@@ -1,0 +1,43 @@
+Atrio gathers all the services you self-host at home and opens them inside the app itself, each in its own tab, without losing the session you just logged into.
+
+It is built for people who have a NAS, a handful of containers, maybe a VPN to reach them from outside, and the habit of typing IP addresses with odd port numbers from memory.
+
+
+WHAT IT DOES
+
+• Every service in one place, in groups, each with its own colour. Tap one and it opens in a tab that keeps you logged in.
+
+• Two addresses per machine: one on your LAN, one over your VPN. The panel picks the right one based on the Wi-Fi network you are on, with nothing to switch by hand.
+
+• It finds them for you. Scan your network for machines and open ports, or import the dashboard you already run (Homer, Homarr, Heimdall and the like), icons included.
+
+• Send links to your downloads. An ed2k, a magnet or a .torrent tapped in any app can be handed to your own aMule, qBittorrent, Transmission or SABnzbd.
+
+• Credentials encrypted on the device, with optional biometric unlock.
+
+• Genuinely yours: colours, logo, background, card size, all configurable.
+
+
+WHAT IT DOES NOT DO
+
+• It collects nothing. No accounts, no analytics, no telemetry, no crash reporting. There is no server belonging to this project: the app talks only to the machines you configure yourself.
+
+• No background work and no notifications. It checks whether your services are up only while the panel is in front of you, so it never fights your battery saver.
+
+• It does not search for content, index anything or host anything.
+
+
+ABOUT THE LOCATION PERMISSION
+
+It is used only to read the name of the Wi-Fi network you are connected to. Since Android 8.1 that name is readable only by an app holding a location permission, and there is no other way. Your position is never requested, read or stored.
+
+It is needed for safety: deciding "I am at home" from an IP address alone is not reliable, because something may answer at that same address in someone else's house, and the app would end up sending your passwords to a machine that is not yours. The network name is a safe signal.
+
+The permission is requested only when you choose to register your network, the app never learns one on its own, and everything works without granting it.
+
+
+OPEN SOURCE
+
+Atrio is free software under the GPLv3 licence. The source is published, and anyone can read it and check what it does with their passwords, which in an app like this one is not a minor detail.
+
+https://github.com/ccastro-design/atrio-homelab

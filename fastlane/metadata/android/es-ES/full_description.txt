@@ -1,0 +1,43 @@
+Atrio reúne todos los servicios que te autoalojas en casa y los abre dentro de la propia aplicación, cada uno en su pestaña y sin perder la sesión iniciada.
+
+Está pensado para quien tiene un NAS, unos cuantos contenedores, puede que una VPN para llegar desde fuera, y la costumbre de escribir direcciones IP con puertos raros de memoria.
+
+
+QUÉ HACE
+
+• Todos tus servicios juntos, por grupos y con su color. Tocas uno y se abre en una pestaña que mantiene la sesión.
+
+• Dos direcciones por máquina: la de tu red y la de la VPN. El panel usa la que toca según la WiFi en la que estés, sin que tengas que cambiar nada a mano.
+
+• Los encuentra por ti. Busca en tu red qué máquinas responden y en qué puertos, o importa el panel que ya uses (Homer, Homarr, Heimdall y similares) con sus iconos.
+
+• Envía enlaces a tus descargas. Un ed2k, un magnet o un .torrent que pulses en cualquier aplicación se puede mandar a tu propio aMule, qBittorrent, Transmission o SABnzbd.
+
+• Contraseñas cifradas en el dispositivo, con desbloqueo por huella opcional.
+
+• Suyo de verdad: colores, logotipo, fondo, tamaño de las tarjetas, todo se cambia.
+
+
+QUÉ NO HACE
+
+• No recoge nada. Ni cuentas, ni estadísticas, ni telemetría, ni informes de errores. No existe ningún servidor de este proyecto: la aplicación solo habla con las máquinas que tú configuras.
+
+• No trabaja en segundo plano ni manda notificaciones. Comprueba el estado de tus servicios solo mientras tienes el panel delante, así que no se pelea con el ahorro de batería.
+
+• No busca contenido, no indexa nada y no aloja nada.
+
+
+SOBRE EL PERMISO DE UBICACIÓN
+
+Se usa únicamente para leer el nombre de la red WiFi a la que estás conectado. Desde Android 8.1, ese nombre solo lo puede leer una aplicación con permiso de ubicación y no hay otra vía. Tu posición no se pide, no se lee y no se guarda nunca.
+
+Hace falta por seguridad: decidir «estoy en casa» solo por una dirección IP no es fiable, porque en casa de otra persona puede responder algo en esa misma dirección y la aplicación acabaría enviando tus contraseñas a una máquina ajena. El nombre de la red sí es una señal segura.
+
+El permiso se pide solo cuando decides registrar tu red, la aplicación no aprende ninguna por su cuenta y todo funciona sin concederlo.
+
+
+CÓDIGO ABIERTO
+
+Atrio es software libre con licencia GPLv3. El código está publicado y cualquiera puede leerlo y comprobar qué hace con sus contraseñas, que en una aplicación como esta no es un detalle menor.
+
+https://github.com/ccastro-design/atrio-homelab

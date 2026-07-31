@@ -1,0 +1,1 @@
+Todos los servicios de tu homelab en una pantalla. Sin cuentas ni telemetría.

@@ -1,0 +1,1 @@
+Every service in your homelab on one screen. No accounts, no telemetry.
