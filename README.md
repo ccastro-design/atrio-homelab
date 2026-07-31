@@ -104,7 +104,20 @@ Written in Kotlin with Jetpack Compose. Minimum supported version is Android 8.0
 
 ## Status
 
-In development, not released yet.
+First release. Available here as a signed APK, and on its way to Google Play.
+
+### Looking for testers
+
+Google Play requires a new developer account to run a closed test with **12 testers for 14
+consecutive days** before an app can reach the store. Atrio is there now, and short of
+people.
+
+If you run a homelab and have a few minutes, joining is a real help: you opt in with your
+Google account, install the app from Play, and stay opted in for two weeks. Nothing else is
+asked of you, and there is nothing to pay — the app is free and always will be.
+
+Open an issue or write to **atrio.homelab.app@proton.me** and I will send you the link.
+Feedback on what does not make sense is more than welcome; that is the point of a test.
 
 ## Licence
 

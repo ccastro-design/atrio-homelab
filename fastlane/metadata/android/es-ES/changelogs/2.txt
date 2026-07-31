@@ -1,0 +1,9 @@
+Primera versión pública.
+
+Todos tus servicios autoalojados en una pantalla, cada uno en su pestaña y sin perder la
+sesión. Dos direcciones por máquina según la WiFi en la que estés, buscador de red,
+importación desde Homer, Homarr y Heimdall, y envío de enlaces ed2k, magnet y .torrent a
+tu propio aMule, qBittorrent, Transmission o SABnzbd.
+
+Las contraseñas se guardan cifradas en el dispositivo. Sin cuentas, sin telemetría y sin
+servidores nuestros.

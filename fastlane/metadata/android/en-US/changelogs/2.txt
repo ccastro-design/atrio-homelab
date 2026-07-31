@@ -1,0 +1,8 @@
+First public release.
+
+All your self-hosted services on one screen, each opening in its own tab that keeps the
+session alive. Two addresses per machine picked by Wi-Fi network name, network scan,
+import from Homer, Homarr and Heimdall, and sending ed2k, magnet and .torrent links to
+your own aMule, qBittorrent, Transmission or SABnzbd.
+
+Credentials are encrypted on the device. No accounts, no telemetry, no servers of ours.
