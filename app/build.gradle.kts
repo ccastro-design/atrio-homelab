@@ -42,7 +42,7 @@ android {
         minSdk = 26
         targetSdk = 35
         // Sube en cada subida a Play, incluso a pruebas internas: Play rechaza repetir uno.
-        versionCode = 1
+        versionCode = 2
         versionName = "1.0"
 
         // Solo los idiomas del producto: evita arrastrar las traducciones de las
@@ -65,6 +65,12 @@ android {
         release {
             // Solo si la clave está en esta máquina; si no, `release` sale sin firmar.
             signingConfig = signingConfigs.findByName("publicacion")
+
+            // NO poner aquí `ndk { debugSymbolLevel = ... }` para callar el aviso de Play
+            // sobre los símbolos de depuración: **no funciona**. La única librería nativa
+            // del paquete, `libandroidx.graphics.path.so`, llega ya compilada y sin
+            // símbolos dentro de Compose, y Gradle solo sabe extraerlos del código nativo
+            // que compila el propio proyecto. Probado el 31/07/2026: el `.aab` sale igual.
 
             // Minificada, con sus reglas en `proguard-rules.pro`. Sin esas reglas la
             // compilación ni terminaba, y lo que se guarda en disco dejaba de poder leerse.
