@@ -26,8 +26,14 @@ object Proyecto {
      */
     const val CODIGO = "https://github.com/ccastro-design/atrio-homelab"
 
-    /** Política de privacidad, en una página pública. */
-    const val PRIVACIDAD = ""
+    /**
+     * Política de privacidad, en una página pública.
+     *
+     * Apunta al fichero del repositorio, que GitHub sirve ya renderizado y sin pedir
+     * cuenta. Google Play exige que esta dirección exista y sea accesible para cualquiera
+     * antes de poder publicar.
+     */
+    const val PRIVACIDAD = "https://github.com/ccastro-design/atrio-homelab/blob/main/PRIVACY.md"
 
     /**
      * Donación suelta, en Ko-fi. Sin nada a cambio: Google no permite otra cosa.
