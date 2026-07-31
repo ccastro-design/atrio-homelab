@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android bloquea el tráfico HTTP sin cifrar desde la versión 9. En un servidor
+  doméstico la mayoría de los servicios van por HTTP plano y por dirección IP, así que
+  hay que permitirlo o la aplicación no sirve para nada.
+
+  No se puede restringir por rangos de red: este fichero solo admite dominios o IPs
+  concretas y es estático, mientras que las direcciones las escribe el usuario en
+  tiempo de ejecución. Así que se permite en general, y es la interfaz la que avisa
+  con una marca visible en cada servicio que va sin cifrar.
+
+  Se confía además en las autoridades instaladas por el usuario: quien tiene una CA
+  propia en su red la habrá instalado a propósito en el móvil, y así sus servicios
+  funcionan sin avisos de certificado.
+-->
+<network-security-config>
+
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+
+</network-security-config>

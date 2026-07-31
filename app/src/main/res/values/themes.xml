@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Barras del sistema transparentes: los colores los pone Compose según el tema
+      claro u oscuro, en vez de quedar fijados aquí a un azul concreto.
+    -->
+    <style name="Theme.Panel" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+</resources>

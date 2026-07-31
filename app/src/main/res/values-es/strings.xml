@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Atrio</string>
+    <string name="app_full_name">Atrio Homelab</string>
+
+    <!-- Panel -->
+    <string name="panel_subtitle_default">Todos tus servicios en un sitio</string>
+    <string name="search_hint">Buscar servicios</string>
+    <string name="search_clear">Borrar</string>
+    <string name="settings">Ajustes</string>
+    <string name="send_link">Enviar un enlace</string>
+    <string name="profile_home">Red local</string>
+    <string name="profile_away">Red VPN</string>
+    <string name="profile_auto">Automático</string>
+    <string name="profile_auto_with">Automático · %1$s</string>
+    <string name="no_results">Ningún servicio coincide con «%1$s»</string>
+
+    <!-- Estado -->
+    <string name="refresh_status">Volver a comprobar los servicios</string>
+    <string name="status_checking">Comprobando…</string>
+    <string name="status_online">En línea</string>
+    <string name="status_offline">Sin conexión</string>
+    <string name="status_cleartext">Sin cifrar</string>
+
+    <!-- Primer arranque y ejemplos -->
+    <string name="welcome_title">Bienvenido</string>
+    <string name="welcome_body">Este panel está vacío. Añade tu primer servidor y sus
+        servicios, impórtalos de un panel que ya uses, o deja que la aplicación los
+        busque en tu red.</string>
+    <string name="welcome_add">Añadir un servicio</string>
+    <string name="welcome_scan">Buscar en mi red</string>
+    <string name="example_badge">Ejemplo</string>
+    <!-- Sin la palabra «Ejemplo»: ya la lleva la insignia de la propia tarjeta. -->
+    <string name="example_hint">Toca para ver cómo se configura un servicio</string>
+    <string name="examples_remove">Quitar los ejemplos</string>
+
+    <!-- Grupos del primer arranque -->
+    <string name="example_group_docker">Servicios Docker</string>
+    <string name="example_group_local">Servicios servidor local</string>
+    <string name="example_group_remote">Servicios servidor externo</string>
+    <string name="example_group_web">Webs</string>
+
+    <!--
+      Servicios de ejemplo. La dirección es una instrucción a propósito: no se conectan a
+      ninguna parte y al tocarlos se abre su ficha explicada, así que enseñan cómo se
+      configura un servicio en vez de dar la sensación de que la aplicación viene rota.
+      Nombres genéricos y no marcas: son plantillas, no una lista de programas.
+    -->
+    <string name="example_containers_name">Gestor de contenedores</string>
+    <string name="example_containers_url">http://IP-DE-TU-SERVIDOR:9000</string>
+    <string name="example_photos_name">Galería de fotos</string>
+    <string name="example_photos_url">http://IP-DE-TU-SERVIDOR:2283</string>
+    <string name="example_media_name">Servidor multimedia</string>
+    <string name="example_media_url">http://IP-DE-TU-SERVIDOR:8096</string>
+
+    <string name="example_nas_name">Panel del NAS</string>
+    <string name="example_nas_url">http://IP-DE-TU-NAS:8080</string>
+    <string name="example_router_name">Router</string>
+    <string name="example_router_url">http://192.168.1.1</string>
+
+    <string name="example_vps_name">Panel del servidor</string>
+    <string name="example_vps_url">https://MI-SERVIDOR-DE-FUERA</string>
+    <string name="example_remote_backup_name">Copia de seguridad remota</string>
+    <string name="example_remote_backup_url">https://MI-SERVIDOR-DE-FUERA:8200</string>
+
+    <!-- Estas dos sí funcionan: no son ejemplos, son enlaces de verdad. -->
+    <string name="web_source_name">Código de Atrio</string>
+    <string name="web_source_subtitle">El código fuente de esta aplicación</string>
+    <string name="web_author_name">El Humo Viral</string>
+    <string name="web_author_subtitle">Humor y curiosidades</string>
+    <string name="web_author_url">https://www.elhumoviral.com</string>
+
+    <!-- Categorías de icono -->
+    <string name="cat_generic">General</string>
+    <string name="cat_media">Vídeo</string>
+    <string name="cat_music">Música</string>
+    <string name="cat_photos">Fotos</string>
+    <string name="cat_containers">Contenedores</string>
+    <string name="cat_virtualization">Máquinas virtuales</string>
+    <string name="cat_backup">Copias de seguridad</string>
+    <string name="cat_storage">Almacenamiento</string>
+    <string name="cat_files">Archivos</string>
+    <string name="cat_documents">Documentos</string>
+    <string name="cat_notes">Notas</string>
+    <string name="cat_books">Libros</string>
+    <string name="cat_dns">DNS</string>
+    <string name="cat_router">Router</string>
+    <string name="cat_network">Red</string>
+    <string name="cat_vpn">VPN</string>
+    <string name="cat_downloads">Descargas</string>
+    <string name="cat_monitoring">Monitorización</string>
+    <string name="cat_security">Seguridad</string>
+    <string name="cat_cameras">Cámaras</string>
+    <string name="cat_home">Domótica</string>
+    <string name="cat_power">Energía</string>
+    <string name="cat_mail">Correo</string>
+    <string name="cat_calendar">Calendario</string>
+    <string name="cat_chat">Mensajería</string>
+    <string name="cat_code">Código</string>
+    <string name="cat_terminal">Terminal</string>
+    <string name="cat_games">Juegos</string>
+    <string name="cat_web">Web</string>
+    <string name="cat_printer">Impresión</string>
+    <string name="cat_ai">Inteligencia artificial</string>
+    <string name="cat_feeds">Noticias</string>
+
+    <!-- Fichas de servicio y servidor -->
+    <string name="service_new">Nuevo servicio</string>
+    <string name="service_edit">Editar servicio</string>
+    <string name="server_new">Nuevo servidor</string>
+    <string name="server_edit">Editar servidor</string>
+    <string name="server_help">La dirección de cada máquina se pone aquí una sola vez; sus
+        servicios solo indican el puerto.</string>
+    <string name="server_none">Sin servidor: dirección completa</string>
+
+    <string name="field_name">Nombre</string>
+    <string name="field_subtitle">Descripción</string>
+    <string name="field_port">Puerto</string>
+    <string name="field_path">Ruta</string>
+    <string name="field_url">Dirección local</string>
+    <string name="field_url_away">Dirección VPN</string>
+    <string name="field_url_away_help">Vacía si usas la misma dentro y fuera de casa</string>
+    <string name="address_use_server">Usar una de mis máquinas…</string>
+    <string name="address_from_server">Esta dirección es de «%1$s». Si cambia la dirección
+        de esa máquina, este servicio la sigue.</string>
+    <string name="field_server">Servidor</string>
+    <string name="field_server_name">Nombre del servidor</string>
+    <string name="field_host_home">Dirección local</string>
+    <string name="field_host_home_help">Solo el nombre o la IP, sin http:// ni puerto</string>
+    <string name="field_host_away">Dirección VPN</string>
+    <string name="field_host_away_help">Vacía si usas la misma dentro y fuera de casa</string>
+    <string name="field_user">Usuario</string>
+    <!-- Hay servicios que solo piden contraseña, así que aquí el usuario puede quedar
+         vacío. En los destinos de descarga no: allí se sigue usando field_user. -->
+    <string name="field_user_optional">Usuario (opcional)</string>
+    <string name="field_password">Contraseña</string>
+    <string name="field_api_key">Clave API</string>
+    <string name="field_api_key_help">Está en los ajustes del propio SABnzbd, en
+        Configuración › General.</string>
+    <string name="auth_title">Este servicio pide contraseña</string>
+    <string name="auth_asked_by">La pide %1$s antes de dejar ver la página.</string>
+    <string name="auth_remember">Recordarla para este servicio</string>
+    <string name="auth_enter">Entrar</string>
+    <string name="password_saved">Ya hay una contraseña guardada. Escribe encima solo si
+        quieres cambiarla.</string>
+    <string name="password_will_change">La contraseña guardada se sustituirá por esta.</string>
+    <string name="password_show">Ver la contraseña</string>
+    <string name="password_hide">Ocultar la contraseña</string>
+
+    <string name="section_address">Dirección</string>
+    <string name="section_icon">Icono</string>
+    <string name="section_behaviour">Comportamiento</string>
+    <string name="section_autologin">Autenticación automática</string>
+
+    <!--
+      Los mismos rótulos que el menú del logotipo en Apariencia: es la misma pregunta —de
+      dónde sale esta imagen— y no tiene sentido que se llame distinto en cada pantalla.
+    -->
+    <string name="icon_default">Por defecto</string>
+    <string name="icon_choose_category">Del sistema</string>
+    <string name="icon_choose_image">De la galería</string>
+    <string name="icon_from_service">El que sirva el servidor</string>
+    <string name="icon_choose_own">Iconos Atrio</string>
+    <string name="atrio_icon_server">Servidor</string>
+    <string name="atrio_icon_server_two">Servidor 2</string>
+    <string name="atrio_icon_donkey">Burro</string>
+    <string name="atrio_icon_donkey_star">Burro con estrella</string>
+    <string name="atrio_icon_flame">Llama</string>
+    <string name="atrio_icon_arrow">Subida</string>
+    <string name="atrio_icon_search">Búsqueda</string>
+    <string name="atrio_icon_ship">Barco</string>
+    <string name="atrio_icon_router">Router</string>
+    <string name="icon_change">Cambiar</string>
+
+    <string name="open_external">Abrir fuera del panel</string>
+    <string name="open_external_help">En vez de en una pestaña del panel</string>
+    <string name="open_external_app">Se abre con</string>
+    <string name="open_external_app_none">El navegador del móvil</string>
+    <string name="open_external_app_gone">Ya no está instalada</string>
+    <string name="open_external_pick">Elegir aplicación</string>
+    <string name="open_external_search">Buscar aplicación</string>
+    <string name="error_app_gone">«%1$s» ya no está en este móvil. Elige otra aplicación en
+        la ficha del servicio.</string>
+    <string name="desktop_mode">Versión de escritorio</string>
+    <string name="desktop_mode_help">Puede arreglar problemas visuales</string>
+    <string name="check_status">Comprobar si responde</string>
+    <plurals name="check_status_help">
+        <item quantity="one">Comprueba el estado periódicamente cada segundo</item>
+        <item quantity="other">Comprueba el estado periódicamente cada %1$d segundos</item>
+    </plurals>
+    <string name="autologin">Usar mi usuario y contraseña</string>
+
+
+    <!-- Buscador de red -->
+    <string name="scan_title">Buscar en mi red</string>
+    <string name="scan_intro">Primero la aplicación lista las máquinas de tu red. Eliges una
+        y entonces comprueba todos sus puertos, así que encuentra también los servicios que
+        están en puertos poco habituales. Solo habla con tus propias máquinas: nada sale de
+        tu red.</string>
+    <string name="scan_where">Buscar en</string>
+    <string name="scan_where_title">¿Dónde busco?</string>
+    <string name="scan_network_none">Ninguna red</string>
+    <string name="scan_network_wifi">WiFi</string>
+    <string name="scan_network_ethernet">Cable</string>
+    <string name="scan_network_vpn">VPN</string>
+    <string name="scan_network_routed">Red que llega por la VPN</string>
+    <string name="scan_network_mesh">Equipos que conoce tu VPN</string>
+    <plurals name="scan_mesh_hosts">
+        <item quantity="one">1 equipo de la VPN</item>
+        <item quantity="other">%1$d equipos de la VPN</item>
+    </plurals>
+    <string name="scan_network_manual">Rango escrito por ti</string>
+    <string name="scan_network_other">Otra red</string>
+    <string name="scan_manual">Buscar en otro rango</string>
+    <string name="scan_manual_use">Usar este rango</string>
+    <string name="scan_slow_warning">Al ir por la VPN cada máquina tarda más en contestar,
+        así que la búsqueda es bastante más lenta.</string>
+    <string name="scan_start">Empezar a buscar</string>
+    <string name="scan_again">Buscar otra vez</string>
+    <string name="scan_step_devices">Buscando máquinas encendidas…</string>
+    <string name="scan_step_ports">Comprobando todos los puertos de %1$s…</string>
+    <string name="scan_choose_device">Toca la máquina donde están tus servicios</string>
+    <string name="scan_no_devices">No se ha encontrado ninguna máquina en tu red.</string>
+    <string name="scan_no_web">No se ha encontrado ningún panel web en esta máquina.</string>
+    <string name="scan_device_unknown">Equipo %1$s</string>
+    <string name="scan_stop">Parar</string>
+    <string name="scan_no_network">No se ha encontrado ninguna red que se pueda recorrer.
+        Conéctate a la WiFi de tu casa, o escribe abajo el rango donde quieres buscar.</string>
+    <string name="scan_unknown_service">Servicio en el puerto %1$d</string>
+    <string name="scan_already_added">Ya está en tu panel</string>
+    <string name="scan_rename_hint">Los servicios cuyo nombre no se ha podido leer salen
+        con su puerto. Luego puedes renombrarlos en Ajustes.</string>
+
+    <!-- Certificados y errores de carga -->
+    <string name="cert_title">El certificado no se puede verificar</string>
+    <string name="cert_body">El certificado que presenta «%1$s» no está firmado por
+        ninguna autoridad reconocida. Es lo normal en servidores domésticos con
+        certificado autofirmado. Si no reconoces este servidor, recházalo.</string>
+    <string name="cert_issued_to">Expedido a</string>
+    <string name="cert_issued_by">Expedido por</string>
+    <string name="cert_fingerprint">Huella SHA-256</string>
+    <string name="cert_trust">Confiar en este certificado</string>
+    <string name="cert_reject">Rechazar</string>
+    <string name="cert_trusted_list">Certificados aceptados</string>
+    <string name="cert_forget">Olvidar</string>
+
+    <string name="error_title">No se pudo abrir «%1$s»</string>
+    <string name="error_timeout">El servicio no ha respondido en 12 segundos.</string>
+    <string name="error_no_away_address">Este servicio solo tiene dirección local, así que
+        no se puede alcanzar desde fuera de tu red. Dale a su servidor una dirección para
+        cuando estés fuera.</string>
+    <string name="error_try_home">Probar la dirección de casa</string>
+    <string name="error_no_app">Ninguna aplicación de este móvil puede abrir «%1$s».</string>
+
+    <!--
+      Un servicio al que no le queda ninguna dirección con la que abrirse. Antes tocarlo no
+      hacía nada y parecía que la aplicación se había colgado.
+    -->
+    <!-- Salir de una ficha con cambios sin guardar. -->
+    <string name="discard_title">¿Descartar los cambios?</string>
+    <string name="discard_body">Lo que has escrito en esta ficha se perderá.</string>
+    <string name="discard_confirm">Descartar</string>
+    <string name="discard_keep">Seguir editando</string>
+
+    <string name="no_address_title">No se puede abrir «%1$s»</string>
+    <string name="no_address_server_gone">Su servidor ya no existe. Al borrarlo, este
+        servicio se quedó sin dirección.</string>
+    <string name="no_address_server_empty">Su servidor «%1$s» está sin dirección: no tiene
+        ni la de tu red local ni la de fuera.</string>
+    <string name="no_address_none">No tiene servidor ni dirección web propia.</string>
+
+    <!-- Aviso antes de borrar un servidor del que cuelgan servicios. -->
+    <string name="server_delete_title">¿Borrar «%1$s»?</string>
+    <string name="server_delete_confirm">Borrar de todos modos</string>
+
+    <!--
+      Cómo llega un enlace hasta el destino, dicho en su propia ficha. No es evidente: el
+      botón está en el panel, no aquí, y con aMule es el único camino práctico porque los
+      ed2k casi nunca se pueden pulsar en una web.
+    -->
+    <string name="target_send_help">Copia el enlace y toca el icono de descarga del panel:
+        el cuadro sale ya con lo copiado dentro.</string>
+    <string name="target_send_help_ed2k">Copia el enlace ed2k y toca el icono de descarga
+        del panel: el cuadro sale ya con lo copiado dentro. Los ed2k casi nunca se pueden
+        pulsar en la web, así que este es el camino normal.</string>
+
+    <!-- Descargas -->
+    <string name="downloads_help">Añade los programas de descarga que tengas funcionando en
+        tus servidores. Al enviar un enlace, la aplicación decide sola a dónde va; solo
+        pregunta cuando hay más de uno que podría recibirlo.</string>
+    <string name="downloads_empty">Todavía no hay destinos de descarga</string>
+    <string name="target_new">Nuevo destino</string>
+    <string name="target_edit">Editar destino</string>
+    <string name="target_kind">Programa</string>
+    <string name="target_accepts">Tipos de enlace que acepta</string>
+    <string name="routing_title">Qué hacer con cada tipo de enlace si hay más de un
+        posible destino</string>
+    <string name="routing_ask">Preguntar siempre</string>
+
+    <string name="link_ed2k">Enlaces ed2k</string>
+    <string name="link_magnet">Enlaces magnet</string>
+    <string name="link_torrent">Ficheros torrent</string>
+    <string name="link_nzb">Ficheros NZB</string>
+    <string name="send">Enviar</string>
+    <string name="send_paste_hint">Pega aquí el enlace. Puedes pegar varios, uno por línea.</string>
+    <string name="send_invalid">Eso no parece un enlace que la aplicación pueda enviar</string>
+    <string name="send_choose_target">¿A dónde lo mando?</string>
+    <string name="send_remember">Usar siempre para %1$s</string>
+    <string name="send_sending_generic">Enviando el enlace…</string>
+    <string name="send_sending_wait">Esperando a que conteste</string>
+    <string name="send_ok">Enlace enviado a «%1$s»</string>
+    <plurals name="send_ok_many">
+        <item quantity="one">%1$d enlace enviado a «%2$s»</item>
+        <item quantity="other">%1$d enlaces enviados a «%2$s»</item>
+    </plurals>
+    <string name="send_ok_partial">Enviados %1$d de %2$d a «%3$s»</string>
+    <plurals name="send_count">
+        <item quantity="one">1 enlace</item>
+        <item quantity="other">%1$d enlaces</item>
+    </plurals>
+    <string name="send_no_target">Ningún destino acepta %1$s. Añade uno en Ajustes ›
+        Descargas.</string>
+    <string name="send_no_address">«%1$s» no tiene dirección configurada.</string>
+    <string name="send_no_password">Pon la contraseña de «%1$s» en Ajustes › Descargas.</string>
+    <string name="send_bad_password">«%1$s» ha rechazado la contraseña.</string>
+    <string name="send_http_error">«%1$s» ha respondido con el código %2$d.</string>
+    <string name="send_unreachable">No se pudo contactar con «%1$s». Comprueba que estás en
+        su red.\n\n%2$s</string>
+    <string name="send_target_not_supported">El envío a «%1$s» todavía no está disponible.</string>
+    <string name="send_not_whitelisted">«%1$s» no acepta órdenes desde este móvil. Añade tu
+        red a su lista de direcciones permitidas (rpc-whitelist).</string>
+    <string name="send_duplicate">Ese enlace ya estaba en «%1$s».</string>
+    <string name="send_not_accepted">«%1$s» no ha aceptado el enlace.</string>
+    <string name="send_no_api_key">Pon la clave API de «%1$s» en Ajustes › Descargas.</string>
+    <string name="send_bad_api_key">«%1$s» ha rechazado la clave API.</string>
+    <string name="send_reason_unknown">no dice por qué</string>
+    <string name="send_bad_answer">«%1$s» ha contestado algo que no se entiende. ¿Es la
+        dirección correcta?</string>
+    <string name="send_refused">«%1$s» lo ha rechazado: %2$s</string>
+
+    <!--
+      Ficheros que la web prepara dentro del móvil (Binsearch y su `blob:`): no hay enlace
+      que pasar, así que se sube el fichero entero.
+    -->
+    <string name="send_file_read_failed">No se ha podido leer el fichero que preparó la
+        página.</string>
+    <string name="send_file_not_supported">«%1$s» todavía no admite recibir el fichero
+        entero, solo enlaces.</string>
+
+    <!-- Ajustes -->
+    <string name="settings_services">Servicios y grupos</string>
+    <string name="settings_servers">Servidores</string>
+    <string name="settings_downloads">Descargas</string>
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_security">Seguridad</string>
+    <string name="security_networks">Tu red local</string>
+    <string name="security_networks_help">Solo en estas redes se usan las direcciones
+        locales. En cualquier otra se va por la VPN, aunque algo responda.</string>
+    <string name="network_add">Añadir la WiFi de ahora</string>
+    <string name="network_add_manual">Escribir el nombre a mano</string>
+    <string name="network_add_done">WiFi añadida</string>
+    <string name="network_add_already">Esa WiFi ya estaba añadida</string>
+    <string name="network_add_none">No se ha podido leer el nombre de la WiFi. Escríbelo a
+        mano.</string>
+    <string name="network_add_no_permission">Añadida, pero sin el permiso de ubicación el
+        panel no puede saber en qué WiFi estás.</string>
+    <string name="network_needs_location">Enciende la ubicación del móvil: Android no deja
+        leer el nombre de la WiFi con ella apagada.</string>
+    <string name="network_unknown_title">¿Es esta tu red?</string>
+    <string name="network_unknown_body">Algo responde en las direcciones de tu casa, pero
+        estás en la WiFi «%1$s», que no es de las tuyas: podría ser el equipo de otra
+        persona.\n\nMientras tanto se usan tus direcciones de fuera.</string>
+    <string name="network_unknown_mine">Es mi red</string>
+    <string name="network_unknown_not_mine">No es mía</string>
+
+    <string name="settings_backup">Copia de seguridad</string>
+    <string name="settings_tour">Cómo funciona</string>
+    <string name="settings_support">Apoyar el proyecto</string>
+    <string name="support_intro">Esta aplicación es gratis, sin anuncios, sin versión de
+        pago, de código abierto, sin telemetría y con los permisos justos para que funcione.
+        Si te resulta útil y te apetece echar una mano, aquí te dejo varias formas de
+        agradecerlo.</string>
+    <string name="support_kofi_title">Ko-fi</string>
+    <string name="support_kofi_intro">Puedes usar mi cuenta de Ko-fi, la de mi
+        semiabandonado proyecto de página web.</string>
+    <string name="support_github_title">GitHub</string>
+    <string name="support_kofi">Invitar a un café</string>
+    <!--
+      Sin hablar de puntual ni recurrente: los dos admiten las dos cosas. Lo único que de
+      verdad los diferencia para quien va a donar es si le hace falta una cuenta.
+    -->
+    <string name="support_kofi_help">Sin registrarte en nada.</string>
+    <string name="support_sponsors">Patrocinar en GitHub</string>
+    <string name="support_sponsors_help">Necesitas una cuenta de GitHub.</string>
+    <string name="support_note">Donar no desbloquea nada: la aplicación es la misma para
+        todo el mundo.</string>
+    <string name="settings_about">Acerca de</string>
+
+    <string name="tour_skip">Saltar</string>
+    <string name="tour_close">Cerrar</string>
+    <string name="tour_next">Siguiente</string>
+    <string name="tour_start">Empezar</string>
+    <string name="tour_1_title">Tu homelab en una pantalla</string>
+    <string name="tour_1_body">Todos tus servicios juntos, agrupados y con su color. Cada
+        uno se abre aquí dentro, en su pestaña, sin salir a otra aplicación.</string>
+    <string name="tour_2_title">Añádelos como prefieras</string>
+    <string name="tour_2_body">Busca los que responden en tu red, trae el panel que ya uses
+        —Homer, Homarr, Heimdall— o añádelos a mano uno a uno.</string>
+    <string name="tour_3_title">En casa y fuera de casa</string>
+    <string name="tour_3_body">Cada máquina puede tener dos direcciones: la de tu red y la
+        de la VPN. El panel usa la que toca.\n\nRecuerda seleccionar el WiFi de tu red en
+        Ajustes › Seguridad.</string>
+    <string name="tour_4_title">Manda enlaces a tus descargas</string>
+    <string name="tour_4_body">Un ed2k, un magnet o un torrent que pulses en cualquier
+        sitio se puede enviar a tu aMule, qBittorrent, Transmission o SABnzbd.</string>
+    <string name="tour_5_title">Tus datos no salen de aquí</string>
+    <string name="tour_5_body">Las contraseñas se guardan cifradas en el móvil y la
+        aplicación solo habla con tus máquinas. Ni cuentas, ni estadísticas, ni nube.</string>
+    <string name="tour_6_title">El único permiso que se pide</string>
+    <string name="tour_6_body">La ubicación, y solo para leer el nombre de tu WiFi: es lo
+        único que Android acepta para decirlo. Ni se consulta dónde estás, ni se guarda, ni
+        sale de este móvil.\n\nSin él el panel no sabe en qué red está, y no puede
+        distinguir tu casa de otra que use las mismas direcciones.</string>
+
+    <string name="ask_network_title">Ya casi está</string>
+    <string name="ask_network_body">Dile al panel cuál es tu WiFi para que no confunda tu
+        casa con cualquier otra red. Es un toque en Ajustes › Seguridad.</string>
+    <string name="ask_network_go">Llévame allí</string>
+    <string name="ask_network_later">Más tarde</string>
+
+    <string name="group_new">Nuevo grupo</string>
+    <string name="group_rename">Editar grupo</string>
+    <string name="group_edit">Editar grupo</string>
+    <string name="group_color">Color del grupo</string>
+    <string name="group_color_overrides">Manda sobre el color general de Ajustes ›
+        Apariencia, tanto en el nombre del grupo como en el borde de sus tarjetas.</string>
+    <string name="group_color_none">Sin color</string>
+    <string name="group_delete">Borrar grupo</string>
+    <string name="group_add_service">Añadir un servicio aquí</string>
+    <string name="group_empty">Este grupo aún no tiene servicios</string>
+    <string name="reorder_hint">Mantén pulsado y arrastra para reordenar</string>
+    <string name="servers_empty">Todavía no hay servidores. Añade uno y tus servicios solo
+        necesitarán un puerto.</string>
+
+    <string name="appearance_logo">Logotipo del panel</string>
+    <string name="appearance_logo_icon">Elegir un icono</string>
+    <string name="appearance_theme">Tema</string>
+    <string name="appearance_theme_dark">Oscuro</string>
+    <string name="appearance_theme_light">Claro</string>
+    <string name="appearance_theme_system">El del sistema</string>
+    <string name="appearance_colors">Colores</string>
+    <string name="appearance_color_banner">Barra superior</string>
+    <string name="appearance_color_banner_text">Título e iconos de la barra</string>
+    <string name="appearance_color_background">Fondo del panel</string>
+    <string name="appearance_color_text">Texto</string>
+    <string name="appearance_color_service">Nombre del servicio</string>
+    <string name="appearance_color_group">Nombre del grupo</string>
+    <string name="appearance_colors_light">Tema claro</string>
+    <string name="appearance_colors_dark">Tema oscuro</string>
+    <string name="appearance_colors_help">Cada tema tiene sus colores. Sin tocar los del
+        oscuro, se usan los del claro.</string>
+    <string name="appearance_color_default">El del tema</string>
+    <string name="appearance_color_change">Cambiar</string>
+    <string name="appearance_cards">Las tarjetas</string>
+    <string name="appearance_cards_compact">Compactas</string>
+    <string name="appearance_cards_normal">Normales</string>
+    <string name="appearance_cards_comfy">Cómodas</string>
+    <string name="appearance_show_address">Enseñar la dirección</string>
+    <string name="appearance_show_address_help">Debajo del nombre, en la tarjeta de cada servicio</string>
+    <string name="appearance_show_address_compact">En las tarjetas compactas no se enseña</string>
+    <string name="appearance_background">Imagen de fondo</string>
+    <string name="appearance_background_choose">Elegir una imagen</string>
+    <string name="background_source_title">Imagen de fondo</string>
+    <string name="background_source_help">Puedes usar uno de los fondos que trae la
+        aplicación o una imagen tuya.</string>
+    <string name="background_source_system">Del sistema</string>
+    <string name="background_source_gallery">De la galería</string>
+    <string name="background_system_title">Fondos de la aplicación</string>
+    <string name="background_sys_arcs">Arcos</string>
+    <string name="background_sys_atrium">Atrio</string>
+    <string name="background_sys_cells">Celdas</string>
+    <string name="appearance_background_remove">Quitar la imagen</string>
+    <string name="appearance_background_dim">Atenuar la imagen: %1$d%%</string>
+    <string name="appearance_background_blur">Desenfocar la imagen: %1$d</string>
+    <string name="appearance_background_frame">Encuadre: arrastra para mover, dos dedos para acercar</string>
+    <string name="appearance_background_frame_reset">Volver al encuadre original</string>
+    <string name="appearance_background_frame_title">Encuadrar la imagen</string>
+    <string name="appearance_card_opacity">Opacidad de las tarjetas: %1$d%%</string>
+    <string name="appearance_color_type">Escribir el color</string>
+    <string name="appearance_color_type_help">En formato #RRGGBB, como #2F6BD8.</string>
+    <string name="appearance_logo_default">Por defecto</string>
+    <string name="appearance_logo_system">Del sistema</string>
+    <string name="appearance_logo_gallery">De la galería</string>
+    <string name="appearance_title">Título del panel</string>
+    <string name="appearance_subtitle">Subtítulo</string>
+    <string name="appearance_profiles">Nombres de los perfiles de red</string>
+    <string name="appearance_label_home">Nombre red local</string>
+    <string name="appearance_label_away">Nombre VPN</string>
+
+    <string name="security_unlock">Pedir la huella al abrir</string>
+    <string name="security_unlock_unavailable">Este móvil no tiene huella ni bloqueo de
+        pantalla configurados</string>
+    <string name="security_cleartext_help">Vale para todos los servicios. Cada uno puede quedarse fuera desde su ficha.</string>
+    <string name="security_section_unlock">Desbloqueo</string>
+    <string name="security_section_warnings">Avisos</string>
+    <string name="security_section_privacy">Privacidad</string>
+    <string name="security_relock">Volver a pedirlo al regresar</string>
+    <string name="security_relock_help">Cuánto tiempo puedes estar fuera de la aplicación sin que te la vuelva a pedir.</string>
+    <string name="security_relock_now">Al momento</string>
+    <string name="security_relock_1">1 minuto</string>
+    <string name="security_relock_5">5 minutos</string>
+    <string name="security_relock_never">Solo al abrir</string>
+    <string name="security_hide_recents">Ocultar en aplicaciones recientes</string>
+    <string name="security_hide_recents_help">La miniatura sale en negro y no se pueden hacer capturas.</string>
+    <string name="security_sessions">Cerrar las sesiones al salir</string>
+    <string name="security_sessions_help">Al cerrar la aplicación se olvidan las sesiones de las pestañas.</string>
+    <string name="security_erase_sessions">Cerrar las sesiones ahora</string>
+    <string name="security_erase_sessions_ask">Se olvidarán las sesiones abiertas en las pestañas. Tus contraseñas guardadas no se tocan.</string>
+    <string name="security_erase_passwords">Borrar todas las contraseñas</string>
+    <string name="security_erase_passwords_ask">Se borran las contraseñas de todos los servicios y de los destinos de descarga. No se puede deshacer y no están en las copias de seguridad.</string>
+    <string name="security_erase_certs">Olvidar los certificados aceptados</string>
+    <string name="security_erase_certs_ask">La próxima vez que entres en esos servicios se te volverá a pedir que confirmes su certificado.</string>
+    <string name="security_status_help">Vale para todos los servicios, y solo mientras el
+        panel está en pantalla: la aplicación nunca trabaja en segundo plano. Cada
+        servicio puede quedarse fuera desde su ficha.</string>
+    <string name="warn_cleartext">Avisar si va sin cifrar</string>
+    <string name="warn_cleartext_help">Enseña «Sin cifrar» en su tarjeta cuando la dirección es http</string>
+    <string name="warn_cleartext_disabled">El aviso está apagado para toda la aplicación en Ajustes › Seguridad.</string>
+    <string name="check_status_disabled">La comprobación está apagada para toda la
+        aplicación en Ajustes › Seguridad.</string>
+
+    <string name="backup_export">Exportar a un fichero</string>
+    <string name="backup_export_sub">Tus servidores, servicios y grupos. Nunca las contraseñas.</string>
+    <string name="backup_import">Restaurar desde un fichero</string>
+    <string name="backup_import_sub">Reemplaza todo lo que tengas ahora.</string>
+    <string name="backup_exported">Configuración exportada</string>
+    <string name="backup_export_failed">No se pudo escribir el fichero</string>
+    <string name="backup_imported">Configuración importada</string>
+    <string name="backup_import_failed">Ese fichero no contiene una configuración válida</string>
+    <string name="backup_import_panel">Traer un panel que ya uses</string>
+    <string name="backup_import_panel_sub">Homer, Homarr, Heimdall o lo que exporte el tuyo.</string>
+    <string name="import_choose_file">Elegir un fichero…</string>
+    <string name="import_nothing_found">No se ha encontrado ningún servicio en ese fichero</string>
+    <string name="import_found_title">Panel leído</string>
+    <!--
+      Las dos cuentas llegan ya escritas, de `count_services` y `count_groups`. El verbo va
+      en una forma que vale para las dos: «Se han encontrado 1 servicio» estaría mal, y
+      desde aquí ya no hay manera de cambiarlo según el número.
+    -->
+    <string name="import_found">Tiene %1$s en %2$s.</string>
+    <string name="import_away_title">Direcciones para cuando estás fuera</string>
+    <string name="import_away_help">Un segundo panel con tus direcciones de VPN: se
+        emparejan por el nombre y aparece el selector de casa y fuera.</string>
+    <string name="import_away_choose">Elegir el panel de fuera…</string>
+    <string name="import_away_none">No se ha podido emparejar ninguna dirección nueva. Las
+        suyas son las mismas que ya tienes.</string>
+
+    <string name="import_icons_help">Los iconos de ese fichero son imágenes que están
+        guardadas en tu panel antiguo. Dime en qué dirección está y los traigo también.</string>
+    <string name="import_icons_address">Dirección de ese panel (opcional)</string>
+    <string name="import_icons_downloading">Trayendo los iconos…</string>
+    <string name="import_undo_note">Antes se guarda tu configuración actual, así que esto
+        se puede deshacer.</string>
+    <string name="reset_title">Empezar de cero</string>
+    <string name="reset_help">Deja la aplicación como venía recién instalada, con sus
+        servicios de ejemplo.</string>
+    <string name="reset_button">Restablecer la configuración inicial</string>
+    <string name="reset_ask_title">¿Empezar de cero?</string>
+    <string name="reset_ask">Se borran tus servicios, tus grupos y todos los ajustes, y la
+        aplicación se reinicia como el primer día.\n\nPrimero te pedirá dónde guardar un
+        fichero con lo que tienes ahora, y no se borra nada hasta que se haya guardado.
+        Además queda una copia dentro de la aplicación, en «Volver a la configuración
+        anterior».\n\nTus contraseñas guardadas no se tocan: para borrarlas está Ajustes ›
+        Seguridad.</string>
+    <string name="reset_save_and_do">Guardar copia y empezar</string>
+    <string name="reset_cancelled">No se ha restablecido nada</string>
+    <string name="reset_save_failed">No se pudo guardar el fichero, así que no se ha
+        restablecido nada</string>
+
+    <string name="undo_title">Deshacer</string>
+    <string name="undo_saved_at">Guardada el %1$s</string>
+    <string name="undo_restore">Volver a la configuración anterior</string>
+    <string name="undo_done">Configuración anterior restaurada</string>
+    <string name="undo_failed">No se pudo leer la configuración anterior</string>
+    <string name="import_add">Añadir a lo mío</string>
+    <string name="import_replace">Reemplazar todo</string>
+    <!-- Las dos cuentas llegan ya escritas, de `count_services` y `count_servers`. -->
+    <string name="import_restore_warning">Esta copia tiene %1$s y %2$s.
+        Restaurarla reemplaza todo lo que tengas ahora.</string>
+
+    <string name="about_version">Versión %1$s</string>
+    <string name="about_what">Todos los servicios de tu homelab en una pantalla, y cada uno
+        se abre aquí dentro.</string>
+    <string name="about_section_privacy">Privacidad</string>
+    <string name="about_privacy">Esta aplicación solo habla con los servidores que tú
+        configuras. No tiene cuentas, ni estadísticas, ni conexión con ningún servidor
+        nuestro: no existe ninguno.</string>
+    <string name="about_privacy_policy">Política de privacidad</string>
+    <string name="about_section_code">Código y licencia</string>
+    <string name="about_licence">Software libre con licencia GPLv3: cualquiera puede leer
+        el código y comprobar qué hace con sus contraseñas.</string>
+    <string name="about_source">Código fuente</string>
+    <string name="about_source_sub">En GitHub</string>
+    <string name="about_section_third_party">Software de terceros</string>
+    <string name="about_third_party">Kotlin, Jetpack Compose, las librerías de AndroidX
+        (núcleo, actividad, ciclo de vida, fragmentos, biometría, almacenamiento cifrado y
+        WebKit) y kotlinx.serialization, todas con licencia Apache 2.0.</string>
+    <string name="about_no_browser">No hay ningún navegador para abrir la página</string>
+
+    <string name="biometric_title">Desbloquear el panel</string>
+    <string name="biometric_subtitle">Usa tu huella o el código del móvil</string>
+
+    <!-- Comunes -->
+    <string name="add">Añadir</string>
+    <string name="edit">Editar</string>
+    <string name="actions">Acciones</string>
+    <string name="ok">Aceptar</string>
+    <string name="config_recovered_title">Se ha recuperado tu panel</string>
+    <string name="config_recovered_body">El fichero de tu configuración estaba dañado y se
+        ha recuperado la última copia buena. Puedes haber perdido los últimos cambios, así
+        que échale un ojo al panel.\n\nEl fichero dañado se ha guardado por si acaso.</string>
+    <string name="config_lost_title">No se ha podido leer tu configuración</string>
+    <string name="config_lost_body">El fichero estaba dañado y no había ninguna copia
+        utilizable, así que la aplicación ha empezado de cero.\n\nEl fichero dañado no se ha
+        borrado. Si tenías una copia de seguridad exportada, este es el momento de
+        restaurarla desde Ajustes.</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Guardar</string>
+    <string name="delete">Borrar</string>
+    <string name="back">Atrás</string>
+    <string name="retry">Reintentar</string>
+    <string name="reload">Recargar</string>
+    <string name="home">Panel</string>
+    <string name="close_tab">Cerrar pestaña</string>
+
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Qué se lleva Android en una copia a la nube y en un traspaso a otro móvil.
+
+  Aquí no se lleva nada, y no es por celo: las contraseñas de los servicios están cifradas
+  con una clave que vive en el almacén seguro del propio móvil y que **no sale de él**.
+  Restaurar esta carpeta en otro teléfono dejaría un fichero de contraseñas que ese móvil
+  no puede descifrar, y la aplicación arrancaría con credenciales ilegibles sin que el
+  usuario entienda por qué.
+
+  Sustituye a `android:allowBackup`, que está deprecado desde Android 12. El atributo se
+  queda en el manifiesto porque `minSdk` es 26 y hace falta para las versiones anteriores;
+  este fichero manda de la 12 en adelante.
+-->
+<data-extraction-rules>
+
+    <cloud-backup>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+    </cloud-backup>
+
+    <device-transfer>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+    </device-transfer>
+
+</data-extraction-rules>

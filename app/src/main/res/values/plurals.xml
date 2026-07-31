@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Textos con número. Android elige la forma correcta según la cantidad y el idioma, así
+  que no queda ningún «1 servicios».
+-->
+<resources>
+
+    <plurals name="server_services_count">
+        <item quantity="one">%1$d service on this server</item>
+        <item quantity="other">%1$d services on this server</item>
+    </plurals>
+
+    <plurals name="scan_found">
+        <item quantity="one">%1$d service found</item>
+        <item quantity="other">%1$d services found</item>
+    </plurals>
+
+    <plurals name="scan_add">
+        <item quantity="one">Add the one selected</item>
+        <item quantity="other">Add the %1$d selected</item>
+    </plurals>
+
+    <plurals name="import_away_done">
+        <item quantity="one">%1$d server now has an away address</item>
+        <item quantity="other">%1$d servers now have an away address</item>
+    </plurals>
+
+    <plurals name="import_done">
+        <item quantity="one">%1$d service imported</item>
+        <item quantity="other">%1$d services imported</item>
+    </plurals>
+
+    <plurals name="scan_added">
+        <item quantity="one">%1$d service added</item>
+        <item quantity="other">%1$d services added</item>
+    </plurals>
+
+    <plurals name="import_found_servers">
+        <item quantity="one">%1$d server will be created from the addresses that repeat.</item>
+        <item quantity="other">%1$d servers will be created from the addresses that repeat.</item>
+    </plurals>
+
+    <!--
+      Sintagmas sueltos, para frases con dos cantidades: un `plurals` solo sabe de una, así
+      que la frase recibe cada cuenta ya escrita. Ver `import_found` e
+      `import_restore_warning`, y ojo al redactarlas: el verbo no puede depender del número,
+      porque aquí ya no hay forma de cambiarlo.
+    -->
+    <plurals name="count_services">
+        <item quantity="one">%1$d service</item>
+        <item quantity="other">%1$d services</item>
+    </plurals>
+
+    <plurals name="count_groups">
+        <item quantity="one">%1$d group</item>
+        <item quantity="other">%1$d groups</item>
+    </plurals>
+
+    <plurals name="count_servers">
+        <item quantity="one">%1$d server</item>
+        <item quantity="other">%1$d servers</item>
+    </plurals>
+
+    <plurals name="server_delete_warning">
+        <item quantity="one">%1$d service is on this server and will be left with no
+            address.</item>
+        <item quantity="other">%1$d services are on this server and will be left with no
+            address.</item>
+    </plurals>
+
+</resources>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <plurals name="server_services_count">
+        <item quantity="one">%1$d servicio en este servidor</item>
+        <item quantity="other">%1$d servicios en este servidor</item>
+    </plurals>
+
+    <plurals name="scan_found">
+        <item quantity="one">%1$d servicio encontrado</item>
+        <item quantity="other">%1$d servicios encontrados</item>
+    </plurals>
+
+    <plurals name="scan_add">
+        <item quantity="one">Añadir el seleccionado</item>
+        <item quantity="other">Añadir los %1$d seleccionados</item>
+    </plurals>
+
+    <plurals name="import_away_done">
+        <item quantity="one">%1$d servidor ya tiene su dirección de fuera</item>
+        <item quantity="other">%1$d servidores ya tienen su dirección de fuera</item>
+    </plurals>
+
+    <plurals name="import_done">
+        <item quantity="one">%1$d servicio importado</item>
+        <item quantity="other">%1$d servicios importados</item>
+    </plurals>
+
+    <plurals name="scan_added">
+        <item quantity="one">%1$d servicio añadido</item>
+        <item quantity="other">%1$d servicios añadidos</item>
+    </plurals>
+
+    <plurals name="import_found_servers">
+        <item quantity="one">Se creará %1$d servidor a partir de las direcciones que se repiten.</item>
+        <item quantity="other">Se crearán %1$d servidores a partir de las direcciones que se repiten.</item>
+    </plurals>
+
+    <!--
+      Sintagmas sueltos, para frases con dos cantidades: un `plurals` solo sabe de una, así
+      que la frase recibe cada cuenta ya escrita. Ver `import_found` e
+      `import_restore_warning`, y ojo al redactarlas: el verbo no puede depender del número,
+      porque aquí ya no hay forma de cambiarlo.
+    -->
+    <plurals name="count_services">
+        <item quantity="one">%1$d servicio</item>
+        <item quantity="other">%1$d servicios</item>
+    </plurals>
+
+    <plurals name="count_groups">
+        <item quantity="one">%1$d grupo</item>
+        <item quantity="other">%1$d grupos</item>
+    </plurals>
+
+    <plurals name="count_servers">
+        <item quantity="one">%1$d servidor</item>
+        <item quantity="other">%1$d servidores</item>
+    </plurals>
+
+    <plurals name="server_delete_warning">
+        <item quantity="one">%1$d servicio está en este servidor y se quedará sin
+            dirección.</item>
+        <item quantity="other">%1$d servicios están en este servidor y se quedarán sin
+            dirección.</item>
+    </plurals>
+
+</resources>

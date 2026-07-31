@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+
+    <!--
+      Para los iconos temáticos de Android 13 y posteriores: quien los active tiene todos
+      los iconos teñidos del color de su fondo de pantalla, y el que no lo declara se queda
+      fuera del juego, con su color de siempre metido en un círculo.
+
+      Vale el mismo dibujo del frente: ya es una silueta blanca maciza, y el sistema
+      ignora su color y lo tiñe. Al no llevar fondo, el arco se dibuja sobre el color que
+      ponga el sistema y sigue leyéndose.
+    -->
+    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>

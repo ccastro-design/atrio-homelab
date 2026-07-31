@@ -1,0 +1,37 @@
+# Ruta del SDK de cada máquina. Nunca se publica.
+local.properties
+
+# Resultados de compilación
+build/
+app/build/
+.gradle/
+.kotlin/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Firma de la aplicación. Si esto se sube, cualquiera puede publicar
+# actualizaciones falsas de la app en nombre del autor: no hay vuelta atrás.
+*.jks
+*.keystore
+keystore.properties
+key.properties
+
+# Herramientas de desarrollo. Nada de esto es parte del proyecto y en un repositorio
+# público solo sirve para dar explicaciones.
+.claude/
+.vscode/
+
+# Android Studio e IntelliJ
+.idea/
+*.iml
+.navigation/
+.externalNativeBuild/
+.cxx/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

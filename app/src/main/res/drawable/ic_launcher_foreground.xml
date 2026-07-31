@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  El atrio: el arco por el que se entra, con tres servicios dentro.
+
+  La geometría está calculada para que quede centrada de verdad: el dibujo ocupa de 24 a
+  84 en los dos ejes, así que su centro cae en 54, el del lienzo. El arco es un
+  semicírculo exacto de radio 26 con el eje del trazo en y=53,5, de modo que su punto más
+  alto está en 27,5 y, con los 3,5 de medio grosor, el borde exterior cae justo en 24.
+
+  Todo queda dentro de la zona segura de los iconos adaptativos, que es lo que garantiza
+  que ningún móvil recorte nada al pasarlo a círculo o a cuadrado redondeado.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- El arco, como trazo de 7 de grosor. -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="butt"
+        android:fillColor="#00000000"
+        android:pathData="M28,79 L28,53.5 A26,26 0 0 1 80,53.5 L80,79" />
+
+    <!-- La base sobre la que apoya. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M26.5,77 L81.5,77 A3.5,3.5 0 0 1 81.5,84 L26.5,84 A3.5,3.5 0 0 1 26.5,77 Z" />
+
+    <!-- Los tres servicios: uno arriba y dos abajo, siguiendo cómo se estrecha el arco. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M51,40 L57,40 Q60,40 60,43 L60,49 Q60,52 57,52 L51,52 Q48,52 48,49 L48,43 Q48,40 51,40 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M43,56 L49,56 Q52,56 52,59 L52,65 Q52,68 49,68 L43,68 Q40,68 40,65 L40,59 Q40,56 43,56 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M59,56 L65,56 Q68,56 68,59 L68,65 Q68,68 65,68 L59,68 Q56,68 56,65 L56,59 Q56,56 59,56 Z" />
+</vector>

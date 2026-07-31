@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!--
+      Ubicación, solo para leer el nombre de la red WiFi.
+
+      Es lo que Android exige desde la versión 8.1 para decir a qué red estás conectado, y
+      no hay otra vía: no se pide la posición del usuario, no se lee ni una sola vez, y
+      nada de esto sale del dispositivo.
+
+      Hace falta porque el panel tiene dos juegos de direcciones, las de casa y las de la
+      VPN, y elegir mal es peligroso: comprobar solamente si «192.168.1.254 responde» da
+      que estás en casa también en casa de un amigo con un equipo en esa misma dirección,
+      y el panel acabaría entrando en su máquina y mandándole las contraseñas guardadas.
+      Se intentó primero deducir la red por su subred, su puerta de enlace y sus DNS, sin
+      ningún permiso; no sirve, porque «192.168.1.0/24 con el router en el .1 y el DNS de
+      Cloudflare» es la instalación por omisión de medio mundo.
+
+      El permiso se pide solo cuando el usuario va a registrar su red, y la aplicación
+      funciona sin concederlo.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!--
+      Para poder ofrecer la lista de aplicaciones instaladas cuando el usuario elige con
+      cuál se abre un servicio. Desde Android 11 una aplicación no ve a las demás si no lo
+      declara. Se pregunta solo por las que aparecen en el lanzador, que es la vía prevista
+      para esto; el permiso QUERY_ALL_PACKAGES no se usa a propósito porque Google lo
+      restringe a unos pocos casos y habría que justificarlo en cada revisión.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <!--
+      Sin copias de seguridad, en ninguna versión de Android: `allowBackup` lo apaga hasta
+      la 11 y `dataExtractionRules` de la 12 en adelante. El motivo está en ese fichero, y
+      es que las contraseñas están cifradas con una clave que no sale del móvil.
+
+      Lint pide aquí `fullBackupContent`. **No hace falta y no hay que ponerlo**: eso sirve
+      para decir *qué* se copia, y con `allowBackup="false"` no se copia nada.
+    -->
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.Panel">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:theme="@style/Theme.Panel">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Enlaces de descarga pulsados en cualquier aplicación -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ed2k" />
+                <data android:scheme="magnet" />
+            </intent-filter>
+
+            <!-- Compartir cualquier enlace desde otra aplicación. Es la vía universal:
+                 sirve cuando el enlace no es pulsable o el navegador se lo queda. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
