@@ -24,7 +24,7 @@ android {
     // Paquete del código. Es interno, no lo ve el usuario y no hace falta cambiarlo
     // cuando se decida el nombre comercial.
     namespace = "com.homelab.panel"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         // Identificador definitivo, fijado el 31/07/2026 antes de empezar a subir a Play.
@@ -40,7 +40,9 @@ android {
         applicationId = "io.github.ccastrodesign.atrio"
 
         minSdk = 26
-        targetSdk = 35
+        // Android 16. Play obliga a apuntar a la versión del año anterior como mucho: desde
+        // el 31/08/2026 no se aceptan actualizaciones que apunten a la 35 o anteriores.
+        targetSdk = 36
         // Sube en cada subida a Play, incluso a pruebas internas: Play rechaza repetir uno.
         versionCode = 2
         versionName = "1.0"
