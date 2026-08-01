@@ -134,6 +134,11 @@ object DefaultConfig {
      * Las dos webs que vienen puestas. Estas **no** son ejemplos: son enlaces que funcionan,
      * así que se comprueban y se abren como cualquier otro servicio.
      *
+     * **Se abren dentro de la aplicación, no en el navegador del móvil**, y por eso ninguna
+     * lleva `openExternal`. No es un descuido: son lo único del panel de estreno que enseña
+     * que aquí se puede navegar por webs igual que por los servicios propios, y en la
+     * misma pestaña que mantiene la sesión. Quien las abre fuera nunca llega a descubrirlo.
+     *
      * La del código fuente solo aparece cuando hay repositorio: un enlace de fábrica que
      * lleva a un 404 es peor que no tenerlo. Ver [Proyecto].
      */
@@ -145,8 +150,7 @@ object DefaultConfig {
                     name = context.getString(R.string.web_source_name),
                     subtitle = context.getString(R.string.web_source_subtitle),
                     urlOwn = Proyecto.CODIGO,
-                    category = "code",
-                    openExternal = true
+                    category = "code"
                 )
             )
         }
@@ -160,8 +164,7 @@ object DefaultConfig {
                 category = OwnIcons.value("llama"),
                 // Sin esto se vería el icono que sirve la web y no el dibujo elegido: el
                 // del servicio manda sobre los demás.
-                useFavicon = false,
-                openExternal = true
+                useFavicon = false
             )
         )
     }
