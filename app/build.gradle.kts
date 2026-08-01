@@ -126,6 +126,18 @@ android {
     }
 }
 
+// `io.opencensus` es una librería de telemetría que **no usa esta aplicación** y que **no
+// entra en el APK**: llega arrastrada por la plataforma de pruebas instrumentadas del
+// plugin de Android (`utp-common` → `com.google.testing.platform:launcher`), que se ejecuta
+// en el ordenador. Aquí ni siquiera se usa, porque no hay pruebas instrumentadas.
+//
+// Se excluye porque el analizador de F-Droid recorre **todas** las configuraciones de
+// Gradle, incluidas las internas de las herramientas, y la marca como rastreador. La
+// alternativa era discutir un falso positivo en cada revisión.
+configurations.configureEach {
+    exclude(group = "io.opencensus")
+}
+
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.09.02")
     implementation(composeBom)
