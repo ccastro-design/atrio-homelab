@@ -45,7 +45,10 @@ android {
         targetSdk = 36
         // Sube en cada subida a Play, incluso a pruebas internas: Play rechaza repetir uno.
         versionCode = 2
-        versionName = "1.0"
+        // El que ve la gente, y el que da nombre a la etiqueta de git y al release de
+        // GitHub. Sube cuando cambia algo que se nota: dos versiones distintas con el mismo
+        // nombre hacen imposible que un tester diga cuál está probando.
+        versionName = "1.1"
 
         // Solo los idiomas del producto: evita arrastrar las traducciones de las
         // librerías de AndroidX a todos los idiomas del mundo.
