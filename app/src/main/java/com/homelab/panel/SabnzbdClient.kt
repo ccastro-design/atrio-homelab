@@ -24,6 +24,16 @@ import java.net.URLEncoder
  *    forma de enterarse, ni falta, porque eso ya es asunto suyo.
  *  - Con la clave equivocada responde **texto pelado** («API Key Incorrect»), no un JSON.
  *    Hay que contar con las dos formas o el error acaba siendo «respuesta ininteligible».
+ *
+ * Y una cosa más, esta sacada de su documentación y no de una prueba propia:
+ *
+ *  - **El 403 es la comprobación del nombre de equipo**, no un problema de permisos ni de
+ *    clave. SABnzbd solo atiende peticiones cuyo «Host» esté en su `host_whitelist`, que es
+ *    su defensa contra el secuestro de DNS, y contesta «Access denied - Hostname
+ *    verification failed». Salta al llegar por un nombre en vez de por la dirección IP, que
+ *    es justo lo que hace esta aplicación cuando el servidor se define con nombre. Tiene
+ *    mensaje propio porque «ha respondido con el código 403» manda a mirar la clave API,
+ *    que no tiene nada que ver, y el ajuste está escondido en Config › Special.
  */
 object SabnzbdClient {
 
@@ -63,6 +73,10 @@ object SabnzbdClient {
             conexion.disconnect()
 
             when {
+                codigo == 403 -> SendResult.Failed(
+                    context.getString(R.string.send_host_not_allowed, targetName)
+                )
+
                 codigo !in 200..299 -> SendResult.Failed(
                     context.getString(R.string.send_http_error, targetName, codigo)
                 )
@@ -149,6 +163,10 @@ object SabnzbdClient {
             conexion.disconnect()
 
             when {
+                codigo == 403 -> SendResult.Failed(
+                    context.getString(R.string.send_host_not_allowed, targetName)
+                )
+
                 codigo !in 200..299 -> SendResult.Failed(
                     context.getString(R.string.send_http_error, targetName, codigo)
                 )

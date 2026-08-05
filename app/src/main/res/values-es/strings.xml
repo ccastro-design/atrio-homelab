@@ -330,6 +330,8 @@
     <string name="send_target_not_supported">El envío a «%1$s» todavía no está disponible.</string>
     <string name="send_not_whitelisted">«%1$s» no acepta órdenes desde este móvil. Añade tu
         red a su lista de direcciones permitidas (rpc-whitelist).</string>
+    <string name="send_host_not_allowed">«%1$s» rechaza esta dirección. Añádela a
+        host_whitelist.</string>
     <string name="send_duplicate">Ese enlace ya estaba en «%1$s».</string>
     <string name="send_not_accepted">«%1$s» no ha aceptado el enlace.</string>
     <string name="send_no_api_key">Pon la clave API de «%1$s» en Ajustes › Descargas.</string>

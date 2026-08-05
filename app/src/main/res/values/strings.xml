@@ -340,6 +340,8 @@
     <string name="send_target_not_supported">Sending to “%1$s” is not available yet.</string>
     <string name="send_not_whitelisted">“%1$s” does not take orders from this phone. Add
         your network to its allowed addresses (rpc-whitelist).</string>
+    <string name="send_host_not_allowed">“%1$s” rejects this address. Add it to
+        host_whitelist.</string>
     <string name="send_duplicate">That link was already in “%1$s”.</string>
     <string name="send_not_accepted">“%1$s” did not accept the link.</string>
     <string name="send_no_api_key">Set the API key for “%1$s” in Settings › Downloads.</string>
