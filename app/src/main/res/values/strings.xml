@@ -338,8 +338,8 @@
     <string name="send_unreachable">Could not reach “%1$s”. Check that you are on its
         network.\n\n%2$s</string>
     <string name="send_target_not_supported">Sending to “%1$s” is not available yet.</string>
-    <string name="send_not_whitelisted">“%1$s” does not take orders from this phone. Add
-        your network to its allowed addresses (rpc-whitelist).</string>
+    <string name="send_not_whitelisted">“%1$s” refuses this phone. Add your network to
+        rpc-whitelist.</string>
     <string name="send_host_not_allowed">“%1$s” rejects this address. Add it to
         host_whitelist.</string>
     <string name="send_duplicate">That link was already in “%1$s”.</string>
