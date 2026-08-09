@@ -478,9 +478,25 @@ fun buildUrl(scheme: String, host: String, port: Int, path: String): String {
     return "$esquema://${host.trim()}$puerto$ruta"
 }
 
+/**
+ * Endereza una dirección escrita a mano antes de usarla.
+ *
+ * Cambia las barras invertidas por normales. Parece una tontería y no lo es: escribir
+ * `http:\\equipo` en el teclado del móvil es fácil, y el resultado era que **la aplicación
+ * se contradecía a sí misma**. La pestaña abría la web sin quejarse, porque el WebView es
+ * Chromium y los navegadores enderezan esas barras en silencio desde siempre; pero
+ * `java.net.URI` considera la barra invertida un carácter ilegal y lanza excepción, así que
+ * la comprobación de estado se quedaba sin equipo al que llamar y marcaba el servicio como
+ * caído. El usuario veía su web cargando perfectamente con el cartel de «Sin conexión».
+ *
+ * Se aplica **al guardar y también al leer**, para que las direcciones ya guardadas con el
+ * fallo se curen solas sin tener que migrar nada.
+ */
+fun enderezarUrl(url: String): String = url.trim().replace('\\', '/')
+
 /** Equipo de una dirección, para avisos y para agrupar excepciones de certificado. */
 fun hostOf(url: String): String = runCatching {
-    java.net.URI(url).host.orEmpty()
+    java.net.URI(enderezarUrl(url)).host.orEmpty()
 }.getOrDefault("")
 
 /** True si la dirección viaja sin cifrar. */

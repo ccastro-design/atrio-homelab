@@ -606,10 +606,15 @@ private fun servidorPara(config: PanelConfig, local: String, fuera: String): Ser
 /** Guarda la dirección, vinculada a una máquina o completa. */
 private fun conDireccion(
     service: Service,
-    local: String,
-    fuera: String,
+    localEscrito: String,
+    fueraEscrito: String,
     servidor: Server?
 ): Service {
+    // Se enderezan aquí, en la puerta de entrada, para que lo que se guarde ya esté bien y
+    // no haya que ir arreglándolo en cada sitio que lea la dirección.
+    val local = enderezarUrl(localEscrito)
+    val fuera = enderezarUrl(fueraEscrito)
+
     if (servidor == null) {
         return service.copy(serverId = "", urlOwn = local, urlOwnAway = fuera)
     }

@@ -47,7 +47,9 @@ object Reachability {
 
     /** Equipo y puerto de una dirección, resolviendo el puerto implícito del esquema. */
     private fun parse(url: String): Pair<String, Int>? = runCatching {
-        val uri = URI(url.trim())
+        // `enderezarUrl` también aquí, y no solo al guardar: así una configuración que ya
+        // tuviera barras invertidas deja de dar «Sin conexión» sin migrar nada.
+        val uri = URI(enderezarUrl(url))
         val host = uri.host ?: return@runCatching null
         if (host.isBlank()) return@runCatching null
 
