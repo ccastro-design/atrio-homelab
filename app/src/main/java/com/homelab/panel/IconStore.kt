@@ -55,6 +55,8 @@ object IconStore {
      */
     private const val MAX_IMAGEN = 4 * 1024 * 1024
     private const val TIMEOUT = 4_000
+    /** Saltos que se siguen a mano en las redirecciones 307 y 308. Ver [abrirSiguiendo]. */
+    private const val MAX_REDIRECCIONES = 5
     private const val CADUCIDAD_MS = 30L * 24 * 60 * 60 * 1000
 
     /**
@@ -402,7 +404,7 @@ object IconStore {
         // La definitiva tras las redirecciones, que es contra la que hay que resolver.
         var base = origen
 
-        val html = abrir(origen, auth)?.use { conexion ->
+        val html = abrirSiguiendo(origen, auth)?.use { conexion ->
             val texto = conexion.inputStream.use { entrada ->
                 // En bucle: una sola lectura devuelve solo lo que haya llegado ya, y la
                 // etiqueta del icono se perdía. Se corta al cerrar la cabecera.
@@ -456,7 +458,7 @@ object IconStore {
     }.getOrNull()
 
     private fun descargarBitmap(url: String, auth: String? = null): Bitmap? = runCatching {
-        abrir(url, auth)?.use { conexion ->
+        abrirSiguiendo(url, auth)?.use { conexion ->
             if (conexion.responseCode !in 200..299) return null
 
             // Muchos paneles sirven su página para cualquier ruta en vez de devolver 404,
@@ -500,6 +502,39 @@ object IconStore {
             auth?.let { setRequestProperty("Authorization", it) }
         }
     }.getOrNull()
+
+    /**
+     * Como [abrir], pero siguiendo también los **307 y 308**.
+     *
+     * `instanceFollowRedirects` promete seguir redirecciones y solo cumple con las de toda
+     * la vida —301, 302 y 303—. Los 307 y 308 los deja pasar tal cual, porque obligan a
+     * repetir el método original y Java prefiere no decidir por su cuenta. Aquí sí se puede
+     * decidir: solo se piden iconos y páginas, siempre por GET.
+     *
+     * **No es un caso raro.** Pi-hole responde 308 al redirigir `/admin` a `/admin/`, y con
+     * eso su icono era inalcanzable: [descargarBitmap] veía un código fuera de 200..299,
+     * devolvía null, el servicio quedaba marcado como «sin icono» durante
+     * [CADUCIDAD_SIN_ICONO_MS], y al caducar la marca se repetía el mismo choque. Un bucle
+     * que no se rompía solo nunca. Detrás del 308 esperaba un `apple-touch-icon` de 180x180.
+     */
+    private fun abrirSiguiendo(url: String, auth: String? = null): HttpURLConnection? {
+        var actual = url
+
+        repeat(MAX_REDIRECCIONES) {
+            val conexion = abrir(actual, auth) ?: return null
+            val codigo = runCatching { conexion.responseCode }.getOrNull() ?: return null
+
+            if (codigo != 307 && codigo != 308) return conexion
+
+            val destino = conexion.getHeaderField("Location")
+            conexion.disconnect()
+            // El `Location` puede venir relativo, así que se resuelve contra la que se pidió.
+            actual = destino?.takeIf { it.isNotBlank() }
+                ?.let { resolverIcono(actual, it) } ?: return null
+        }
+
+        return null
+    }
 
     /**
      * Cabecera `Authorization` de un servicio, o null si no tiene contraseña guardada.
