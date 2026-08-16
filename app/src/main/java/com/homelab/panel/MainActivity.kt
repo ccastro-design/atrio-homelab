@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -648,7 +649,17 @@ private fun Contenido(
         return
     }
 
-    when (pantalla) {
+    // Las pantallas entran creciendo desde el centro y la anterior se va hacia el fondo.
+    // El movimiento está definido una sola vez, en `Ui.kt`, para que este cambio y el de
+    // las páginas de Ajustes se sientan igual.
+    val (entrada, salida) = duracionesDeTransicion()
+
+    AnimatedContent(
+        targetState = pantalla,
+        label = "pantalla",
+        transitionSpec = { transicionDePantalla(entrada, salida) }
+    ) { destino ->
+    when (destino) {
         Screen.SETTINGS -> SettingsScreen(
             config = config,
             onConfigChange = { guardar(it) },
@@ -764,6 +775,7 @@ private fun Contenido(
             onScanNetwork = { pantalla = Screen.SCAN },
             onRemoveExamples = { guardar(DefaultConfig.withoutExamples(config)) }
         )
+    }
     }
 
     if (enviandoEnlace) {

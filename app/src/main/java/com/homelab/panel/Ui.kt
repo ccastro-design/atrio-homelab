@@ -1,5 +1,13 @@
 package com.homelab.panel
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -289,4 +297,51 @@ fun TextPromptDialog(
             TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
         }
     )
+}
+
+/**
+ * El movimiento con el que se cambia de pantalla en toda la aplicación: **lo nuevo crece
+ * desde el centro y lo anterior se aleja al irse**.
+ *
+ * Está aquí, en un solo sitio, porque hay dos navegaciones distintas —la de las pantallas
+ * grandes, en `MainActivity`, y la de las páginas de Ajustes— y si cada una define su propia
+ * animación acaban descuadradas: se nota que entrar en Ajustes se siente distinto a entrar
+ * en Apariencia, aunque no se sepa decir por qué.
+ *
+ * Dura poco a propósito. Una transición sirve para contar de dónde sale lo que estás
+ * mirando; pasado un cuarto de segundo ya no cuenta nada y solo hace esperar.
+ */
+internal fun transicionDePantalla(entrada: Int, salida: Int): ContentTransform =
+    (
+        scaleIn(initialScale = 0.92f, animationSpec = tween(entrada)) +
+            fadeIn(animationSpec = tween(entrada))
+        ).togetherWith(
+        scaleOut(targetScale = 1.04f, animationSpec = tween(salida)) +
+            fadeOut(animationSpec = tween(salida))
+    )
+
+/**
+ * Cuánto duran la entrada y la salida, **o cero si el móvil tiene las animaciones apagadas**.
+ *
+ * Android deja apagarlas en las opciones del sistema, y quien lo hace suele tener un motivo:
+ * el movimiento en pantalla marea a bastante gente, y en un móvil viejo cada animación se
+ * nota. Una aplicación que anima igualmente está pasando por encima de esa decisión.
+ *
+ * Si el ajuste no se puede leer se dan por activadas, que es lo normal.
+ */
+@Composable
+internal fun duracionesDeTransicion(): Pair<Int, Int> {
+    val contexto = LocalContext.current
+    val animar = remember(contexto) {
+        runCatching {
+            android.provider.Settings.Global.getFloat(
+                contexto.contentResolver,
+                android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+                1f
+            ) != 0f
+        }.getOrDefault(true)
+    }
+    // La entrada dura más que la salida a propósito: lo que llega merece verse, lo que se va
+    // ya no interesa y quedarse mirándolo solo hace esperar.
+    return if (animar) 300 to 220 else 0 to 0
 }

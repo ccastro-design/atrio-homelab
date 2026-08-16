@@ -1,6 +1,7 @@
 package com.homelab.panel
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -196,35 +197,52 @@ fun SettingsScreen(
         )
 
         Box(Modifier.weight(1f)) {
-            // La lista de servicios trae su propio desplazamiento, porque es una lista
-            // perezosa: meterla dentro de otra que se desplaza revienta la medida.
-            if (pagina == SettingsPage.SERVICES) {
-                ServicesPage(
-                    config = config,
-                    onConfigChange = onConfigChange,
-                    onEdit = { servicio, grupoId -> servicioEnEdicion = servicio to grupoId },
-                    onAddIn = { grupoId -> servicioEnEdicion = Service() to grupoId }
-                )
-            } else {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    when (pagina) {
-                        SettingsPage.MENU -> Menu(
-                            onNavigate = { pagina = it },
-                            onOpenDownloads = onOpenDownloads,
-                            onShowTutorial = onShowTutorial
-                        )
+            // El mismo movimiento que al cambiar de pantalla grande: entrar en Apariencia
+            // tiene que sentirse igual que entrar en Ajustes.
+            //
+            // La animación envuelve **las dos ramas**, no solo la de abajo. Servicios y
+            // grupos se dibuja aparte porque su lista es perezosa y no puede ir dentro de
+            // una que se desplaza; dejándola fuera del `AnimatedContent` era la única
+            // página de Ajustes que seguía apareciendo de golpe.
+            val (entrada, salida) = duracionesDeTransicion()
 
-                        SettingsPage.SERVERS -> PaginaDeServidores(
-                            config = config,
-                            onEdit = { servidorEnEdicion = it }
-                        )
+            AnimatedContent(
+                targetState = pagina,
+                label = "pagina",
+                transitionSpec = { transicionDePantalla(entrada, salida) }
+            ) { destino ->
+                // La lista de servicios trae su propio desplazamiento, porque es una lista
+                // perezosa: meterla dentro de otra que se desplaza revienta la medida.
+                if (destino == SettingsPage.SERVICES) {
+                    ServicesPage(
+                        config = config,
+                        onConfigChange = onConfigChange,
+                        onEdit = { servicio, grupoId -> servicioEnEdicion = servicio to grupoId },
+                        onAddIn = { grupoId -> servicioEnEdicion = Service() to grupoId }
+                    )
+                } else {
+                    // El desplazamiento va **dentro** de cada página y no fuera, o al animar
+                    // se arrastraría la posición del scroll de la página anterior.
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                        when (destino) {
+                            SettingsPage.MENU -> Menu(
+                                onNavigate = { pagina = it },
+                                onOpenDownloads = onOpenDownloads,
+                                onShowTutorial = onShowTutorial
+                            )
 
-                        SettingsPage.APPEARANCE -> PaginaDeApariencia(config, onConfigChange)
-                        SettingsPage.SECURITY -> PaginaDeSeguridad(config, onConfigChange)
-                        SettingsPage.BACKUP -> PaginaDeCopia(config, onConfigChange)
-                        SettingsPage.SUPPORT -> PaginaDeApoyo()
-                        SettingsPage.ABOUT -> PaginaAcercaDe()
-                        SettingsPage.SERVICES -> Unit
+                            SettingsPage.SERVERS -> PaginaDeServidores(
+                                config = config,
+                                onEdit = { servidorEnEdicion = it }
+                            )
+
+                            SettingsPage.APPEARANCE -> PaginaDeApariencia(config, onConfigChange)
+                            SettingsPage.SECURITY -> PaginaDeSeguridad(config, onConfigChange)
+                            SettingsPage.BACKUP -> PaginaDeCopia(config, onConfigChange)
+                            SettingsPage.SUPPORT -> PaginaDeApoyo()
+                            SettingsPage.ABOUT -> PaginaAcercaDe()
+                            SettingsPage.SERVICES -> Unit
+                        }
                     }
                 }
             }
