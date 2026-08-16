@@ -370,24 +370,42 @@ object IconStore {
             "${base.scheme}://${base.host}$puerto"
         }.getOrNull() ?: return null
 
+        // La dirección completa del servicio, **con su ruta**. Ver [buscar].
+        val pagina = enderezarUrl(url).trimEnd('/').ifBlank { origen }
+
         // Sin credenciales, que es lo que funciona en la mayoría.
-        buscar(origen, null)?.let { return it }
+        buscar(pagina, origen, null)?.let { return it }
 
         // Y con ellas, para los que no sueltan nada sin identificarse.
-        return if (auth == null) null else buscar(origen, auth)
+        return if (auth == null) null else buscar(pagina, origen, auth)
     }
 
     /** Un intento completo de encontrar el icono, con o sin credenciales. */
-    private fun buscar(origen: String, auth: String?): Bitmap? {
+    private fun buscar(pagina: String, origen: String, auth: String?): Bitmap? {
         val candidatos = buildList {
-            declaradoEnHtml(origen, auth)?.let { add(it) }
+            // **Primero la página del servicio, con su ruta.** Es donde mira un navegador, y
+            // es lo que faltaba: se preguntaba solo por la raíz del servidor, así que un
+            // servicio que vive en una subruta se quedaba sin icono para siempre. Pi-hole es
+            // el caso claro —está en `/admin` y su raíz responde **403**—, pero le pasa a
+            // cualquiera que cuelgue sus servicios de un proxy inverso por rutas.
+            declaradoEnHtml(pagina, auth)?.let { add(it) }
+
+            // Y después la raíz, que es donde lo declaran los que sirven desde `/`.
+            if (pagina != origen) declaradoEnHtml(origen, auth)?.let { add(it) }
+
+            // Las rutas de siempre, por si no lo declara nadie. También junto a la página:
+            // un servicio en `/admin` puede tener el suyo en `/admin/favicon.ico`.
+            if (pagina != origen) {
+                add("$pagina/apple-touch-icon.png")
+                add("$pagina/favicon.ico")
+            }
             add("$origen/apple-touch-icon.png")
             add("$origen/apple-touch-icon-precomposed.png")
             add("$origen/favicon.png")
             add("$origen/favicon.ico")
         }
 
-        return candidatos.firstNotNullOfOrNull { candidato ->
+        return candidatos.distinct().firstNotNullOfOrNull { candidato ->
             descargarBitmap(candidato, auth)?.takeIf { it.width >= 16 && it.height >= 16 }
         }
     }
