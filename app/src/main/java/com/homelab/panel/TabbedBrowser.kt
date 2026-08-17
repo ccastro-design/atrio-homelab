@@ -151,9 +151,23 @@ fun TabbedBrowser(
         }
     }
 
-    // El tiempo límite se rearma en cada carga, no solo en la primera: si no, una
-    // recarga colgada dejaba la pantalla en negro indefinidamente.
-    LaunchedEffect(activa.key, activa.loadId) {
+    // El tiempo límite cuenta desde que **empieza cada carga**, incluidas las que lanza el
+    // usuario pulsando enlaces dentro de la página.
+    //
+    // Antes se rearmaba solo con `loadId`, que únicamente cambia cuando la carga la dispara
+    // la aplicación. El resultado era que abrías un servicio, cargaba en dos segundos,
+    // seguías navegando tranquilamente, y a los doce segundos del principio despertaba el
+    // temporizador, veía que en ese instante había algo cargando y **te cortaba la
+    // navegación** con un «no ha respondido». Se notaba sobre todo por WiFi, porque se
+    // navega más rápido y es más fácil estar cargando justo en ese momento.
+    //
+    // Añadir `loading` a las claves hace que cada carga tenga sus doce segundos enteros. Y
+    // si una página va moviendo el progreso, el plazo se renueva y no salta nunca: correcto,
+    // porque lo que este aviso debe cazar es un servicio **colgado**, y algo que responde no
+    // lo está.
+    LaunchedEffect(activa.key, activa.loadId, activa.loading) {
+        if (!activa.loading) return@LaunchedEffect
+
         delay(ESPERA_MAXIMA_MS)
         if (activa.loading && activa.error == null) {
             // Hay que llamar a stopLoading, no basta con dar el error por mostrado: un
