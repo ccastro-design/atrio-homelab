@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Atrio Homelab</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    max-width: 46rem; margin: 0 auto; padding: 2rem 1.2rem 4rem;
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin-top: 2.5rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; display: block; overflow-x: auto; }
+  th, td { border: 1px solid #8884; padding: .5rem .6rem; text-align: left; vertical-align: top; }
+  code { font-size: .9em; background: #8882; padding: .1rem .3rem; border-radius: .2rem; }
+  hr { margin: 3rem 0; border: 0; border-top: 1px solid #8884; }
+  .fecha { opacity: .75; }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — Atrio Homelab</h1>
+<p class="fecha"><strong>Last updated: 31 July 2026</strong></p>
+<p>This policy applies to the Android application <strong>Atrio Homelab</strong> ("the app"),
+published by <strong>C. Castro</strong> ("the developer").</p>
+<p><em><a href="#es">Versión en español más abajo</a>.</em></p>
+
+<h2>In short</h2>
+<p><strong>The app collects no data whatsoever.</strong> There are no accounts, no analytics,
+no advertising, no tracking, no crash reporting and no servers belonging to the developer.
+Nothing you enter into the app is ever sent anywhere except to the servers on your own
+network whose addresses you typed in yourself.</p>
+
+<h2>What the app stores, and where</h2>
+<p>Everything the app saves stays <strong>on your device</strong>, in the app's private
+storage. It is never uploaded anywhere.</p>
+<table>
+<tr><th>What</th><th>Where</th></tr>
+<tr><td>Your panel: services, groups, servers, addresses, appearance settings</td><td>A file in the app's private storage</td></tr>
+<tr><td>Passwords and credentials for your services</td><td>Encrypted storage (AES-256, key held in the device's hardware-backed keystore)</td></tr>
+<tr><td>Icons and background images you choose or that the app fetches from your own services</td><td>The app's private storage</td></tr>
+<tr><td>Web sessions and cookies from services you open inside the app</td><td>The app's own WebView storage</td></tr>
+<tr><td>The names of the Wi-Fi networks you register as "home"</td><td>Together with the rest of your settings</td></tr>
+</table>
+<p>Uninstalling the app removes all of it. Android backups are switched off for this app on
+purpose (<code>allowBackup="false"</code>), so none of this is copied to Google's servers.</p>
+
+<h2>Network connections</h2>
+<p>The app connects <strong>only to the addresses you enter yourself</strong>: your own
+services, your NAS, your download clients. It does this to:</p>
+<ul>
+<li>check whether a service is online,</li>
+<li>fetch a service's own icon (favicon), from that service,</li>
+<li>send links to your download clients (aMule, qBittorrent, Transmission, SABnzbd),</li>
+<li>display a service inside the app's browser tabs.</li>
+</ul>
+<p><strong>The app contacts no third-party service of any kind</strong> — no icon service, no
+directory, no update check, no telemetry endpoint.</p>
+<p>Two exceptions, both requiring you to tap them first: the "Source code" and "Support the
+project" entries open GitHub and Ko-fi <strong>in your own browser</strong>. Once you leave
+the app, those sites' privacy policies apply, not this one.</p>
+
+<h2>Content from your own services</h2>
+<p>When you open one of your services inside the app, the app renders that service's web
+interface. Whatever that page loads is under the control of that service, not of this app.
+If your own service pulls in fonts, scripts or images from the internet, those requests
+happen — exactly as they would in any browser.</p>
+
+<h2>Permissions, and why each one is needed</h2>
+<ul>
+<li><strong>Internet / network state</strong> — to reach your services and to know whether
+you are connected.</li>
+<li><strong>Wi-Fi state and location (<code>ACCESS_FINE_LOCATION</code>,
+<code>ACCESS_COARSE_LOCATION</code>)</strong> — used <strong>only to read the name (SSID) of
+the Wi-Fi network you are connected to</strong>. Since Android 8.1 that name is only readable
+by apps holding a location permission; there is no other way to obtain it.
+<p><strong>Your geographic position is never requested, never read and never stored.</strong>
+The app has no use for it and does not ask the system for it.</p>
+<p>The network name matters for your safety. The app keeps two sets of addresses — one for
+home, one for your VPN — and choosing the wrong one is dangerous: deciding "I am at home"
+merely because some device answers at <code>192.168.1.254</code> would also be true at a
+friend's house with a machine on that same address, and the app would then send <strong>your
+saved passwords</strong> to their machine. The network name is the reliable signal.</p>
+<p>The permission is requested only when you choose to register your network, and <strong>the
+app works fully without granting it</strong>. The app never learns a network on its own — you
+add every one of them yourself.</p></li>
+<li><strong>Biometrics</strong> — optional, and off by default. If you turn it on, the app
+asks Android to confirm it is you. Your fingerprint or face never reaches the app; Android
+answers only yes or no.</li>
+<li><strong>Installed applications (<code>queries</code>)</strong> — so the app can offer you
+the list of apps in your launcher when you choose which one opens a given service. The list
+is read on your device and never leaves it. The broad <code>QUERY_ALL_PACKAGES</code>
+permission is deliberately not used.</li>
+</ul>
+
+<h2>Backups you export yourself</h2>
+<p>The app can export your configuration to a file you choose. <strong>Exported files never
+contain your passwords.</strong> Once a file is on your device or in your cloud, it is under
+your control and this policy no longer governs it.</p>
+
+<h2>Children</h2>
+<p>The app is not directed at children and collects no data from anyone, of any age.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes, the new version will be published at this same address with a new
+date at the top.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy: <strong>atrio.homelab.app@proton.me</strong></p>
+
+<hr>
+
+<h1 id="es">Política de privacidad — Atrio Homelab</h1>
+<p class="fecha"><strong>Última actualización: 31 de julio de 2026</strong></p>
+<p>Esta política se aplica a la aplicación Android <strong>Atrio Homelab</strong> («la
+aplicación»), publicada por <strong>C. Castro</strong> («el desarrollador»).</p>
+
+<h2>En resumen</h2>
+<p><strong>La aplicación no recoge ningún dato.</strong> No hay cuentas, ni analítica, ni
+publicidad, ni seguimiento, ni informes de errores, ni servidores del desarrollador. Nada de
+lo que escribas en la aplicación sale a ninguna parte, salvo a los servidores de tu propia
+red cuyas direcciones has escrito tú.</p>
+
+<h2>Qué guarda la aplicación, y dónde</h2>
+<p>Todo lo que la aplicación guarda se queda <strong>en tu dispositivo</strong>, en su
+almacenamiento privado. Nunca se sube a ningún sitio.</p>
+<table>
+<tr><th>Qué</th><th>Dónde</th></tr>
+<tr><td>Tu panel: servicios, grupos, servidores, direcciones y ajustes de apariencia</td><td>Un fichero en el almacenamiento privado de la aplicación</td></tr>
+<tr><td>Las contraseñas y credenciales de tus servicios</td><td>Almacenamiento cifrado (AES-256, con la clave guardada en el almacén de claves del propio dispositivo)</td></tr>
+<tr><td>Los iconos e imágenes de fondo que elijas, y los que la aplicación pide a tus propios servicios</td><td>El almacenamiento privado de la aplicación</td></tr>
+<tr><td>Las sesiones y cookies de los servicios que abras dentro de la aplicación</td><td>El almacenamiento del navegador interno</td></tr>
+<tr><td>Los nombres de las redes WiFi que registres como «casa»</td><td>Junto al resto de tus ajustes</td></tr>
+</table>
+<p>Al desinstalar la aplicación se borra todo. Las copias de seguridad de Android están
+desactivadas a propósito (<code>allowBackup="false"</code>), así que nada de esto se copia a
+los servidores de Google.</p>
+
+<h2>Conexiones de red</h2>
+<p>La aplicación se conecta <strong>solo a las direcciones que escribes tú</strong>: tus
+servicios, tu NAS, tus clientes de descarga. Lo hace para:</p>
+<ul>
+<li>comprobar si un servicio está en línea,</li>
+<li>pedir el icono (favicon) de un servicio, a ese mismo servicio,</li>
+<li>enviar enlaces a tus clientes de descarga (aMule, qBittorrent, Transmission, SABnzbd),</li>
+<li>mostrar un servicio dentro de las pestañas de la aplicación.</li>
+</ul>
+<p><strong>La aplicación no contacta con ningún servicio de terceros</strong>: ni servicios de
+iconos, ni directorios, ni comprobaciones de actualización, ni telemetría.</p>
+<p>Dos excepciones, y las dos hay que pulsarlas: las entradas «Código fuente» y «Apoyar el
+proyecto» abren GitHub y Ko-fi <strong>en tu propio navegador</strong>. En cuanto sales de la
+aplicación, se aplican las políticas de privacidad de esos sitios, no esta.</p>
+
+<h2>Contenido de tus propios servicios</h2>
+<p>Cuando abres uno de tus servicios dentro de la aplicación, lo que se dibuja es la interfaz
+web de ese servicio. Lo que esa página cargue depende de ese servicio, no de esta aplicación.
+Si tu propio servicio trae tipografías, scripts o imágenes de internet, esas peticiones se
+producen, exactamente igual que en cualquier navegador.</p>
+
+<h2>Permisos, y para qué hace falta cada uno</h2>
+<ul>
+<li><strong>Internet y estado de la red</strong>: para llegar a tus servicios y saber si hay
+conexión.</li>
+<li><strong>Estado de la WiFi y ubicación (<code>ACCESS_FINE_LOCATION</code>,
+<code>ACCESS_COARSE_LOCATION</code>)</strong>: se usan <strong>únicamente para leer el nombre
+(SSID) de la red WiFi a la que estás conectado</strong>. Desde Android 8.1 ese nombre solo lo
+puede leer una aplicación que tenga permiso de ubicación, y no hay otra vía.
+<p><strong>Tu posición geográfica no se pide, no se lee y no se guarda nunca.</strong> La
+aplicación no la necesita para nada y no se la pregunta al sistema.</p>
+<p>El nombre de la red importa por tu seguridad. La aplicación guarda dos juegos de
+direcciones —las de casa y las de la VPN— y elegir mal es peligroso: dar por hecho que «estoy
+en casa» solo porque algo responde en <code>192.168.1.254</code> también sería cierto en casa
+de un amigo con un equipo en esa misma dirección, y entonces la aplicación le mandaría a su
+máquina <strong>tus contraseñas guardadas</strong>. El nombre de la red es la señal fiable.</p>
+<p>El permiso se pide solo cuando decides registrar tu red, y <strong>la aplicación funciona
+entera sin concederlo</strong>. La aplicación nunca aprende una red por su cuenta: las añades
+tú.</p></li>
+<li><strong>Biometría</strong>: opcional y desactivada de fábrica. Si la activas, la
+aplicación le pide a Android que confirme que eres tú. Tu huella o tu cara no llegan nunca a
+la aplicación; Android responde solo sí o no.</li>
+<li><strong>Aplicaciones instaladas (<code>queries</code>)</strong>: para poder ofrecerte la
+lista de aplicaciones de tu escritorio cuando eliges con cuál se abre un servicio. Esa lista
+se consulta en tu dispositivo y no sale de él. El permiso amplio
+<code>QUERY_ALL_PACKAGES</code> no se usa a propósito.</li>
+</ul>
+
+<h2>Las copias que exportas tú</h2>
+<p>La aplicación puede exportar tu configuración a un fichero que eliges tú. <strong>Los
+ficheros exportados no contienen tus contraseñas.</strong> Una vez que el fichero está en tu
+dispositivo o en tu nube, queda bajo tu control y esta política ya no lo cubre.</p>
+
+<h2>Menores</h2>
+<p>La aplicación no está dirigida a menores y no recoge datos de nadie, tenga la edad que
+tenga.</p>
+
+<h2>Cambios</h2>
+<p>Si esta política cambia, la nueva versión se publicará en esta misma dirección con una
+fecha nueva arriba.</p>
+
+<h2>Contacto</h2>
+<p>Dudas sobre esta política: <strong>atrio.homelab.app@proton.me</strong></p>
+
+</body>
+</html>
