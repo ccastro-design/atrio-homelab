@@ -44,14 +44,14 @@ android {
         // el 31/08/2026 no se aceptan actualizaciones que apunten a la 35 o anteriores.
         targetSdk = 36
         // Sube en cada subida a Play, incluso a pruebas internas: Play rechaza repetir uno.
-        versionCode = 6
+        versionCode = 7
         // El que ve la gente, y el que da nombre a la etiqueta de git y al release de
         // GitHub. Sube cuando cambia algo que se nota: dos versiones distintas con el mismo
         // nombre hacen imposible que un tester diga cuál está probando.
         //
         // Dos números y de uno en uno: 1.1, 1.2, 1.3… Nada de «1.15», que se lee como
         // posterior a «1.2». El 2.0 se guarda para un cambio de verdad grande.
-        versionName = "1.5"
+        versionName = "1.6"
 
         // Solo los idiomas del producto: evita arrastrar las traducciones de las
         // librerías de AndroidX a todos los idiomas del mundo.
