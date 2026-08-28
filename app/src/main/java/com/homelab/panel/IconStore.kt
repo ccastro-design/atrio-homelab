@@ -43,15 +43,13 @@ object IconStore {
      * cómodo, que en una pantalla densa son más de 160 píxeles— a 96 se veía blanda.
      */
     private const val TAMANO = 192
-    /** Por debajo de esto un icono ya guardado se considera de la época de los 96 px. */
-    private const val TAMANO_MINIMO = 128
     /** Lado mayor de la imagen de fondo. De sobra para cualquier pantalla de móvil. */
     private const val TAMANO_FONDO = 1440
     private const val MAX_HTML = 64 * 1024
     /**
      * Tope de descarga de una imagen. Generoso a propósito: el logotipo que tenía el
      * autor en su Homer pesaba 684 kB y con un límite de 512 kB se descartaba sin decir
-     * nada. Como después se escala a 96 px, el peso original da igual.
+     * nada. Como después se escala a [TAMANO], el peso original da igual.
      */
     private const val MAX_IMAGEN = 4 * 1024 * 1024
     private const val TIMEOUT = 4_000
@@ -154,6 +152,29 @@ object IconStore {
             it.id != service.id && it.iconFile == service.iconFile
         }
         if (!laUsaOtro) deleteUserIcon(context, service.iconFile)
+    }
+
+    /**
+     * Olvida la marca de «este servicio no da icono», para que se vuelva a preguntar.
+     *
+     * **Solo borra el fichero si está vacío**, es decir, si es la marca. Un icono bueno no
+     * se toca nunca desde aquí.
+     *
+     * Hace falta porque esa marca dura [CADUCIDAD_SIN_ICONO_MS] y **no la invalidaba nada**:
+     * ni poner la contraseña que faltaba, ni activar el autocompletado. Las credenciales
+     * viven en [SecureStore], fuera del modelo, así que no entran en la cadena de origen
+     * que sirve para caducar lo guardado. El resultado era el peor posible: un servicio que
+     * exige autenticación —Transmission responde 401 hasta al favicon— se marcaba como «sin
+     * icono» por no tener credenciales, y después el usuario las ponía y la aplicación
+     * seguía sin intentarlo, porque ni llegaba a mirar si ahora había con qué. Tres días
+     * enseñando la inicial, y cada intento fallido reiniciaba el reloj.
+     *
+     * Se llama al guardar la ficha del servicio: es el momento en que pueden haber
+     * aparecido —o desaparecido— las credenciales.
+     */
+    fun olvidarMarcaSinIcono(context: Context, serviceId: String) {
+        val fichero = ficheroDeFavicon(context, serviceId)
+        if (fichero.exists() && fichero.length() == 0L) runCatching { fichero.delete() }
     }
 
     /**
@@ -316,9 +337,13 @@ object IconStore {
             runCatching { destino.delete() }
         }
 
-        // Ya descargado y reciente: no se vuelve a molestar al servidor. Salvo que sea uno
-        // de los pequeños que se guardaron antes, que se vuelve a pedir para que la
-        // tarjeta no lo enseñe ampliado y borroso.
+        // Ya descargado y reciente: no se vuelve a molestar al servidor.
+        //
+        // Aquí se exigía además que el guardado midiera 128 px, para re-pedir los de la
+        // época en que se guardaban a 96. Se quitó: [escalar] nunca amplía, así que un
+        // favicon legítimo de 32 px **no podía cumplir la condición jamás** y cada pasada
+        // por aquí era otra descarga con su riesgo de fallo. Un icono pequeño se ve peor;
+        // uno re-pedido sin fin acaba, tarde o temprano, en la marca de abajo.
         //
         // Un fichero vacío recuerda que este servicio no tiene icono, para no reintentarlo
         // en cada arranque. Esa marca vale mucho menos tiempo que un icono bueno: ver
@@ -328,7 +353,7 @@ object IconStore {
 
         if (destino.exists() && (
                 (vacio && edad < CADUCIDAD_SIN_ICONO_MS) ||
-                    (!vacio && edad < CADUCIDAD_MS && ladoMayor(destino) >= TAMANO_MINIMO)
+                    (!vacio && edad < CADUCIDAD_MS)
                 )
         ) {
             return@withContext destino.takeIf { it.length() > 0 }
@@ -341,14 +366,38 @@ object IconStore {
         if (origen != null) anotarOrigen(context, serviceId, origen)
 
         if (bitmap == null) {
+            // **Un fallo de descarga no destruye lo último bueno.** Aquí se escribía la
+            // marca de «sin icono» incondicionalmente, y eso era el icono de Transmission
+            // desapareciendo cada pocos días: ese servidor responde 401 a todo sin
+            // credenciales, así que su icono depende de una única vía, y al primer
+            // tropiezo transitorio —el NAS ocupado, la red a medio levantar— la marca
+            // pisaba el icono que ya había y la inicial se quedaba tres días
+            // ([CADUCIDAD_SIN_ICONO_MS], y el patrón del usuario era exactamente ese: se
+            // iba y volvía solo a los tres días justos). La marca solo tiene sentido
+            // cuando no había nada que enseñar.
+            if (destino.length() > 0L) return@withContext destino
             runCatching { destino.writeBytes(ByteArray(0)) }
             return@withContext null
         }
 
+        // Se escribe a un fichero aparte y se renombra encima al terminar.
+        //
+        // Escribir directamente sobre el destino lo deja **vacío mientras dura la
+        // escritura**, y un fichero de cero bytes es justo lo que aquí significa «este
+        // servicio no da icono»: [olvidarMarcaSinIcono] lo borraría, y otro que estuviera
+        // mirando en ese instante lo tomaría por la marca. Son milisegundos, pero el panel
+        // pinta el mismo servicio en varios sitios a la vez. Además, una escritura que
+        // falle a medias no deja medio icono: deja una mentira que dura días.
+        //
+        // El renombrado es instantáneo y ocurre entero o no ocurre, así que el icono
+        // aparece completo o no aparece. El nombre lleva el instante para que dos
+        // descargas del mismo servicio a la vez no se pisen el fichero intermedio.
+        val temporal = File(carpetaFavicons(context), "${destino.name}.${System.nanoTime()}.tmp")
         runCatching {
-            destino.outputStream().use { escalar(bitmap).compress(Bitmap.CompressFormat.PNG, 100, it) }
+            temporal.outputStream().use { escalar(bitmap).compress(Bitmap.CompressFormat.PNG, 100, it) }
+            if (!temporal.renameTo(destino)) throw java.io.IOException("no se pudo renombrar el icono")
             destino
-        }.getOrNull()
+        }.onFailure { runCatching { temporal.delete() } }.getOrNull()
     }
 
     /**
@@ -573,13 +622,6 @@ object IconStore {
             android.util.Base64.NO_WRAP
         )
     }
-
-    /** Lado mayor de una imagen guardada, sin llegar a cargarla en memoria. */
-    private fun ladoMayor(fichero: File): Int = runCatching {
-        val opciones = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(fichero.absolutePath, opciones)
-        maxOf(opciones.outWidth, opciones.outHeight)
-    }.getOrDefault(0)
 
     private fun escalar(original: Bitmap, tamano: Int = TAMANO): Bitmap {
         if (original.width <= tamano && original.height <= tamano) return original

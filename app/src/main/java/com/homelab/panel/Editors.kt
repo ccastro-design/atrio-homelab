@@ -200,6 +200,13 @@ fun ServiceEditor(
                 } else {
                     AutoLogin.forget(context, nuevo.id)
                 }
+
+                // Guardar la ficha da otra oportunidad al icono. Un servicio que pide
+                // contraseña —Transmission responde 401 hasta al favicon— pudo quedar
+                // marcado como «sin icono» justo por no tenerla; ahora puede que sí, o al
+                // revés. Solo se olvida la marca: un icono bueno no se toca.
+                IconStore.olvidarMarcaSinIcono(context, nuevo.id)
+
                 onSave(nuevo, grupo)
             },
             onCancelar = { salir() },
