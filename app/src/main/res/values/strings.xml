@@ -524,9 +524,9 @@
     <string name="security_sessions">Close sessions on exit</string>
     <string name="security_sessions_help">When the app closes, tab sessions are forgotten.</string>
     <string name="security_erase_sessions">Close the sessions now</string>
-    <string name="security_erase_sessions_ask">Sessions open in the tabs will be forgotten. Your saved passwords are not touched.</string>
+    <string name="security_erase_sessions_ask">Open tabs will be closed and their sessions forgotten. Your saved passwords are not touched.\n\nThe app will close: that is the only way to make a service that asks for its password in a browser window ask again.</string>
     <string name="security_erase_passwords">Erase every password</string>
-    <string name="security_erase_passwords_ask">Passwords for every service and download destination are erased. This cannot be undone and they are not in the backups.</string>
+    <string name="security_erase_passwords_ask">Passwords for every service and download destination are erased. This cannot be undone and they are not in the backups.\n\nThe app will close to finish cleaning up.</string>
     <string name="security_erase_certs">Forget the accepted certificates</string>
     <string name="security_erase_certs_ask">Next time you open those services you will be asked to confirm their certificate again.</string>
     <string name="security_status_help">Applies to every service, and only while the panel
@@ -634,5 +634,7 @@
     <string name="reload">Reload</string>
     <string name="home">Panel</string>
     <string name="close_tab">Close tab</string>
+    <string name="erase_done">Erased</string>
+    <string name="erase_cancelled">Nothing was erased</string>
 
 </resources>

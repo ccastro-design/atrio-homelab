@@ -518,9 +518,9 @@
     <string name="security_sessions">Cerrar las sesiones al salir</string>
     <string name="security_sessions_help">Al cerrar la aplicación se olvidan las sesiones de las pestañas.</string>
     <string name="security_erase_sessions">Cerrar las sesiones ahora</string>
-    <string name="security_erase_sessions_ask">Se olvidarán las sesiones abiertas en las pestañas. Tus contraseñas guardadas no se tocan.</string>
+    <string name="security_erase_sessions_ask">Se cerrarán las pestañas abiertas y se olvidarán sus sesiones. Tus contraseñas guardadas no se tocan.\n\nLa aplicación se cerrará: es la única forma de que un servicio que pide la contraseña en una ventana del navegador vuelva a pedírtela.</string>
     <string name="security_erase_passwords">Borrar todas las contraseñas</string>
-    <string name="security_erase_passwords_ask">Se borran las contraseñas de todos los servicios y de los destinos de descarga. No se puede deshacer y no están en las copias de seguridad.</string>
+    <string name="security_erase_passwords_ask">Se borran las contraseñas de todos los servicios y de los destinos de descarga. No se puede deshacer y no están en las copias de seguridad.\n\nLa aplicación se cerrará para terminar de limpiar.</string>
     <string name="security_erase_certs">Olvidar los certificados aceptados</string>
     <string name="security_erase_certs_ask">La próxima vez que entres en esos servicios se te volverá a pedir que confirmes su certificado.</string>
     <string name="security_status_help">Vale para todos los servicios, y solo mientras el
@@ -635,5 +635,7 @@
     <string name="reload">Recargar</string>
     <string name="home">Panel</string>
     <string name="close_tab">Cerrar pestaña</string>
+    <string name="erase_done">Borrado</string>
+    <string name="erase_cancelled">No se ha borrado nada</string>
 
 </resources>
