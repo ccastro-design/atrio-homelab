@@ -82,6 +82,8 @@ fun TabbedBrowser(
     onCloseTab: (Int) -> Unit,
     onMoveTab: (Int, Int) -> Unit,
     onSwitchToHome: () -> Unit,
+    /** Reintento desde la pantalla de error. Lo atiende quien sabe re-decidir casa/fuera. */
+    onRetryTab: (TabState) -> Unit,
     onBackToPanel: () -> Unit,
     onDownloadLink: (String, LinkKind?) -> Unit,
     onDownloadFile: (DownloadFile) -> Unit,
@@ -144,7 +146,7 @@ fun TabbedBrowser(
                         !config.hasAwayAddress(activa.service) &&
                         isPrivateHost(activa.url),
                     away = away,
-                    onReintentar = { activa.load() },
+                    onReintentar = { onRetryTab(activa) },
                     onModoCasa = onSwitchToHome
                 )
             }

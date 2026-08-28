@@ -88,7 +88,7 @@ class MainActivity : FragmentActivity() {
         // Al cerrarla del todo, y si el usuario lo ha pedido, no se dejan sesiones vivas
         // en las pestañas.
         if (isFinishing && ConfigStore.load(this).clearSessionsOnExit) {
-            WebSessions.clear()
+            WebSessions.clear(this)
         }
     }
 
@@ -362,6 +362,11 @@ private fun Contenido(
 
     val alcance = rememberCoroutineScope()
 
+    // Para las corrutinas que sobreviven a una recomposición: una lanzada con `config`
+    // capturado seguiría viendo la configuración de cuando arrancó, y aplicaría, por
+    // ejemplo, un veredicto AUTO por encima de un perfil que el usuario acaba de fijar.
+    val configVigente by rememberUpdatedState(config)
+
     fun guardar(nueva: PanelConfig) {
         onConfigChange(nueva)
         ConfigStore.save(context, nueva)
@@ -389,15 +394,50 @@ private fun Contenido(
         refrescando = true
         alcance.launch {
             NetworkResolver.invalidate()
-            aplicar(NetworkResolver.resolve(context, config))
+            val veredicto = NetworkResolver.resolve(context, config)
+            // Un veredicto provisional no cambia el perfil: recargaría las pestañas por
+            // una decisión tomada con la red a medio levantar. El estado sí se refresca.
+            if (!veredicto.provisional) aplicar(veredicto)
             status.refresh(config, away)
             refrescando = false
         }
     }
 
+    // Al volver la aplicación a primer plano hay que volver a decidir casa o fuera: la
+    // decisión anterior puede ser de hace horas y de otra red, y aquí no se recibía
+    // ninguna señal del sistema. La primera ON_START llega con la composición inicial,
+    // que ya resuelve por su cuenta, así que se descarta.
+    var vueltasAPrimerPlano by remember { mutableIntStateOf(0) }
+    DisposableEffect(context) {
+        val ciclo = (context as? androidx.activity.ComponentActivity)?.lifecycle
+        var primera = true
+        val observador = androidx.lifecycle.LifecycleEventObserver { _, evento ->
+            if (evento == androidx.lifecycle.Lifecycle.Event.ON_START) {
+                if (primera) primera = false else vueltasAPrimerPlano++
+            }
+        }
+        ciclo?.addObserver(observador)
+        onDispose { ciclo?.removeObserver(observador) }
+    }
+
     // Qué direcciones tocan: manda la WiFi en la que estemos, y si no se puede leer, que
     // responda o no la dirección de casa.
-    LaunchedEffect(config.profile, config.servers, config.groups, config.homeSsids) {
+    LaunchedEffect(config.profile, config.servers, config.groups, config.homeSsids, vueltasAPrimerPlano) {
+        if (vueltasAPrimerPlano > 0) NetworkResolver.invalidate()
+        val veredicto = NetworkResolver.resolve(context, config)
+
+        if (!veredicto.provisional) {
+            aplicar(veredicto)
+            return@LaunchedEffect
+        }
+
+        // Un «fuera» provisional NO se aplica todavía. Aplicarlo en el acto era cambiar
+        // todas las pestañas a las direcciones de fuera para, tres segundos después,
+        // devolverlas a las de casa: dos recargas y por el camino se pierde lo que
+        // hubiera en ellas. Se deja el perfil como estaba, se espera a que la red
+        // termine de levantarse y la segunda decisión ya se aplica, sea la que sea.
+        delay(3_000)
+        NetworkResolver.invalidate()
         aplicar(NetworkResolver.resolve(context, config))
     }
 
@@ -666,6 +706,43 @@ private fun Contenido(
             onOpenDownloads = { pantalla = Screen.DOWNLOADS },
             onOpenScan = { pantalla = Screen.SCAN },
             onShowTutorial = { tutorial = true },
+            onCerrarApp = {
+                // Se cierra la aplicación **matando el proceso**, no solo la pantalla: lo
+                // que hay que vaciar es la memoria del motor del navegador, donde quedan
+                // las credenciales de los servicios que las piden por su propia ventana, y
+                // a esa memoria no llega ninguna función de Android. Muere con el proceso
+                // y de ninguna otra forma; por eso el interruptor de «borrar sesiones al
+                // salir» sí funciona: allí el proceso también acaba muriendo.
+                //
+                // El retardo deja ver el aviso de que se ha borrado, y da margen a que
+                // termine de escribirse la configuración.
+                val actividad = context as? android.app.Activity
+                val cola = android.os.Handler(android.os.Looper.getMainLooper())
+                cola.postDelayed({
+                    actividad?.finishAffinity()
+
+                    // El cierre y la muerte del proceso van en **dos mensajes separados**,
+                    // no seguidos. Entre uno y otro, Android ejecuta el ciclo de cierre de
+                    // la pantalla, y ahí es donde el sistema espera a que terminen las
+                    // escrituras que quedaran encoladas y donde se aplica «borrar las
+                    // sesiones al salir» si el usuario lo tiene puesto. Haciéndolo todo de
+                    // una tacada, ese cierre no llegaba a ocurrir: se mataba el proceso
+                    // antes y se perdían las dos cosas.
+                    cola.postDelayed({
+                        android.os.Process.killProcess(android.os.Process.myPid())
+                    }, 600)
+                }, 1_200)
+            },
+            onSessionsCleared = {
+                // Las pestañas abiertas se cierran. Borrar las cookies no echa de un sitio
+                // en el que ya estás dentro: la página sigue cargada y funcionando, y el
+                // usuario ve que «no ha pasado nada». Cerrarlas es además lo que espera
+                // cualquiera que pulsa algo llamado «borrar sesiones».
+                pestanas.forEach { it.destroy() }
+                pestanas.clear()
+                pestanaActiva = 0
+                if (pantalla == Screen.TABS) pantalla = Screen.PANEL
+            },
             empezarEnSeguridad = irASeguridad,
             onClose = {
                 irASeguridad = false
@@ -702,6 +779,42 @@ private fun Contenido(
                     guardar(config.copy(profile = NetworkProfile.HOME.name))
                     away = false
                 },
+                onRetryTab = onRetryTab@{ pestana ->
+                    // Reintentar también re-decide casa o fuera. Repetir a ciegas la misma
+                    // dirección solo acierta cuando el fallo era un transitorio de red; si
+                    // la decisión inicial fue la equivocada, el reintento la corrige y el
+                    // LaunchedEffect(away) recarga las demás pestañas.
+                    //
+                    // La reacción visual va ANTES del sondeo, que puede tardar segundos:
+                    // sin esto el botón parecía muerto y cada toque extra lanzaba otro
+                    // sondeo entero. `loading` hace además de guarda contra esos toques.
+                    if (pestana.loading) return@onRetryTab
+                    pestana.error = null
+                    pestana.loading = true
+                    pestana.progress = 0
+                    val cargaPrevia = pestana.loadId
+
+                    alcance.launch {
+                        val perfilAlEmpezar = configVigente.profile
+                        NetworkResolver.invalidate()
+                        val veredicto = NetworkResolver.resolve(context, configVigente)
+                        // No se aplica un veredicto provisional (el reintento típico ocurre
+                        // justo cuando la red anda a medio levantar) ni uno calculado con
+                        // un perfil que el usuario ha cambiado mientras se sondeaba.
+                        if (!veredicto.provisional && configVigente.profile == perfilAlEmpezar) {
+                            aplicar(veredicto)
+                        }
+
+                        val destino = configVigente.urlOf(pestana.service, away)
+                        if (destino.isNotBlank() && destino != pestana.url) {
+                            pestana.load(destino)
+                        } else if (pestana.loadId == cargaPrevia) {
+                            pestana.load()
+                        }
+                        // Si loadId cambió, otro camino —el re-resolve de la vuelta a
+                        // primer plano— ya relanzó la carga: no se pisa.
+                    }
+                },
                 onBackToPanel = { pantalla = Screen.PANEL },
                 onDownloadLink = { enlace, tipo ->
                     // El aviso se abre con el primer enlace, no cuando acaba la espera:
@@ -733,6 +846,10 @@ private fun Contenido(
                     guardar(
                         ConfigOps.updateService(config, servicio.id) { it.copy(autoLogin = true) }
                     )
+                    // Acaban de aparecer las credenciales que quizá faltaban para poder
+                    // pedirle el icono a este servicio. Si estaba marcado como «no da
+                    // icono», esa marca ya no vale: se olvida para que se reintente.
+                    IconStore.olvidarMarcaSinIcono(context, servicio.id)
                 }
             )
         }

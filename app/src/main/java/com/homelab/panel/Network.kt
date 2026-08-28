@@ -141,10 +141,16 @@ object WifiNetwork {
  *
  * @param away si toca usar las direcciones de fuera.
  * @param ask WiFi desconocida en la que algo responde: hay que preguntar antes de fiarse.
+ * @param provisional un «fuera» dictado a ciegas —sin nombre de WiFi y sin que nadie
+ *   contestara—, que tanto puede ser estar fuera de verdad como la aplicación recién
+ *   abierta con la red a medio levantar. Quien lo reciba no debería tomar decisiones
+ *   destructivas con él (como recargar todas las pestañas): mejor volver a preguntar
+ *   en unos segundos.
  */
 data class NetworkVerdict(
     val away: Boolean,
-    val ask: String? = null
+    val ask: String? = null,
+    val provisional: Boolean = false
 )
 
 /**
@@ -207,6 +213,15 @@ object NetworkResolver {
             descartada = wifi.isNotBlank() && wifi in descartadas,
             respondeAlgo = responde
         )
+
+        // Un «fuera» dictado a ciegas —sin nombre de WiFi legible y sin que nadie
+        // contestara— muchas veces no es «fuera»: es la aplicación recién abierta con la
+        // WiFi todavía asociándose, y en 1.200 ms no contesta nadie. Se devuelve marcado
+        // como provisional, porque algo hay que contestar ya, pero **no se cachea**: la
+        // siguiente consulta debe volver a mirar, no arrastrar 30 segundos una decisión
+        // tomada antes de que la red existiera.
+        val aCiegas = veredicto.away && wifi.isBlank() && !responde
+        if (aCiegas) return veredicto.copy(provisional = true)
 
         ultimoResultado = veredicto
         ultimoMomento = ahora
