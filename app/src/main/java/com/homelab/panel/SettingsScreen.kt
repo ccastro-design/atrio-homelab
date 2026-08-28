@@ -47,6 +47,14 @@ fun SettingsScreen(
     onOpenDownloads: () -> Unit,
     onOpenScan: () -> Unit,
     onShowTutorial: () -> Unit,
+    /**
+     * Se acaban de borrar las sesiones del navegador. Las pestañas abiertas hay que
+     * cerrarlas: sin cerrarlas siguen dentro del servicio, porque una página ya cargada no
+     * se entera de que le han quitado las cookies.
+     */
+    onSessionsCleared: () -> Unit,
+    /** Cierra la aplicación del todo, para que muera con ella la memoria del navegador. */
+    onCerrarApp: () -> Unit,
     /** Entrar directamente en Seguridad, para el «Llévame allí» de la presentación. */
     empezarEnSeguridad: Boolean = false,
     onClose: () -> Unit
@@ -237,7 +245,12 @@ fun SettingsScreen(
                             )
 
                             SettingsPage.APPEARANCE -> PaginaDeApariencia(config, onConfigChange)
-                            SettingsPage.SECURITY -> PaginaDeSeguridad(config, onConfigChange)
+                            SettingsPage.SECURITY -> PaginaDeSeguridad(
+                                config,
+                                onConfigChange,
+                                onSessionsCleared,
+                                onCerrarApp
+                            )
                             SettingsPage.BACKUP -> PaginaDeCopia(config, onConfigChange)
                             SettingsPage.SUPPORT -> PaginaDeApoyo()
                             SettingsPage.ABOUT -> PaginaAcercaDe()

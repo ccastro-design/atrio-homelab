@@ -15,8 +15,21 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** Lo que se puede borrar de golpe desde Seguridad. */
-private enum class Borrado { SESIONES, CONTRASENAS, CERTIFICADOS }
+/**
+ * Los tres borrados de Ajustes › Seguridad.
+ *
+ * @property exigeCerrar si hay que cerrar la aplicación para que el borrado sea de verdad.
+ *   Lo exigen los dos que tocan sesiones o contraseñas: el motor del navegador guarda en
+ *   memoria las credenciales de los servicios que las piden por su propia ventana
+ *   —autenticación HTTP, como Transmission— y esa memoria **no se puede vaciar desde la
+ *   aplicación**. Mientras el proceso siga vivo, ese servicio sigue entrando solo por muy
+ *   a fondo que se haya borrado en disco. Al morir el proceso, desaparece.
+ */
+private enum class Borrado(val exigeCerrar: Boolean) {
+    SESIONES(exigeCerrar = true),
+    CONTRASENAS(exigeCerrar = true),
+    CERTIFICADOS(exigeCerrar = false)
+}
 
 /**
  * Interruptor de una opción, con su explicación debajo.
@@ -56,15 +69,26 @@ private fun InterruptorDeAjuste(
     }
 }
 
+private fun avisar(context: android.content.Context, texto: Int) {
+    Toast.makeText(context, context.getString(texto), Toast.LENGTH_SHORT).show()
+}
+
 /** Ejecuta el borrado ya confirmado. */
 private fun aplicarBorrado(
     que: Borrado,
     context: android.content.Context,
     config: PanelConfig,
-    onConfigChange: (PanelConfig) -> Unit
+    onConfigChange: (PanelConfig) -> Unit,
+    onSessionsCleared: () -> Unit
 ) {
     when (que) {
-        Borrado.SESIONES -> WebSessions.clear()
+        Borrado.SESIONES -> {
+            WebSessions.clear(context)
+            // Y se cierran las pestañas: una página ya cargada sigue dentro del servicio
+            // aunque se le quiten las cookies, así que sin esto el borrado parecía no
+            // hacer nada.
+            onSessionsCleared()
+        }
 
         Borrado.CONTRASENAS -> {
             SecureStore.forgetAll(context)
@@ -85,7 +109,12 @@ private fun aplicarBorrado(
 
 @Composable
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-internal fun PaginaDeSeguridad(config: PanelConfig, onConfigChange: (PanelConfig) -> Unit) {
+internal fun PaginaDeSeguridad(
+    config: PanelConfig,
+    onConfigChange: (PanelConfig) -> Unit,
+    onSessionsCleared: () -> Unit,
+    onCerrarApp: () -> Unit
+) {
     val context = LocalContext.current
     val biometriaDisponible = remember { BiometricGate.state(context) == BiometricGate.State.AVAILABLE }
     var borrando by remember { mutableStateOf<Borrado?>(null) }
@@ -126,10 +155,22 @@ internal fun PaginaDeSeguridad(config: PanelConfig, onConfigChange: (PanelConfig
                     val actividad = context as? androidx.fragment.app.FragmentActivity
                     if (actividad != null) {
                         BiometricGate.ask(actividad) { autorizado ->
-                            if (autorizado) aplicarBorrado(que, context, config, onConfigChange)
+                            // Se dice siempre en qué quedó. El aviso se cerraba igual
+                            // tanto si la huella valía como si se cancelaba, así que
+                            // alguien podía quedarse creyendo que había borrado sus
+                            // contraseñas cuando seguían ahí.
+                            if (autorizado) {
+                                aplicarBorrado(que, context, config, onConfigChange, onSessionsCleared)
+                                avisar(context, R.string.erase_done)
+                                if (que.exigeCerrar) onCerrarApp()
+                            } else {
+                                avisar(context, R.string.erase_cancelled)
+                            }
                         }
                     } else {
-                        aplicarBorrado(que, context, config, onConfigChange)
+                        aplicarBorrado(que, context, config, onConfigChange, onSessionsCleared)
+                        avisar(context, R.string.erase_done)
+                        if (que.exigeCerrar) onCerrarApp()
                     }
                     borrando = null
                 }) {

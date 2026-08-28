@@ -1,5 +1,6 @@
 package com.homelab.panel
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
@@ -58,8 +59,22 @@ object SecureStore {
      * se ha metido una contraseña donde no tocaba. Sin él había que entrar servicio por
      * servicio.
      */
+    // El analizador pide `apply` en vez de `commit`. Aquí está al revés a propósito, y el
+    // motivo está justo debajo: es el único borrado tras el que se mata el proceso.
+    @SuppressLint("ApplySharedPref")
     fun forgetAll(context: Context) {
-        prefs(context)?.edit()?.clear()?.apply()
+        // `commit` y no `apply`: **este borrado termina matando el proceso** (ver Ajustes ›
+        // Seguridad), y `apply` solo encola la escritura para que otro la haga más tarde.
+        // Si el proceso muere antes, las contraseñas siguen en el fichero; y como el
+        // sistema reescribe ese fichero pasando por una copia de respaldo, morir a mitad
+        // las **restaura** en el siguiente arranque. Peor todavía: la configuración sí se
+        // guarda de forma segura, así que las fichas dirían que no hay credenciales
+        // mientras siguen ahí, y esto es justo el botón de antes de prestar el móvil.
+        //
+        // Bloquea unos milisegundos. En una acción puntual del usuario es lo correcto: en
+        // los demás caminos —guardar y borrar una sola credencial— `apply` sigue bien,
+        // porque allí el proceso sigue vivo y el sistema espera esas escrituras al pausar.
+        prefs(context)?.edit()?.clear()?.commit()
     }
 
     /** Borra todo lo guardado de un destino de descarga que se elimina. */
