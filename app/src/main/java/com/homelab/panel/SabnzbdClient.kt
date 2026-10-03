@@ -1,12 +1,6 @@
 package com.homelab.panel
 
-import android.content.Context
-import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 import java.net.URLEncoder
 
 /**
@@ -35,72 +29,24 @@ import java.net.URLEncoder
  *    mensaje propio porque «ha respondido con el código 403» manda a mirar la clave API,
  *    que no tiene nada que ver, y el ajuste está escondido en Config › Special.
  */
-object SabnzbdClient {
+object SabnzbdClient : Conector {
 
-    private const val TAG = "Panel"
-    private const val TIMEOUT = 15_000
-
-    suspend fun send(
-        context: Context,
-        baseUrl: String,
-        apiKey: String,
-        link: String,
-        targetName: String
-    ): SendResult = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
-            return@withContext SendResult.Failed(
-                context.getString(R.string.send_no_api_key, targetName)
-            )
-        }
+    override suspend fun entregar(destino: DatosDeEntrega, enlace: String): Entrega {
+        val apiKey = destino.clave
+        if (apiKey.isBlank()) return Entrega.FaltaClaveApi
 
         val direccion = buildString {
-            append(baseUrl.trimEnd('/'))
+            append(destino.base.trimEnd('/'))
             append("/api?mode=addurl&output=json")
-            append("&name=").append(URLEncoder.encode(link, "UTF-8"))
+            append("&name=").append(URLEncoder.encode(enlace, "UTF-8"))
             append("&apikey=").append(URLEncoder.encode(apiKey, "UTF-8"))
         }
 
-        try {
-            val conexion = (URL(direccion).openConnection() as HttpURLConnection).apply {
-                connectTimeout = TIMEOUT
-                readTimeout = TIMEOUT
-                requestMethod = "GET"
-            }
+        val conexion = Http.abrir(direccion)
+        val respuesta = Http.leer(conexion)
+        conexion.disconnect()
 
-            val codigo = conexion.responseCode
-            val flujo = if (codigo >= 400) conexion.errorStream else conexion.inputStream
-            val cuerpo = flujo?.use { String(it.readBytes()) }.orEmpty().trim()
-            conexion.disconnect()
-
-            when {
-                codigo == 403 -> SendResult.Failed(
-                    context.getString(R.string.send_host_not_allowed, targetName)
-                )
-
-                codigo !in 200..299 -> SendResult.Failed(
-                    context.getString(R.string.send_http_error, targetName, codigo)
-                )
-
-                cuerpo.contains("API Key", ignoreCase = true) -> SendResult.Failed(
-                    context.getString(R.string.send_bad_api_key, targetName)
-                )
-
-                !cuerpo.startsWith("{") -> SendResult.Failed(
-                    context.getString(R.string.send_bad_answer, targetName)
-                )
-
-                else -> interpretar(context, cuerpo, targetName)
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Fallo entregando el enlace a «$targetName»", e)
-            SendResult.Failed(
-                context.getString(
-                    R.string.send_unreachable,
-                    targetName,
-                    e.message ?: e.javaClass.simpleName
-                )
-            )
-        }
+        return contestacion(respuesta.codigo, respuesta.cuerpo.trim())
     }
 
     /**
@@ -114,99 +60,59 @@ object SabnzbdClient {
      * Es `mode=addfile`, que va por POST y con el fichero dentro del cuerpo en formato
      * multipart, escrito a mano aquí porque es lo único que se necesita de él.
      */
-    suspend fun sendFile(
-        context: Context,
-        baseUrl: String,
-        apiKey: String,
-        fileName: String,
-        content: String,
-        targetName: String
-    ): SendResult = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
-            return@withContext SendResult.Failed(
-                context.getString(R.string.send_no_api_key, targetName)
-            )
-        }
+    override suspend fun subir(destino: DatosDeEntrega, fichero: DownloadFile): Entrega {
+        val apiKey = destino.clave
+        if (apiKey.isBlank()) return Entrega.FaltaClaveApi
 
         val direccion = buildString {
-            append(baseUrl.trimEnd('/'))
+            append(destino.base.trimEnd('/'))
             append("/api?mode=addfile&output=json")
             append("&apikey=").append(URLEncoder.encode(apiKey, "UTF-8"))
         }
 
         val frontera = "----AtrioHomelab${System.currentTimeMillis()}"
 
-        try {
-            val conexion = (URL(direccion).openConnection() as HttpURLConnection).apply {
-                connectTimeout = TIMEOUT
-                readTimeout = TIMEOUT
-                requestMethod = "POST"
-                doOutput = true
-                setRequestProperty("Content-Type", "multipart/form-data; boundary=$frontera")
-            }
+        val conexion = Http.abrir(
+            direccion,
+            "POST",
+            mapOf("Content-Type" to "multipart/form-data; boundary=$frontera")
+        )
 
-            // El campo se llama `name`, que es como lo espera SABnzbd para el fichero.
-            val cuerpoEnviado = buildString {
-                append("--").append(frontera).append("\r\n")
-                append("Content-Disposition: form-data; name=\"name\"; filename=\"")
-                append(fileName.replace('"', '_')).append("\"\r\n")
-                append("Content-Type: application/x-nzb\r\n\r\n")
-                append(content).append("\r\n")
-                append("--").append(frontera).append("--\r\n")
-            }
-
-            conexion.outputStream.use { it.write(cuerpoEnviado.toByteArray(Charsets.UTF_8)) }
-
-            val codigo = conexion.responseCode
-            val flujo = if (codigo >= 400) conexion.errorStream else conexion.inputStream
-            val respuesta = flujo?.use { String(it.readBytes()) }.orEmpty().trim()
-            conexion.disconnect()
-
-            when {
-                codigo == 403 -> SendResult.Failed(
-                    context.getString(R.string.send_host_not_allowed, targetName)
-                )
-
-                codigo !in 200..299 -> SendResult.Failed(
-                    context.getString(R.string.send_http_error, targetName, codigo)
-                )
-
-                respuesta.contains("API Key", ignoreCase = true) -> SendResult.Failed(
-                    context.getString(R.string.send_bad_api_key, targetName)
-                )
-
-                !respuesta.startsWith("{") -> SendResult.Failed(
-                    context.getString(R.string.send_bad_answer, targetName)
-                )
-
-                else -> interpretar(context, respuesta, targetName)
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Fallo subiendo el fichero a «$targetName»", e)
-            SendResult.Failed(
-                context.getString(
-                    R.string.send_unreachable,
-                    targetName,
-                    e.message ?: e.javaClass.simpleName
-                )
-            )
+        // El campo se llama `name`, que es como lo espera SABnzbd para el fichero.
+        val cuerpoEnviado = buildString {
+            append("--").append(frontera).append("\r\n")
+            append("Content-Disposition: form-data; name=\"name\"; filename=\"")
+            append(fichero.name.replace('"', '_')).append("\"\r\n")
+            append("Content-Type: application/x-nzb\r\n\r\n")
+            append(fichero.content).append("\r\n")
+            append("--").append(frontera).append("--\r\n")
         }
+
+        conexion.outputStream.use { it.write(cuerpoEnviado.toByteArray(Charsets.UTF_8)) }
+
+        val respuesta = Http.leer(conexion)
+        conexion.disconnect()
+
+        return contestacion(respuesta.codigo, respuesta.cuerpo.trim())
     }
 
-    private fun interpretar(context: Context, cuerpo: String, targetName: String): SendResult {
+    /** SABnzbd contesta igual a un enlace que a un fichero. */
+    private fun contestacion(codigo: Int, cuerpo: String): Entrega = when {
+        codigo == 403 -> Entrega.NombreDeEquipoNoPermitido
+        codigo !in 200..299 -> Entrega.CodigoHttp(codigo)
+        cuerpo.contains("API Key", ignoreCase = true) -> Entrega.ClaveApiMala
+        !cuerpo.startsWith("{") -> Entrega.RespuestaIninteligible
+        else -> interpretar(cuerpo)
+    }
+
+    private fun interpretar(cuerpo: String): Entrega {
         val json = runCatching { JSONObject(cuerpo) }.getOrNull()
-            ?: return SendResult.Failed(context.getString(R.string.send_bad_answer, targetName))
+            ?: return Entrega.RespuestaIninteligible
 
         if (!json.optBoolean("status", false)) {
-            val motivo = json.optString("error").ifBlank {
-                context.getString(R.string.send_reason_unknown)
-            }
-            return SendResult.Failed(
-                context.getString(R.string.send_refused, targetName, motivo)
-            )
+            return Entrega.Rechazada(json.optString("error").ifBlank { null })
         }
 
-        Log.i(TAG, "Enlace entregado a «$targetName»")
-        return SendResult.Ok(targetName)
+        return Entrega.Hecha
     }
 }

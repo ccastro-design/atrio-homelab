@@ -2,13 +2,8 @@ package com.homelab.panel
 
 import android.content.Context
 import android.util.Log
-import com.homelab.panel.Reintentos.conectarY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLEncoder
 
 /**
  * Entrega de enlaces a los servicios de descarga del usuario.
@@ -81,6 +76,75 @@ sealed interface SendResult {
     data class Failed(val message: String) : SendResult
 }
 
+/** Dónde está un programa de descargas y con qué se entra en él. */
+data class DatosDeEntrega(
+    /** Dirección del servicio, ya resuelta según se esté en casa o fuera. */
+    val base: String,
+    val usuario: String,
+    /** La contraseña, o la clave API en SABnzbd. */
+    val clave: String
+)
+
+/**
+ * Lo que pasó al entregar, todavía sin palabras.
+ *
+ * Cada conector solo sabe hablar con su programa y dice qué pasó; lo que se le cuenta al
+ * usuario se decide en un solo sitio, [LinkSender.textoDe]. Antes cada conector escribía sus
+ * propios avisos, y los mismos estaban repetidos en los cuatro.
+ *
+ * Los fallos de red no están aquí: los conectores los dejan salir como excepción, y también
+ * se traducen en un solo sitio.
+ */
+sealed interface Entrega {
+    data object Hecha : Entrega
+
+    /** El programa ya lo tenía. No es un fallo, pero decir «enviado» haría creer que hay algo nuevo. */
+    data object YaEstaba : Entrega
+
+    data object ContrasenaMala : Entrega
+    data object FaltaContrasena : Entrega
+    data object FaltaClaveApi : Entrega
+    data object ClaveApiMala : Entrega
+
+    /** Transmission: el móvil no está en su `rpc-whitelist`. */
+    data object FueraDeLaListaBlanca : Entrega
+
+    /** SABnzbd: el nombre con que se le llama no está en su `host_whitelist`. */
+    data object NombreDeEquipoNoPermitido : Entrega
+
+    data class CodigoHttp(val codigo: Int) : Entrega
+    data object RespuestaIninteligible : Entrega
+
+    /** El programa dijo que no. [motivo] es el que dio él, o null si no dio ninguno. */
+    data class Rechazada(val motivo: String?) : Entrega
+
+    /** qBittorrent contestó bien pero no añadió nada. */
+    data object NoAceptada : Entrega
+
+    data object NoSabeSubirFicheros : Entrega
+}
+
+/**
+ * Un programa de descargas: sabe hablar su protocolo y nada más.
+ *
+ * Deja salir los fallos de red tal cual. Qué decir cuando no se llega, o cuando el servidor
+ * cuelga, se decide en [LinkSender] para los cuatro.
+ */
+interface Conector {
+
+    suspend fun entregar(destino: DatosDeEntrega, enlace: String): Entrega
+
+    /**
+     * Sube un fichero que la web armó en el móvil, en vez de un enlace.
+     *
+     * De momento solo SABnzbd, que es donde se ha visto el caso y donde está probado:
+     * Transmission y qBittorrent admiten algo parecido, pero prometerlo sin haberlo
+     * comprobado contra sus instalaciones sería fiarse de la documentación.
+     */
+    suspend fun subir(destino: DatosDeEntrega, fichero: DownloadFile): Entrega =
+        Entrega.NoSabeSubirFicheros
+}
+
 object LinkSender {
 
     private const val TAG = "Panel"
@@ -95,223 +159,130 @@ object LinkSender {
         target: DownloadTarget,
         baseUrl: String,
         link: String
-    ): SendResult {
-        if (baseUrl.isBlank()) {
-            return SendResult.Failed(context.getString(R.string.send_no_address, target.name))
-        }
+    ): SendResult = entregarCon(
+        context, target.targetKind, target.name, baseUrl, target.username, clave(context, target), link
+    )
 
-        val password = SecureStore.read(context, SecureStore.targetKey(target.id)).orEmpty()
-
-        return when (target.targetKind) {
-            TargetKind.AMULE -> AmuleClient.send(context, baseUrl, password, link, target.name)
-
-            // La clave API se guarda donde las contraseñas: cifrada y fuera de la copia
-            // de seguridad, que es lo que toca para un secreto.
-            TargetKind.SABNZBD -> SabnzbdClient.send(
-                context = context,
-                baseUrl = baseUrl,
-                apiKey = password,
-                link = link,
-                targetName = target.name
-            )
-
-            TargetKind.QBITTORRENT -> QbittorrentClient.send(
-                context = context,
-                baseUrl = baseUrl,
-                username = target.username,
-                password = password,
-                link = link,
-                targetName = target.name
-            )
-
-            TargetKind.TRANSMISSION -> TransmissionClient.send(
-                context = context,
-                baseUrl = baseUrl,
-                username = target.username,
-                password = password,
-                link = link,
-                targetName = target.name
-            )
-
-            // Los demás conectores llegarán después; el enrutado ya está preparado para
-            // ellos y cada uno solo tiene que implementar su forma de entregar.
-            else -> SendResult.Failed(
-                context.getString(R.string.send_target_not_supported, target.name)
-            )
-        }
-    }
-
-    /**
-     * Entrega un fichero que la web armó en el móvil, en vez de un enlace.
-     *
-     * De momento solo SABnzbd, que es donde se ha visto el caso y donde está probado:
-     * Transmission y qBittorrent admiten algo parecido, pero prometerlo sin haberlo
-     * comprobado contra sus instalaciones sería fiarse de la documentación.
-     */
+    /** Entrega un fichero que la web armó en el móvil. Ver [Conector.subir]. */
     suspend fun sendFile(
         context: Context,
         target: DownloadTarget,
         baseUrl: String,
         file: DownloadFile
-    ): SendResult {
-        if (baseUrl.isBlank()) {
-            return SendResult.Failed(context.getString(R.string.send_no_address, target.name))
-        }
+    ): SendResult = subirCon(
+        context, target.targetKind, target.name, baseUrl, target.username, clave(context, target), file
+    )
 
-        val password = SecureStore.read(context, SecureStore.targetKey(target.id)).orEmpty()
+    /**
+     * La clave API de SABnzbd se guarda donde las contraseñas: cifrada y fuera de la copia de
+     * seguridad, que es lo que toca para un secreto.
+     */
+    private fun clave(context: Context, target: DownloadTarget): String =
+        SecureStore.read(context, SecureStore.targetKey(target.id)).orEmpty()
 
-        return when (target.targetKind) {
-            TargetKind.SABNZBD -> SabnzbdClient.sendFile(
-                context = context,
-                baseUrl = baseUrl,
-                apiKey = password,
-                fileName = file.name,
-                content = file.content,
-                targetName = target.name
-            )
-
-            else -> SendResult.Failed(
-                context.getString(R.string.send_file_not_supported, target.name)
-            )
-        }
-    }
-}
-
-/**
- * Entrega enlaces a aMule por su interfaz web, siguiendo el mismo camino que seguiría
- * una persona a mano:
- *
- *   1. GET  /            -> devuelve la cookie de sesión
- *   2. POST /            -> pass=<contraseña>&submit=Submit
- *   3. POST /footer.php  -> ed2klink=<enlace>&selectcat=all&Submit=Download link
- */
-object AmuleClient {
-
-    private const val TAG = "Panel"
-    private const val TIMEOUT = 15_000
-
-    suspend fun send(
+    /** Lo mismo que [send], con la clave ya leída: así se puede probar sin el almacén cifrado. */
+    internal suspend fun entregarCon(
         context: Context,
-        baseUrl: String,
-        password: String,
-        link: String,
-        targetName: String
+        tipo: TargetKind,
+        nombre: String,
+        base: String,
+        usuario: String,
+        clave: String,
+        enlace: String
+    ): SendResult {
+        if (base.isBlank()) return SendResult.Failed(context.getString(R.string.send_no_address, nombre))
+
+        val destino = DatosDeEntrega(base, usuario, clave)
+        return intentar(context, nombre, "Fallo entregando el enlace a «$nombre»") {
+            conectorDe(tipo).entregar(destino, enlace)
+        }
+    }
+
+    /** Lo mismo que [sendFile], con la clave ya leída. */
+    internal suspend fun subirCon(
+        context: Context,
+        tipo: TargetKind,
+        nombre: String,
+        base: String,
+        usuario: String,
+        clave: String,
+        fichero: DownloadFile
+    ): SendResult {
+        if (base.isBlank()) return SendResult.Failed(context.getString(R.string.send_no_address, nombre))
+
+        val destino = DatosDeEntrega(base, usuario, clave)
+        return intentar(context, nombre, "Fallo subiendo el fichero a «$nombre»") {
+            conectorDe(tipo).subir(destino, fichero)
+        }
+    }
+
+    /**
+     * Uno por programa. Sin rama «los demás»: si algún día hay un quinto, el compilador obliga
+     * a decir aquí quién lo atiende.
+     */
+    private fun conectorDe(tipo: TargetKind): Conector = when (tipo) {
+        TargetKind.AMULE -> AmuleClient
+        TargetKind.QBITTORRENT -> QbittorrentClient
+        TargetKind.TRANSMISSION -> TransmissionClient
+        TargetKind.SABNZBD -> SabnzbdClient
+    }
+
+    /**
+     * Hace la entrega fuera del hilo de la pantalla y la convierte en lo que ve el usuario.
+     * Los fallos de red se traducen aquí, en un solo sitio para los cuatro programas.
+     */
+    private suspend fun intentar(
+        context: Context,
+        nombre: String,
+        siFalla: String,
+        entrega: suspend () -> Entrega
     ): SendResult = withContext(Dispatchers.IO) {
-        if (password.isEmpty()) {
-            return@withContext SendResult.Failed(
-                context.getString(R.string.send_no_password, targetName)
-            )
-        }
-
-        val base = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
-
         try {
-            val codigo = entregarConReintentos(base, password, link)
-                ?: return@withContext SendResult.Failed(
-                    context.getString(R.string.send_bad_password, targetName)
-                )
-
-            if (codigo in 200..299) {
-                Log.i(TAG, "Enlace entregado a «$targetName»")
-                SendResult.Ok(targetName)
-            } else {
-                SendResult.Failed(context.getString(R.string.send_http_error, targetName, codigo))
-            }
+            val hecho = entrega()
+            if (hecho == Entrega.Hecha) Log.i(TAG, "Enlace entregado a «$nombre»")
+            textoDe(hecho, nombre)?.let { SendResult.Failed(it.en(context)) } ?: SendResult.Ok(nombre)
         } catch (e: ServidorColgo) {
-            // Sí se contactó: no es la red, es aMule cerrándose. Ver [Reintentos].
-            Log.w(TAG, "«$targetName» colgó sin contestar, también al repetir", e)
-            SendResult.Failed(context.getString(R.string.error_hung_up, targetName))
+            // Sí se contactó: no es la red, es el programa cerrándose. Ver [Reintentos].
+            Log.w(TAG, "«$nombre» colgó sin contestar, también al repetir", e)
+            SendResult.Failed(context.getString(R.string.error_hung_up, nombre))
         } catch (e: Exception) {
-            Log.w(TAG, "Fallo entregando el enlace a «$targetName»", e)
+            Log.w(TAG, siFalla, e)
             SendResult.Failed(
-                context.getString(
-                    R.string.send_unreachable,
-                    targetName,
-                    e.message ?: e.javaClass.simpleName
-                )
+                context.getString(R.string.send_unreachable, nombre, e.message ?: e.javaClass.simpleName)
             )
         }
     }
 
-    /**
-     * La entrega entera —entrar y mandar el enlace—, repetida si aMule cuelga a mitad.
-     *
-     * Se repite **entera** y no solo el paso que falló: cuando `amuleweb` cuelga es porque se
-     * está cerrando, y al volver no recuerda ninguna sesión. Mandar dos veces el mismo enlace
-     * no lo duplica: aMule ignora el que ya tiene. Ver [Reintentos].
-     *
-     * Sin `Context` a propósito, para poder probarla en el móvil contra un aMule de mentira.
-     *
-     * @return el código de la respuesta al enlace, o null si no aceptó la contraseña.
-     */
-    internal suspend fun entregarConReintentos(base: String, password: String, link: String): Int? =
-        Reintentos.repetirSiCuelga { entregar(base, password, link) }
-
-    private fun entregar(base: String, password: String, link: String): Int? {
-        val cookie = login(base, password) ?: return null
-
-        val cuerpo = buildString {
-            append("ed2klink=").append(URLEncoder.encode(link, "UTF-8"))
-            append("&selectcat=all")
-            append("&Submit=").append(URLEncoder.encode("Download link", "UTF-8"))
-        }
-
-        return post("${base}footer.php", cuerpo, cookie)
+    /** Un texto de la aplicación con sus datos. Un dato puede ser a su vez otro texto. */
+    internal data class Texto(val id: Int, val datos: List<Any> = emptyList()) {
+        fun en(context: Context): String =
+            if (datos.isEmpty()) {
+                context.getString(id)
+            } else {
+                context.getString(id, *datos.map { if (it is Texto) it.en(context) else it }.toTypedArray())
+            }
     }
 
     /**
-     * Devuelve la cookie de sesión, o null si la contraseña no fue aceptada.
-     *
-     * Cada petición pasa por `conectarY` hasta tener el código de respuesta: si aMule cuelga,
-     * es ahí donde se nota. Lo de después es como siempre.
+     * Lo que se le dice al usuario, o null si salió bien. Aquí están los avisos de los cuatro
+     * programas; antes cada conector escribía los suyos.
      */
-    private fun login(base: String, password: String): String? {
-        val inicial = open(base)
-        inicial.conectarY { responseCode }
-        val cookie = inicial.getHeaderField("Set-Cookie")?.substringBefore(';')
-        inicial.inputStream.use { it.readBytes() }
-        inicial.disconnect()
-
-        if (cookie.isNullOrBlank()) return null
-
-        val cuerpo = "pass=${URLEncoder.encode(password, "UTF-8")}&submit=Submit"
-        val conexion = open(base, cookie)
-        conexion.requestMethod = "POST"
-        conexion.doOutput = true
-        conexion.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-
-        conexion.conectarY {
-            OutputStreamWriter(outputStream).use { it.write(cuerpo) }
-            responseCode
-        }
-
-        val respuesta = conexion.inputStream.use { String(it.readBytes()) }
-        conexion.disconnect()
-
-        // Si sigue mostrando el campo de contraseña, no entró.
-        return if (respuesta.contains("name=\"pass\"")) null else cookie
+    internal fun textoDe(entrega: Entrega, nombre: String): Texto? = when (entrega) {
+        Entrega.Hecha -> null
+        Entrega.YaEstaba -> Texto(R.string.send_duplicate, listOf(nombre))
+        Entrega.ContrasenaMala -> Texto(R.string.send_bad_password, listOf(nombre))
+        Entrega.FaltaContrasena -> Texto(R.string.send_no_password, listOf(nombre))
+        Entrega.FaltaClaveApi -> Texto(R.string.send_no_api_key, listOf(nombre))
+        Entrega.ClaveApiMala -> Texto(R.string.send_bad_api_key, listOf(nombre))
+        Entrega.FueraDeLaListaBlanca -> Texto(R.string.send_not_whitelisted, listOf(nombre))
+        Entrega.NombreDeEquipoNoPermitido -> Texto(R.string.send_host_not_allowed, listOf(nombre))
+        is Entrega.CodigoHttp -> Texto(R.string.send_http_error, listOf(nombre, entrega.codigo))
+        Entrega.RespuestaIninteligible -> Texto(R.string.send_bad_answer, listOf(nombre))
+        is Entrega.Rechazada -> Texto(
+            R.string.send_refused,
+            listOf(nombre, entrega.motivo ?: Texto(R.string.send_reason_unknown))
+        )
+        Entrega.NoAceptada -> Texto(R.string.send_not_accepted, listOf(nombre))
+        Entrega.NoSabeSubirFicheros -> Texto(R.string.send_file_not_supported, listOf(nombre))
     }
-
-    private fun post(url: String, cuerpo: String, cookie: String): Int {
-        val conexion = open(url, cookie)
-        conexion.requestMethod = "POST"
-        conexion.doOutput = true
-        conexion.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-
-        val codigo = conexion.conectarY {
-            OutputStreamWriter(outputStream).use { it.write(cuerpo) }
-            responseCode
-        }
-        conexion.inputStream.use { it.readBytes() }
-        conexion.disconnect()
-        return codigo
-    }
-
-    private fun open(url: String, cookie: String? = null): HttpURLConnection =
-        (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = TIMEOUT
-            readTimeout = TIMEOUT
-            instanceFollowRedirects = true
-            cookie?.let { setRequestProperty("Cookie", it) }
-        }
 }

@@ -1,14 +1,7 @@
 package com.homelab.panel
 
-import android.content.Context
-import android.util.Base64
-import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
+import java.util.Base64
 
 /**
  * Entrega de enlaces a Transmission por su control remoto (RPC).
@@ -25,62 +18,34 @@ import java.net.URL
  *    y responde 403 al resto. Es el fallo más común al configurarlo, y por eso tiene
  *    mensaje propio: sin él, «no se pudo enviar» no dice dónde mirar.
  */
-object TransmissionClient {
-
-    private const val TAG = "Panel"
-    private const val TIMEOUT = 15_000
+object TransmissionClient : Conector {
 
     /** Identificador de sesión en curso. Vale para todos los envíos hasta que caduque. */
     private var sesion: String? = null
 
-    suspend fun send(
-        context: Context,
-        baseUrl: String,
-        username: String,
-        password: String,
-        link: String,
-        targetName: String
-    ): SendResult = withContext(Dispatchers.IO) {
-        val direccion = rpcUrl(baseUrl)
+    override suspend fun entregar(destino: DatosDeEntrega, enlace: String): Entrega {
+        val direccion = rpcUrl(destino.base)
 
         val peticion = JSONObject().apply {
             put("method", "torrent-add")
             // «filename» acepta tanto un magnet como la dirección de un .torrent: lo
             // descarga el propio Transmission, así que la aplicación nunca maneja ficheros.
-            put("arguments", JSONObject().put("filename", link))
+            put("arguments", JSONObject().put("filename", enlace))
         }.toString()
 
-        try {
-            var respuesta = llamar(direccion, peticion, username, password)
+        var respuesta = llamar(direccion, peticion, destino.usuario, destino.clave)
 
-            // Sesión caducada o primera petición: se reintenta una vez con la nueva.
-            if (respuesta.codigo == 409) {
-                sesion = respuesta.sesion
-                respuesta = llamar(direccion, peticion, username, password)
-            }
+        // Sesión caducada o primera petición: se reintenta una vez con la nueva.
+        if (respuesta.codigo == 409) {
+            sesion = respuesta.sesion
+            respuesta = llamar(direccion, peticion, destino.usuario, destino.clave)
+        }
 
-            when {
-                respuesta.codigo == 401 ->
-                    SendResult.Failed(context.getString(R.string.send_bad_password, targetName))
-
-                respuesta.codigo == 403 ->
-                    SendResult.Failed(context.getString(R.string.send_not_whitelisted, targetName))
-
-                respuesta.codigo !in 200..299 -> SendResult.Failed(
-                    context.getString(R.string.send_http_error, targetName, respuesta.codigo)
-                )
-
-                else -> interpretar(context, respuesta.cuerpo, targetName)
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Fallo entregando el enlace a «$targetName»", e)
-            SendResult.Failed(
-                context.getString(
-                    R.string.send_unreachable,
-                    targetName,
-                    e.message ?: e.javaClass.simpleName
-                )
-            )
+        return when {
+            respuesta.codigo == 401 -> Entrega.ContrasenaMala
+            respuesta.codigo == 403 -> Entrega.FueraDeLaListaBlanca
+            respuesta.codigo !in 200..299 -> Entrega.CodigoHttp(respuesta.codigo)
+            else -> interpretar(respuesta.cuerpo)
         }
     }
 
@@ -91,27 +56,15 @@ object TransmissionClient {
      * correcto. No es un fallo, pero decir «enviado» sin más haría pensar que se ha
      * añadido algo nuevo.
      */
-    private fun interpretar(context: Context, cuerpo: String, targetName: String): SendResult {
+    private fun interpretar(cuerpo: String): Entrega {
         val json = runCatching { JSONObject(cuerpo) }.getOrNull()
-            ?: return SendResult.Failed(
-                context.getString(R.string.send_bad_answer, targetName)
-            )
+            ?: return Entrega.RespuestaIninteligible
 
         val resultado = json.optString("result")
-        if (resultado != "success") {
-            return SendResult.Failed(
-                context.getString(R.string.send_refused, targetName, resultado)
-            )
-        }
+        if (resultado != "success") return Entrega.Rechazada(resultado)
 
         val argumentos = json.optJSONObject("arguments")
-
-        return if (argumentos?.has("torrent-duplicate") == true) {
-            SendResult.Failed(context.getString(R.string.send_duplicate, targetName))
-        } else {
-            Log.i(TAG, "Enlace entregado a «$targetName»")
-            SendResult.Ok(targetName)
-        }
+        return if (argumentos?.has("torrent-duplicate") == true) Entrega.YaEstaba else Entrega.Hecha
     }
 
     private data class Respuesta(val codigo: Int, val cuerpo: String, val sesion: String?)
@@ -122,34 +75,27 @@ object TransmissionClient {
         username: String,
         password: String
     ): Respuesta {
-        val conexion = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = TIMEOUT
-            readTimeout = TIMEOUT
-            requestMethod = "POST"
-            doOutput = true
-            setRequestProperty("Content-Type", "application/json")
+        val cabeceras = buildMap {
+            put("Content-Type", "application/json")
 
             // Transmission puede funcionar sin usuario y contraseña; solo se manda la
             // autenticación si el usuario ha puesto alguna.
             if (username.isNotBlank() || password.isNotBlank()) {
-                val credenciales = Base64.encodeToString(
-                    "$username:$password".toByteArray(), Base64.NO_WRAP
-                )
-                setRequestProperty("Authorization", "Basic $credenciales")
+                val credenciales = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
+                put("Authorization", "Basic $credenciales")
             }
 
-            sesion?.let { setRequestProperty("X-Transmission-Session-Id", it) }
+            sesion?.let { put("X-Transmission-Session-Id", it) }
         }
 
-        OutputStreamWriter(conexion.outputStream).use { it.write(cuerpo) }
+        val conexion = Http.abrir(url, "POST", cabeceras)
+        Http.escribir(conexion, cuerpo)
 
-        val codigo = conexion.responseCode
-        val flujo = if (codigo >= 400) conexion.errorStream else conexion.inputStream
-        val texto = flujo?.use { String(it.readBytes()) }.orEmpty()
+        val respuesta = Http.leer(conexion)
         val nuevaSesion = conexion.getHeaderField("X-Transmission-Session-Id")
         conexion.disconnect()
 
-        return Respuesta(codigo, texto, nuevaSesion)
+        return Respuesta(respuesta.codigo, respuesta.cuerpo, nuevaSesion)
     }
 
     /**

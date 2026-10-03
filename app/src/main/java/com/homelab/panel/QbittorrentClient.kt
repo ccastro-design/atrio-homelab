@@ -1,13 +1,6 @@
 package com.homelab.panel
 
-import android.content.Context
-import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
 import java.net.URLEncoder
 
 /**
@@ -27,68 +20,32 @@ import java.net.URLEncoder
  * Se manda además la cabecera `Referer`. Esta versión no la exige, pero las 4.x sí, y
  * ponerla no cuesta nada: sin ella responden 403 sin explicar por qué.
  */
-object QbittorrentClient {
-
-    private const val TAG = "Panel"
-    private const val TIMEOUT = 15_000
+object QbittorrentClient : Conector {
 
     /** Cookie de sesión por servidor. Vale para varios envíos seguidos. */
     private val cookies = mutableMapOf<String, String>()
 
-    suspend fun send(
-        context: Context,
-        baseUrl: String,
-        username: String,
-        password: String,
-        link: String,
-        targetName: String
-    ): SendResult = withContext(Dispatchers.IO) {
-        val base = baseUrl.trimEnd('/')
+    override suspend fun entregar(destino: DatosDeEntrega, enlace: String): Entrega {
+        val base = destino.base.trimEnd('/')
 
-        try {
-            var cookie = cookies[base] ?: entrar(base, username, password)
-                ?: return@withContext SendResult.Failed(
-                    context.getString(R.string.send_bad_password, targetName)
-                )
+        var cookie = cookies[base] ?: entrar(base, destino.usuario, destino.clave)
+            ?: return Entrega.ContrasenaMala
 
-            var respuesta = anadir(base, cookie, link)
+        var respuesta = anadir(base, cookie, enlace)
 
-            // La sesión caduca por tiempo. Se vuelve a entrar y se reintenta una vez.
-            if (respuesta.codigo == 401 || respuesta.codigo == 403) {
-                cookie = entrar(base, username, password)
-                    ?: return@withContext SendResult.Failed(
-                        context.getString(R.string.send_bad_password, targetName)
-                    )
-                respuesta = anadir(base, cookie, link)
-            }
+        // La sesión caduca por tiempo. Se vuelve a entrar y se reintenta una vez.
+        if (respuesta.codigo == 401 || respuesta.codigo == 403) {
+            cookie = entrar(base, destino.usuario, destino.clave) ?: return Entrega.ContrasenaMala
+            respuesta = anadir(base, cookie, enlace)
+        }
 
-            cookies[base] = cookie
+        cookies[base] = cookie
 
-            when {
-                respuesta.codigo == 409 ->
-                    SendResult.Failed(context.getString(R.string.send_duplicate, targetName))
-
-                respuesta.codigo !in 200..299 -> SendResult.Failed(
-                    context.getString(R.string.send_http_error, targetName, respuesta.codigo)
-                )
-
-                rechazado(respuesta.cuerpo) ->
-                    SendResult.Failed(context.getString(R.string.send_not_accepted, targetName))
-
-                else -> {
-                    Log.i(TAG, "Enlace entregado a «$targetName»")
-                    SendResult.Ok(targetName)
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Fallo entregando el enlace a «$targetName»", e)
-            SendResult.Failed(
-                context.getString(
-                    R.string.send_unreachable,
-                    targetName,
-                    e.message ?: e.javaClass.simpleName
-                )
-            )
+        return when {
+            respuesta.codigo == 409 -> Entrega.YaEstaba
+            respuesta.codigo !in 200..299 -> Entrega.CodigoHttp(respuesta.codigo)
+            rechazado(respuesta.cuerpo) -> Entrega.NoAceptada
+            else -> Entrega.Hecha
         }
     }
 
@@ -126,29 +83,24 @@ object QbittorrentClient {
     private data class Respuesta(val codigo: Int, val cuerpo: String, val cookie: String?)
 
     private fun peticion(url: String, base: String, cuerpo: String, cookie: String?): Respuesta {
-        val conexion = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = TIMEOUT
-            readTimeout = TIMEOUT
-            requestMethod = "POST"
-            doOutput = true
-            setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        val cabeceras = buildMap {
+            put("Content-Type", "application/x-www-form-urlencoded")
             // Protección contra peticiones lanzadas desde otra web: la 4.x la exige.
-            setRequestProperty("Referer", base)
-            setRequestProperty("Origin", base)
-            cookie?.let { setRequestProperty("Cookie", it) }
+            put("Referer", base)
+            put("Origin", base)
+            cookie?.let { put("Cookie", it) }
         }
 
-        OutputStreamWriter(conexion.outputStream).use { it.write(cuerpo) }
+        val conexion = Http.abrir(url, "POST", cabeceras)
+        Http.escribir(conexion, cuerpo)
 
-        val codigo = conexion.responseCode
-        val flujo = if (codigo >= 400) conexion.errorStream else conexion.inputStream
-        val texto = flujo?.use { String(it.readBytes()) }.orEmpty()
+        val respuesta = Http.leer(conexion)
 
         // El nombre de la cookie cambia con el puerto, así que se guarda tal cual venga.
         val nueva = conexion.getHeaderField("Set-Cookie")?.substringBefore(';')
         conexion.disconnect()
 
-        return Respuesta(codigo, texto, nueva)
+        return Respuesta(respuesta.codigo, respuesta.cuerpo, nueva)
     }
 
     private fun codificar(valor: String): String = URLEncoder.encode(valor, "UTF-8")
