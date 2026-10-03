@@ -42,10 +42,7 @@ class MainActivity : FragmentActivity() {
 
         val config = ConfigStore.load(this)
 
-        // El salto del desbloqueo existe solo para poder verificar la aplicación desde el
-        // ordenador, y solo en compilaciones de depuración: en la de publicación
-        // BuildConfig.DEBUG es falso y la condición nunca se cumple.
-        val saltarDesbloqueo = BuildConfig.DEBUG && intent?.getStringExtra("sinhuella") != null
+        val saltarDesbloqueo = Depuracion.saltarDesbloqueo(intent)
 
         if (config.requireUnlock && !saltarDesbloqueo) {
             BiometricGate.ask(this) { autorizado ->
@@ -117,111 +114,11 @@ class MainActivity : FragmentActivity() {
         aplicarExtrasDeDepuracion(intent)
     }
 
-    /**
-     * Ayudas para probar la aplicación desde el ordenador. Este móvil no permite simular
-     * toques por adb (HyperOS revierte en silencio el ajuste que lo autoriza), así que se
-     * abren las pantallas por intent:
-     *
-     * Ojo al nombre del componente: la parte de la izquierda es el `applicationId` y la de
-     * la derecha el paquete del código, que **no coinciden** desde que se fijó el
-     * identificador definitivo.
-     *
-     *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e pantalla ajustes
-     *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e pantalla descargas
-     *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e servicio <id>
-     *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e sembrar 1
-     *
-     * Solo funciona en compilaciones de depuración: en la de publicación el `if` es
-     * siempre falso y el código se elimina al minificar.
-     */
+    /** Ver [Depuracion]. Solo hace algo en compilaciones de depuración. */
     private fun aplicarExtrasDeDepuracion(intent: Intent?) {
-        if (!BuildConfig.DEBUG || intent == null) return
-
-        when (intent.getStringExtra("sembrar")) {
-            null -> Unit
-
-            // Solo los destinos de descarga, sin tocar el panel: sirve para recuperarlos
-            // conservando su identificador, y con él la contraseña ya guardada.
-            "destinos" -> {
-                val actual = ConfigStore.load(this)
-                val nasDelPanel = actual.servers.firstOrNull { it.hostHome == "192.168.1.254" }
-
-                val nuevos = DebugSeed.create().downloadTargets
-                    .filter { candidato -> actual.downloadTargets.none { it.id == candidato.id } }
-                    .map { destino ->
-                        if (nasDelPanel != null) destino.copy(serverId = nasDelPanel.id)
-                        else destino
-                    }
-
-                ConfigStore.save(
-                    this,
-                    actual.copy(downloadTargets = actual.downloadTargets + nuevos)
-                )
-            }
-
-            else -> ConfigStore.save(this, DebugSeed.create())
-        }
-
-        // Importa un panel desde un fichero del dispositivo, para poder probar la lectura
-        // sin recorrer el selector de ficheros a mano:
-        //   adb push config.yml /data/local/tmp/config.yml
-        //   adb shell am start ... -e importar /data/local/tmp/config.yml
-        intent.getStringExtra("importar")?.let { ruta ->
-            val leido = runCatching { java.io.File(ruta).readText() }
-                .getOrNull()
-                ?.let { PanelImport.parse(it) }
-
-            if (leido == null) {
-                android.util.Log.w("Panel", "No se pudo importar $ruta")
-            } else {
-                android.util.Log.i(
-                    "Panel",
-                    "Importados ${leido.serviceCount} servicios, " +
-                        "${leido.groups.size} grupos, ${leido.servers.size} servidores, " +
-                        "${leido.logoPaths.size} iconos declarados"
-                )
-
-                val anterior = ConfigStore.load(this)
-                ConfigStore.keepPrevious(this, anterior)
-
-                // Se parte de la configuración actual, igual que hace la pantalla de
-                // ajustes: construirla de cero se llevaba por delante los destinos de
-                // descarga y los demás ajustes.
-                var nueva = anterior.copy(
-                    title = leido.title,
-                    subtitle = leido.subtitle,
-                    servers = leido.servers,
-                    groups = leido.groups
-                )
-
-                // Con -e origen http://... se traen también los iconos del panel viejo.
-                val origen = intent.getStringExtra("origen")
-                if (origen != null) {
-                    kotlinx.coroutines.runBlocking {
-                        nueva = PanelImport.withOriginIcons(this@MainActivity, nueva, leido, origen)
-                    }
-                }
-
-                ConfigStore.save(this, nueva)
-            }
-        }
-
-        // Segundo fichero con las direcciones de fuera:
-        //   adb shell am start ... -e importarfuera /data/local/tmp/vpn.yml
-        intent.getStringExtra("importarfuera")?.let { ruta ->
-            val leido = runCatching { java.io.File(ruta).readText() }
-                .getOrNull()
-                ?.let { PanelImport.parse(it) }
-
-            if (leido != null) {
-                val (nueva, cuenta) = PanelImport.applyAwayAddresses(ConfigStore.load(this), leido)
-                android.util.Log.i("Panel", "Direcciones de fuera aplicadas a $cuenta servidores")
-                ConfigStore.save(this, nueva.copy(profile = NetworkProfile.AUTO.name))
-            }
-        }
-
-        intent.getStringExtra("pantalla")?.let { debugScreen = it }
-        intent.getStringExtra("servicio")?.let { debugService = it }
+        val pedido = Depuracion.aplicarExtras(this, intent) ?: return
+        pedido.pantalla?.let { debugScreen = it }
+        pedido.servicio?.let { debugService = it }
     }
 
     /** Un enlace puede llegar como dirección pulsada o compartido desde otra aplicación. */
