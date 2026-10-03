@@ -44,14 +44,33 @@ class TabState(val service: Service, url: String) {
      */
     var httpAuthTried = false
 
-    /** Carga una dirección, o recarga la actual, dejando el estado limpio. */
-    fun load(nueva: String = url) {
+    /**
+     * Repeticiones que lleva hechas la aplicación por su cuenta porque el servidor colgó sin
+     * contestar. Ver [Reintentos].
+     */
+    var reintentosSolos = 0
+
+    /**
+     * Hay una repetición esperando su turno. Mientras, se tapa la página de error del propio
+     * WebView: el usuario ve que sigue cargando, no un error que va a desaparecer solo.
+     */
+    var reintentoPendiente by mutableStateOf(false)
+
+    /**
+     * Carga una dirección, o recarga la actual, dejando el estado limpio.
+     *
+     * @param automatica la lanza la aplicación tras colgar el servidor. Cualquier otra carga
+     *   —abrir, recargar, reintentar a mano— empieza una tanda de repeticiones nueva.
+     */
+    fun load(nueva: String = url, automatica: Boolean = false) {
         url = nueva
         loading = true
         progress = 0
         error = null
         autoLoginTried = false
         httpAuthTried = false
+        reintentoPendiente = false
+        if (!automatica) reintentosSolos = 0
         loadId++
         view?.loadUrl(nueva)
     }

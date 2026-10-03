@@ -138,6 +138,13 @@ fun TabbedBrowser(
                 }
             )
 
+            // Mientras llega la repetición. Ver `TabState.reintentoPendiente`.
+            if (activa.reintentoPendiente) {
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
+            }
+
             activa.error?.let { mensaje ->
                 PantallaDeError(
                     service = activa.service,
@@ -177,6 +184,24 @@ fun TabbedBrowser(
             activa.view?.stopLoading()
             activa.loading = false
             activa.error = TIMEOUT_MARCA
+        }
+    }
+
+    // Las repeticiones de cuando el servidor cuelga sin contestar. Ver [Reintentos].
+    tabs.forEach { tab ->
+        key(tab.key) {
+            LaunchedEffect(tab.reintentoPendiente) {
+                if (!tab.reintentoPendiente) return@LaunchedEffect
+
+                val carga = tab.loadId
+                delay(Reintentos.ESPERAS_MS[tab.reintentosSolos.coerceAtMost(Reintentos.ESPERAS_MS.lastIndex)])
+
+                // Si entretanto se recargó por otro camino, esta ya no toca.
+                if (tab.reintentoPendiente && tab.loadId == carga) {
+                    tab.reintentosSolos++
+                    tab.load(automatica = true)
+                }
+            }
         }
     }
 
@@ -311,6 +336,9 @@ private fun DialogoDeAutenticacion(
  * dejaba este fichero fuera de cualquier búsqueda.
  */
 private const val TIMEOUT_MARCA = "\u0000timeout"
+
+/** Igual que [TIMEOUT_MARCA], para el servidor que colgó sin contestar. Ver [Reintentos]. */
+private const val COLGO_MARCA = "\u0000colgo"
 
 @Composable
 private fun BarraSuperior(
@@ -725,7 +753,15 @@ private fun crearWebView(
             err: WebResourceError?
         ) {
             if (peticion?.isForMainFrame == true) {
-                tab.error = err?.description?.toString().orEmpty()
+                val descripcion = err?.description?.toString().orEmpty()
+                val hechos = tab.reintentosSolos
+
+                when {
+                    // Colgó sin contestar: se repite sola en un momento. Ver [Reintentos].
+                    Reintentos.repetirLaPestana(descripcion, hechos) -> tab.reintentoPendiente = true
+                    Reintentos.colgoLaPestana(descripcion, hechos) -> tab.error = COLGO_MARCA
+                    else -> tab.error = descripcion
+                }
                 tab.loading = false
             }
         }
@@ -855,7 +891,11 @@ private fun PantallaDeError(
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                if (mensaje == TIMEOUT_MARCA) stringResource(R.string.error_timeout) else mensaje,
+                when (mensaje) {
+                    TIMEOUT_MARCA -> stringResource(R.string.error_timeout)
+                    COLGO_MARCA -> stringResource(R.string.error_hung_up, service.name)
+                    else -> mensaje
+                },
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )

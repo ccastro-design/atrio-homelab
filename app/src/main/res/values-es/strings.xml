@@ -247,6 +247,7 @@
 
     <string name="error_title">No se pudo abrir «%1$s»</string>
     <string name="error_timeout">El servicio no ha respondido en 12 segundos.</string>
+    <string name="error_hung_up">«%1$s» ha cortado la conexión sin contestar.</string>
     <string name="error_no_away_address">Este servicio solo tiene dirección local, así que
         no se puede alcanzar desde fuera de tu red. Dale a su servidor una dirección para
         cuando estés fuera.</string>

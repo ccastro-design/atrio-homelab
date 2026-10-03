@@ -2,6 +2,7 @@ package com.homelab.panel
 
 import android.content.Context
 import android.util.Log
+import com.homelab.panel.Reintentos.conectarY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.OutputStreamWriter
@@ -205,18 +206,10 @@ object AmuleClient {
         val base = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
 
         try {
-            val cookie = login(base, password)
+            val codigo = entregarConReintentos(base, password, link)
                 ?: return@withContext SendResult.Failed(
                     context.getString(R.string.send_bad_password, targetName)
                 )
-
-            val cuerpo = buildString {
-                append("ed2klink=").append(URLEncoder.encode(link, "UTF-8"))
-                append("&selectcat=all")
-                append("&Submit=").append(URLEncoder.encode("Download link", "UTF-8"))
-            }
-
-            val codigo = post("${base}footer.php", cuerpo, cookie)
 
             if (codigo in 200..299) {
                 Log.i(TAG, "Enlace entregado a «$targetName»")
@@ -224,6 +217,10 @@ object AmuleClient {
             } else {
                 SendResult.Failed(context.getString(R.string.send_http_error, targetName, codigo))
             }
+        } catch (e: ServidorColgo) {
+            // Sí se contactó: no es la red, es aMule cerrándose. Ver [Reintentos].
+            Log.w(TAG, "«$targetName» colgó sin contestar, también al repetir", e)
+            SendResult.Failed(context.getString(R.string.error_hung_up, targetName))
         } catch (e: Exception) {
             Log.w(TAG, "Fallo entregando el enlace a «$targetName»", e)
             SendResult.Failed(
@@ -236,9 +233,41 @@ object AmuleClient {
         }
     }
 
-    /** Devuelve la cookie de sesión, o null si la contraseña no fue aceptada. */
+    /**
+     * La entrega entera —entrar y mandar el enlace—, repetida si aMule cuelga a mitad.
+     *
+     * Se repite **entera** y no solo el paso que falló: cuando `amuleweb` cuelga es porque se
+     * está cerrando, y al volver no recuerda ninguna sesión. Mandar dos veces el mismo enlace
+     * no lo duplica: aMule ignora el que ya tiene. Ver [Reintentos].
+     *
+     * Sin `Context` a propósito, para poder probarla en el móvil contra un aMule de mentira.
+     *
+     * @return el código de la respuesta al enlace, o null si no aceptó la contraseña.
+     */
+    internal suspend fun entregarConReintentos(base: String, password: String, link: String): Int? =
+        Reintentos.repetirSiCuelga { entregar(base, password, link) }
+
+    private fun entregar(base: String, password: String, link: String): Int? {
+        val cookie = login(base, password) ?: return null
+
+        val cuerpo = buildString {
+            append("ed2klink=").append(URLEncoder.encode(link, "UTF-8"))
+            append("&selectcat=all")
+            append("&Submit=").append(URLEncoder.encode("Download link", "UTF-8"))
+        }
+
+        return post("${base}footer.php", cuerpo, cookie)
+    }
+
+    /**
+     * Devuelve la cookie de sesión, o null si la contraseña no fue aceptada.
+     *
+     * Cada petición pasa por `conectarY` hasta tener el código de respuesta: si aMule cuelga,
+     * es ahí donde se nota. Lo de después es como siempre.
+     */
     private fun login(base: String, password: String): String? {
         val inicial = open(base)
+        inicial.conectarY { responseCode }
         val cookie = inicial.getHeaderField("Set-Cookie")?.substringBefore(';')
         inicial.inputStream.use { it.readBytes() }
         inicial.disconnect()
@@ -251,7 +280,10 @@ object AmuleClient {
         conexion.doOutput = true
         conexion.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
 
-        OutputStreamWriter(conexion.outputStream).use { it.write(cuerpo) }
+        conexion.conectarY {
+            OutputStreamWriter(outputStream).use { it.write(cuerpo) }
+            responseCode
+        }
 
         val respuesta = conexion.inputStream.use { String(it.readBytes()) }
         conexion.disconnect()
@@ -266,9 +298,10 @@ object AmuleClient {
         conexion.doOutput = true
         conexion.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
 
-        OutputStreamWriter(conexion.outputStream).use { it.write(cuerpo) }
-
-        val codigo = conexion.responseCode
+        val codigo = conexion.conectarY {
+            OutputStreamWriter(outputStream).use { it.write(cuerpo) }
+            responseCode
+        }
         conexion.inputStream.use { it.readBytes() }
         conexion.disconnect()
         return codigo

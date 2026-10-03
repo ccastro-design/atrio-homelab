@@ -257,6 +257,7 @@
 
     <string name="error_title">Could not open “%1$s”</string>
     <string name="error_timeout">The service did not answer within 12 seconds.</string>
+    <string name="error_hung_up">“%1$s” closed the connection without answering.</string>
     <string name="error_no_away_address">This service only has a local address, so it
         cannot be reached from outside your network. Give its server an address for when
         you are away.</string>
