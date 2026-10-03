@@ -326,20 +326,7 @@ private fun Contenido(
 
     val pestanas = remember { Pestanas() }
 
-    var enviandoEnlace by remember { mutableStateOf(false) }
-    var enlacesEntrantes by remember { mutableStateOf<List<String>>(emptyList()) }
-    /**
-     * De qué son los enlaces que acaban de llegar, cuando quien los capturó ya lo sabía.
-     *
-     * Hace falta porque la dirección de un enlace de descarga muchas veces no dice nada:
-     * los buscadores de NZB sirven `…/api?t=get&id=123&apikey=…`, y deducir el tipo otra
-     * vez a partir de eso da «no parece un enlace que se pueda enviar».
-     */
-    var tipoEntrante by remember { mutableStateOf<LinkKind?>(null) }
-    /** Fichero que armó la propia web en el móvil, cuando no hay enlace que pasar. */
-    var ficheroEntrante by remember { mutableStateOf<DownloadFile?>(null) }
-    /** Cierto mientras pueden llegar más enlaces de la misma ráfaga. */
-    var recogiendoEnlaces by remember { mutableStateOf(false) }
+    val envio = remember { EnvioDeEnlaces() }
     var servicioEnEdicion by remember { mutableStateOf<Pair<Service, String>?>(null) }
     var refrescando by remember { mutableStateOf(false) }
     /** La presentación sale sola la primera vez, y a petición desde Ajustes. */
@@ -455,8 +442,7 @@ private fun Contenido(
     LaunchedEffect(pendingLink) {
         val enlace = pendingLink ?: return@LaunchedEffect
         onLinkConsumed()
-        enlacesEntrantes = listOf(enlace)
-        enviandoEnlace = true
+        envio.deOtraAplicacion(enlace)
     }
 
     // Una web que lanza varios enlaces los suelta en ráfaga, así que se espera un momento
@@ -465,11 +451,11 @@ private fun Contenido(
     // Medio segundo y no más: el aviso de «enviando» sale desde el primer toque, pero
     // esta espera es tiempo en el que no pasa nada, y de nada sirve un aviso puntual si
     // luego se queda parado dos segundos.
-    LaunchedEffect(enlacesEntrantes, recogiendoEnlaces) {
-        if (!recogiendoEnlaces) return@LaunchedEffect
+    LaunchedEffect(envio.enlaces, envio.recogiendo) {
+        if (!envio.recogiendo) return@LaunchedEffect
 
         delay(600)
-        recogiendoEnlaces = false
+        envio.rafagaTerminada()
     }
 
     fun abrirServicio(servicio: Service) {
@@ -779,32 +765,9 @@ private fun Contenido(
                     }
                 },
                 onBackToPanel = { pantalla = Screen.PANEL },
-                onDownloadLink = { enlace, tipo ->
-                    // El aviso se abre con el primer enlace, no cuando acaba la espera:
-                    // pulsar y que no pase nada durante un segundo parece que no ha
-                    // funcionado y lleva a pulsar otra vez.
-                    enlacesEntrantes = (enlacesEntrantes + enlace).distinct()
-                    // El primero que llegue con tipo conocido manda: en una ráfaga son
-                    // todos de la misma página y del mismo tipo.
-                    if (tipoEntrante == null) tipoEntrante = tipo
-                    recogiendoEnlaces = true
-                    enviandoEnlace = true
-                },
-                onDownloadFile = { fichero ->
-                    // Aquí no hay ráfaga que esperar: el fichero ya está leído entero.
-                    ficheroEntrante = fichero
-                    enlacesEntrantes = emptyList()
-                    tipoEntrante = fichero.kind
-                    recogiendoEnlaces = false
-                    enviandoEnlace = true
-                },
-                onSendLink = {
-                    enlacesEntrantes = emptyList()
-                    tipoEntrante = null
-                    ficheroEntrante = null
-                    recogiendoEnlaces = false
-                    enviandoEnlace = true
-                },
+                onDownloadLink = { enlace, tipo -> envio.dePestana(enlace, tipo) },
+                onDownloadFile = { fichero -> envio.deFichero(fichero) },
+                onSendLink = { envio.abrirDesdePestana() },
                 onRememberCredentials = { servicio ->
                     guardar(
                         ConfigOps.updateService(config, servicio.id) { it.copy(autoLogin = true) }
@@ -844,11 +807,7 @@ private fun Contenido(
                 guardar(config.copy(profile = perfil.name))
             },
             onSettings = { pantalla = Screen.SETTINGS },
-            onSendLink = {
-                enlacesEntrantes = emptyList()
-                recogiendoEnlaces = false
-                enviandoEnlace = true
-            },
+            onSendLink = { envio.abrirDesdePanel() },
             onAddService = {
                 servicioEnEdicion = Service() to config.groups.firstOrNull()?.id.orEmpty()
             },
@@ -858,28 +817,20 @@ private fun Contenido(
     }
     }
 
-    if (enviandoEnlace) {
+    if (envio.abierto) {
         SendLinkFlow(
             config = config,
             away = away,
-            initialLinks = enlacesEntrantes,
-            tipoEntrante = tipoEntrante,
-            ficheroEntrante = ficheroEntrante,
-            esperandoMas = recogiendoEnlaces,
+            initialLinks = envio.enlaces,
+            tipoEntrante = envio.tipo,
+            ficheroEntrante = envio.fichero,
+            esperandoMas = envio.recogiendo,
             onConfigChange = { guardar(it) },
             onFinished = { mensaje ->
-                enviandoEnlace = false
-                enlacesEntrantes = emptyList()
-                tipoEntrante = null
-                ficheroEntrante = null
+                envio.cerrar()
                 Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
             },
-            onCancel = {
-                enviandoEnlace = false
-                enlacesEntrantes = emptyList()
-                tipoEntrante = null
-                ficheroEntrante = null
-            }
+            onCancel = { envio.cerrar() }
         )
     }
 
