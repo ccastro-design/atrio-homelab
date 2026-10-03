@@ -324,8 +324,7 @@ private fun Contenido(
     }
     val status = rememberStatusMap()
 
-    val pestanas = remember { mutableStateListOf<TabState>() }
-    var pestanaActiva by remember { mutableIntStateOf(0) }
+    val pestanas = remember { Pestanas() }
 
     var enviandoEnlace by remember { mutableStateOf(false) }
     var enlacesEntrantes by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -483,16 +482,7 @@ private fun Contenido(
             return
         }
 
-        val existente = pestanas.indexOfFirst { it.service.id == servicio.id }
-        if (existente >= 0) {
-            pestanaActiva = existente
-            // Puede llevar cargada la dirección del otro perfil: hay que recargar, o se
-            // queda mostrando algo que ya no responde.
-            if (pestanas[existente].url != destino) pestanas[existente].load(destino)
-        } else {
-            pestanas.add(TabState(servicio, destino))
-            pestanaActiva = pestanas.lastIndex
-        }
+        pestanas.abrir(servicio, destino)
         pantalla = Screen.TABS
     }
 
@@ -505,37 +495,12 @@ private fun Contenido(
 
     // Al cambiar de perfil, las pestañas abiertas conservan la dirección antigua.
     LaunchedEffect(away) {
-        pestanas.forEach { pestana ->
-            val destino = config.urlOf(pestana.service, away)
-            if (destino.isNotBlank() && pestana.url != destino) pestana.load(destino)
-        }
-    }
-
-    /**
-     * Cambia una pestaña de sitio, arrastrándola por la tira.
-     *
-     * La pestaña que se estaba viendo sigue siendo la misma aunque cambie de posición: se
-     * recoloca el índice de la activa, o al mover una de al lado se saltaría a otra
-     * página sin haberla pedido.
-     */
-    fun moverPestana(desde: Int, hasta: Int) {
-        if (desde !in pestanas.indices || hasta !in pestanas.indices || desde == hasta) return
-
-        pestanas.add(hasta, pestanas.removeAt(desde))
-
-        pestanaActiva = when {
-            pestanaActiva == desde -> hasta
-            desde < pestanaActiva && hasta >= pestanaActiva -> pestanaActiva - 1
-            desde > pestanaActiva && hasta <= pestanaActiva -> pestanaActiva + 1
-            else -> pestanaActiva
-        }
+        pestanas.cambiarDirecciones { config.urlOf(it, away) }
     }
 
     fun cerrarPestana(indice: Int) {
-        pestanas.getOrNull(indice)?.destroy()
-        pestanas.removeAt(indice)
-        pestanaActiva = pestanaActiva.coerceIn(0, maxOf(0, pestanas.lastIndex))
-        if (pestanas.isEmpty()) pantalla = Screen.PANEL
+        pestanas.cerrar(indice)
+        if (pestanas.vacia) pantalla = Screen.PANEL
     }
 
     // La presentación, encima de todo lo demás. Al cerrarla se vuelve a donde se estaba,
@@ -738,9 +703,7 @@ private fun Contenido(
                 // en el que ya estás dentro: la página sigue cargada y funcionando, y el
                 // usuario ve que «no ha pasado nada». Cerrarlas es además lo que espera
                 // cualquiera que pulsa algo llamado «borrar sesiones».
-                pestanas.forEach { it.destroy() }
-                pestanas.clear()
-                pestanaActiva = 0
+                pestanas.cerrarTodas()
                 if (pantalla == Screen.TABS) pantalla = Screen.PANEL
             },
             empezarEnSeguridad = irASeguridad,
@@ -762,18 +725,18 @@ private fun Contenido(
             onClose = { pantalla = Screen.PANEL }
         )
 
-        Screen.TABS -> if (pestanas.isEmpty()) {
+        Screen.TABS -> if (pestanas.vacia) {
             pantalla = Screen.PANEL
         } else {
             TabbedBrowser(
-                tabs = pestanas,
-                activeIndex = pestanaActiva,
+                tabs = pestanas.lista,
+                activeIndex = pestanas.activa,
                 config = config,
                 away = away,
                 onTrustCert = { info -> guardar(CertTrust.trust(config, info)) },
-                onSelect = { pestanaActiva = it },
+                onSelect = { pestanas.activa = it },
                 onCloseTab = { cerrarPestana(it) },
-                onMoveTab = { desde, hasta -> moverPestana(desde, hasta) },
+                onMoveTab = { desde, hasta -> pestanas.mover(desde, hasta) },
                 onSwitchToHome = {
                     NetworkResolver.invalidate()
                     guardar(config.copy(profile = NetworkProfile.HOME.name))
