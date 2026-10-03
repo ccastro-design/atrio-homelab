@@ -233,12 +233,9 @@ private fun FondoDelPanel(config: PanelConfig) {
 
     val imagen = produceState<ImageBitmap?>(null, config.backgroundImage) {
         value = withContext(Dispatchers.IO) {
-            IconStore.userIcon(context, config.backgroundImage)?.let { fichero ->
-                runCatching {
-                    android.graphics.BitmapFactory.decodeFile(fichero.absolutePath)
-                        ?.asImageBitmap()
-                }.getOrNull()
-            }
+            IconStore.userIcon(context, config.backgroundImage)
+                ?.let { IconStore.leerFondo(it) }
+                ?.asImageBitmap()
         }
     }.value ?: return
 
@@ -381,11 +378,7 @@ private fun LogoDelPanel(logoFile: String, logoIcon: String) {
 
     val propio = produceState<ImageBitmap?>(null, logoFile) {
         value = withContext(Dispatchers.IO) {
-            IconStore.userIcon(context, logoFile)?.let { fichero ->
-                runCatching {
-                    android.graphics.BitmapFactory.decodeFile(fichero.absolutePath)?.asImageBitmap()
-                }.getOrNull()
-            }
+            IconStore.userIcon(context, logoFile)?.let { IconStore.leerIcono(it) }?.asImageBitmap()
         }
     }.value
 

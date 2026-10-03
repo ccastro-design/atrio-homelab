@@ -1,6 +1,7 @@
 package com.homelab.panel
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -152,5 +153,70 @@ class IconStoreTest {
                 origenActual = enCasaYFuera
             )
         )
+    }
+
+    // -------------------------------------------------------------------------------
+    // Cuánto se reduce una imagen al leerla.
+    //
+    // Esto sí es cuenta pura, sin Android de por medio: lo que se prueba aquí vale igual
+    // en el móvil. Lo que hace el decodificador con el factor se midió aparte, en el móvil.
+    // -------------------------------------------------------------------------------
+
+    /** Una foto de 12 Mpx para el fondo: se lee a la mitad, 2000x1500, y no a 4000x3000. */
+    @Test
+    fun `una foto de 12 Mpx para el fondo se lee a la mitad`() {
+        assertEquals(2, IconStore.factorDeReduccion(4000, 3000, 1440))
+    }
+
+    /** La de 50 Mpx de muchos móviles: a un cuarto, que sigue pasando de 1440. */
+    @Test
+    fun `una foto de 50 Mpx para el fondo se lee a un cuarto`() {
+        assertEquals(4, IconStore.factorDeReduccion(8160, 6144, 1440))
+    }
+
+    /** Lo que ya guardó la aplicación se lee entero: para eso no cambia nada. */
+    @Test
+    fun `lo que ya cabe se lee entero`() {
+        assertEquals(1, IconStore.factorDeReduccion(1440, 1080, 1440))
+        assertEquals(1, IconStore.factorDeReduccion(192, 192, 192))
+        assertEquals(1, IconStore.factorDeReduccion(32, 32, 192))
+    }
+
+    /** Manda el lado mayor, esté en horizontal o en vertical. */
+    @Test
+    fun `una foto en vertical cuenta igual`() {
+        assertEquals(
+            IconStore.factorDeReduccion(4000, 3000, 1440),
+            IconStore.factorDeReduccion(3000, 4000, 1440)
+        )
+    }
+
+    /** Una imagen rota o sin medidas no se reduce: que la lectura decida qué hacer con ella. */
+    @Test
+    fun `sin medidas no se reduce`() {
+        assertEquals(1, IconStore.factorDeReduccion(0, 0, 1440))
+        assertEquals(1, IconStore.factorDeReduccion(-1, -1, 192))
+        assertEquals(1, IconStore.factorDeReduccion(4000, 3000, 0))
+    }
+
+    /**
+     * La regla entera, en todas las medidas a la vez: el lado mayor **nunca baja** del que hace
+     * falta —lo que no se lee no se recupera al escalar—, y el factor es **el mayor** posible:
+     * uno el doble ya bajaría.
+     */
+    @Test
+    fun `nunca baja del tamano pedido y no se queda corto`() {
+        for (lado in listOf(192, 1440)) {
+            for (ancho in 1..9000 step 37) {
+                for (alto in listOf(1, ancho / 3 + 1, ancho, ancho * 2)) {
+                    val factor = IconStore.factorDeReduccion(ancho, alto, lado)
+                    val mayor = maxOf(ancho, alto)
+
+                    assertEquals("potencia de dos", 0, factor and (factor - 1))
+                    assertTrue("$ancho x $alto a $lado: baja", mayor / factor >= minOf(lado, mayor))
+                    assertTrue("$ancho x $alto a $lado: se queda corto", mayor / (factor * 2) < lado)
+                }
+            }
+        }
     }
 }

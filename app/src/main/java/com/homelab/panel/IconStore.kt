@@ -8,6 +8,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -98,9 +99,8 @@ object IconStore {
             val nombre = "$id-${System.currentTimeMillis()}.png"
             val destino = File(carpetaUsuario(context), nombre)
 
-            val original = context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it)
-            } ?: return null
+            val original = leerReducida(tamano) { context.contentResolver.openInputStream(uri) }
+                ?: return null
 
             escalar(original, tamano).let { escalado ->
                 destino.outputStream().use { escalado.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -108,6 +108,57 @@ object IconStore {
 
             nombre
         }.onFailure { Log.w(TAG, "No se pudo guardar la imagen elegida", it) }.getOrNull()
+
+    /**
+     * Lee una imagen sin cargarla entera cuando es más grande de lo que se va a usar.
+     *
+     * Antes se leía siempre entera y se reducía después: una foto de 12 Mpx de la galería
+     * ocupaba 48 MB de memoria **solo para tirar casi todo** al escalarla, y una de 50 Mpx
+     * —el modo de máxima resolución de muchos móviles— 200 MB. Es la receta de la
+     * documentación de Android («Loading large bitmaps efficiently»): primero se leen solo
+     * las medidas, y después se lee saltando píxeles en potencias de dos (`inSampleSize`) sin
+     * bajar nunca de [ladoMaximo]. El ajuste fino lo sigue haciendo [escalar].
+     *
+     * Recibe cómo abrir la imagen, y no la imagen abierta, porque hay que leerla dos veces y
+     * un flujo ya leído no se puede rebobinar.
+     */
+    internal fun leerReducida(ladoMaximo: Int, abrir: () -> InputStream?): Bitmap? {
+        val medidas = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        // Así no devuelve ninguna imagen, siempre null: solo rellena las medidas.
+        abrir()?.use { BitmapFactory.decodeStream(it, null, medidas) }
+        if (medidas.outWidth <= 0 || medidas.outHeight <= 0) return null
+
+        val opciones = BitmapFactory.Options().apply {
+            inSampleSize = factorDeReduccion(medidas.outWidth, medidas.outHeight, ladoMaximo)
+        }
+        return abrir()?.use { BitmapFactory.decodeStream(it, null, opciones) }
+    }
+
+    /**
+     * Cuántos píxeles se saltan al leer: la mayor potencia de dos que deja el lado mayor en
+     * [ladoMaximo] o más. Por debajo nunca, porque lo que no se lee ya no se recupera.
+     */
+    internal fun factorDeReduccion(ancho: Int, alto: Int, ladoMaximo: Int): Int {
+        val mayor = maxOf(ancho, alto)
+        var factor = 1
+        while (ladoMaximo > 0 && mayor / (factor * 2) >= ladoMaximo) factor *= 2
+        return factor
+    }
+
+    /**
+     * Un icono o un logotipo guardados, para pintarlos.
+     *
+     * Lo que guarda la aplicación ya cabe en [TAMANO], así que el factor sale 1 y se lee igual
+     * que siempre. La lectura acotada está para que un fichero que no haya pasado por aquí
+     * no se cargue entero.
+     */
+    fun leerIcono(fichero: File): Bitmap? = leerFichero(fichero, TAMANO)
+
+    /** La imagen de fondo guardada, para pintarla. Igual que [leerIcono], con [TAMANO_FONDO]. */
+    fun leerFondo(fichero: File): Bitmap? = leerFichero(fichero, TAMANO_FONDO)
+
+    private fun leerFichero(fichero: File, ladoMaximo: Int): Bitmap? =
+        runCatching { leerReducida(ladoMaximo) { fichero.inputStream() } }.getOrNull()
 
     /**
      * Descarga una imagen y la guarda como icono de un servicio.

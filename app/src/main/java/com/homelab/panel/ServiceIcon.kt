@@ -1,6 +1,5 @@
 package com.homelab.panel
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -142,6 +141,5 @@ private fun rememberIconBitmap(service: Service, url: String, origen: String?): 
     }.value
 }
 
-private fun decodificar(fichero: java.io.File): ImageBitmap? = runCatching {
-    BitmapFactory.decodeFile(fichero.absolutePath)?.asImageBitmap()
-}.getOrNull()
+private fun decodificar(fichero: java.io.File): ImageBitmap? =
+    IconStore.leerIcono(fichero)?.asImageBitmap()

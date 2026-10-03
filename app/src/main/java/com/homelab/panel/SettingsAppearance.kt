@@ -30,12 +30,9 @@ private fun LogoActual(config: PanelConfig) {
 
     val propio = produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, config.logoFile) {
         value = withContext(Dispatchers.IO) {
-            IconStore.userIcon(context, config.logoFile)?.let { fichero ->
-                runCatching {
-                    android.graphics.BitmapFactory.decodeFile(fichero.absolutePath)
-                        ?.asImageBitmap()
-                }.getOrNull()
-            }
+            IconStore.userIcon(context, config.logoFile)
+                ?.let { IconStore.leerIcono(it) }
+                ?.asImageBitmap()
         }
     }.value
 

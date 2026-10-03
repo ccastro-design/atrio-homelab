@@ -344,12 +344,9 @@ internal fun EncuadreDeFondo(
         config.backgroundImage
     ) {
         value = withContext(Dispatchers.IO) {
-            IconStore.userIcon(context, config.backgroundImage)?.let { fichero ->
-                runCatching {
-                    android.graphics.BitmapFactory.decodeFile(fichero.absolutePath)
-                        ?.asImageBitmap()
-                }.getOrNull()
-            }
+            IconStore.userIcon(context, config.backgroundImage)
+                ?.let { IconStore.leerFondo(it) }
+                ?.asImageBitmap()
         }
     }.value ?: return
 
