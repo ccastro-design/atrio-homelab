@@ -311,7 +311,7 @@ private fun Contenido(
         }
     }
 
-    var away by remember { mutableStateOf(false) }
+    val red = remember { CasaOFuera() }
     var pantalla by remember {
         mutableStateOf(
             when (debugScreen) {
@@ -341,8 +341,6 @@ private fun Contenido(
     var avisoDeCarga by remember { mutableStateOf(ConfigStore.ultimoEstado) }
     /** Entrar en Ajustes directamente por Seguridad, no por su menú. */
     var irASeguridad by remember { mutableStateOf(false) }
-    /** Red no reconocida en la que, aun así, algo responde en una dirección de casa. */
-    var redDesconocida by remember { mutableStateOf<String?>(null) }
     /** Servicio que se ha tocado y no tiene ninguna dirección con la que abrirse. */
     var servicioSinDireccion by remember { mutableStateOf<Service?>(null) }
 
@@ -366,15 +364,6 @@ private fun Contenido(
      * botón puede saltárselo. El botón de la barra ya no se enseña, pero el gesto de
      * tirar hacia abajo sí llegaba aquí.
      */
-    /**
-     * Aplica lo que ha decidido el resolutor: además de qué direcciones tocan, puede
-     * traer una red que aprender o una por la que preguntar.
-     */
-    fun aplicar(veredicto: NetworkVerdict) {
-        away = veredicto.away
-        redDesconocida = veredicto.ask
-    }
-
     fun refrescarEstado() {
         if (refrescando || !config.checkStatus) return
         refrescando = true
@@ -383,57 +372,21 @@ private fun Contenido(
             val veredicto = NetworkResolver.resolve(context, config)
             // Un veredicto provisional no cambia el perfil: recargaría las pestañas por
             // una decisión tomada con la red a medio levantar. El estado sí se refresca.
-            if (!veredicto.provisional) aplicar(veredicto)
-            status.refresh(config, away)
+            if (!veredicto.provisional) red.aplicar(veredicto)
+            status.refresh(config, red.fuera)
             refrescando = false
         }
     }
 
-    // Al volver la aplicación a primer plano hay que volver a decidir casa o fuera: la
-    // decisión anterior puede ser de hace horas y de otra red, y aquí no se recibía
-    // ninguna señal del sistema. La primera ON_START llega con la composición inicial,
-    // que ya resuelve por su cuenta, así que se descarta.
-    var vueltasAPrimerPlano by remember { mutableIntStateOf(0) }
-    DisposableEffect(context) {
-        val ciclo = (context as? androidx.activity.ComponentActivity)?.lifecycle
-        var primera = true
-        val observador = androidx.lifecycle.LifecycleEventObserver { _, evento ->
-            if (evento == androidx.lifecycle.Lifecycle.Event.ON_START) {
-                if (primera) primera = false else vueltasAPrimerPlano++
-            }
-        }
-        ciclo?.addObserver(observador)
-        onDispose { ciclo?.removeObserver(observador) }
-    }
-
-    // Qué direcciones tocan: manda la WiFi en la que estemos, y si no se puede leer, que
-    // responda o no la dirección de casa.
-    LaunchedEffect(config.profile, config.servers, config.groups, config.homeSsids, vueltasAPrimerPlano) {
-        if (vueltasAPrimerPlano > 0) NetworkResolver.invalidate()
-        val veredicto = NetworkResolver.resolve(context, config)
-
-        if (!veredicto.provisional) {
-            aplicar(veredicto)
-            return@LaunchedEffect
-        }
-
-        // Un «fuera» provisional NO se aplica todavía. Aplicarlo en el acto era cambiar
-        // todas las pestañas a las direcciones de fuera para, tres segundos después,
-        // devolverlas a las de casa: dos recargas y por el camino se pierde lo que
-        // hubiera en ellas. Se deja el perfil como estaba, se espera a que la red
-        // termine de levantarse y la segunda decisión ya se aplica, sea la que sea.
-        delay(3_000)
-        NetworkResolver.invalidate()
-        aplicar(NetworkResolver.resolve(context, config))
-    }
+    DecidirCasaOFuera(config, red)
 
     // El estado se refresca solo mientras el panel está en pantalla. Al salir, la
     // corrutina se cancela y la aplicación deja de usar la red.
-    LaunchedEffect(config, away, pantalla) {
+    LaunchedEffect(config, red.fuera, pantalla) {
         if (!config.checkStatus || pantalla != Screen.PANEL) return@LaunchedEffect
 
         while (true) {
-            status.refresh(config, away)
+            status.refresh(config, red.fuera)
             delay(STATUS_REFRESH_SECONDS * 1000L)
         }
     }
@@ -459,7 +412,7 @@ private fun Contenido(
     }
 
     fun abrirServicio(servicio: Service) {
-        val destino = config.urlOf(servicio, away)
+        val destino = config.urlOf(servicio, red.fuera)
 
         // Sin dirección no hay nada que abrir, pero callarse tampoco vale: hasta ahora se
         // volvía sin más y tocar la tarjeta no hacía absolutamente nada.
@@ -480,8 +433,8 @@ private fun Contenido(
     }
 
     // Al cambiar de perfil, las pestañas abiertas conservan la dirección antigua.
-    LaunchedEffect(away) {
-        pestanas.cambiarDirecciones { config.urlOf(it, away) }
+    LaunchedEffect(red.fuera) {
+        pestanas.cambiarDirecciones { config.urlOf(it, red.fuera) }
     }
 
     fun cerrarPestana(indice: Int) {
@@ -579,7 +532,7 @@ private fun Contenido(
             title = { Text(stringResource(R.string.no_address_title, servicio.name)) },
             text = {
                 Text(
-                    when (config.motivoSinDireccion(servicio, away)) {
+                    when (config.motivoSinDireccion(servicio, red.fuera)) {
                         NoSePuedeAbrir.SERVIDOR_BORRADO ->
                             stringResource(R.string.no_address_server_gone)
 
@@ -718,7 +671,7 @@ private fun Contenido(
                 tabs = pestanas.lista,
                 activeIndex = pestanas.activa,
                 config = config,
-                away = away,
+                away = red.fuera,
                 onTrustCert = { info -> guardar(CertTrust.trust(config, info)) },
                 onSelect = { pestanas.activa = it },
                 onCloseTab = { cerrarPestana(it) },
@@ -726,44 +679,9 @@ private fun Contenido(
                 onSwitchToHome = {
                     NetworkResolver.invalidate()
                     guardar(config.copy(profile = NetworkProfile.HOME.name))
-                    away = false
+                    red.fuera = false
                 },
-                onRetryTab = onRetryTab@{ pestana ->
-                    // Reintentar también re-decide casa o fuera. Repetir a ciegas la misma
-                    // dirección solo acierta cuando el fallo era un transitorio de red; si
-                    // la decisión inicial fue la equivocada, el reintento la corrige y el
-                    // LaunchedEffect(away) recarga las demás pestañas.
-                    //
-                    // La reacción visual va ANTES del sondeo, que puede tardar segundos:
-                    // sin esto el botón parecía muerto y cada toque extra lanzaba otro
-                    // sondeo entero. `loading` hace además de guarda contra esos toques.
-                    if (pestana.loading) return@onRetryTab
-                    pestana.error = null
-                    pestana.loading = true
-                    pestana.progress = 0
-                    val cargaPrevia = pestana.loadId
-
-                    alcance.launch {
-                        val perfilAlEmpezar = configVigente.profile
-                        NetworkResolver.invalidate()
-                        val veredicto = NetworkResolver.resolve(context, configVigente)
-                        // No se aplica un veredicto provisional (el reintento típico ocurre
-                        // justo cuando la red anda a medio levantar) ni uno calculado con
-                        // un perfil que el usuario ha cambiado mientras se sondeaba.
-                        if (!veredicto.provisional && configVigente.profile == perfilAlEmpezar) {
-                            aplicar(veredicto)
-                        }
-
-                        val destino = configVigente.urlOf(pestana.service, away)
-                        if (destino.isNotBlank() && destino != pestana.url) {
-                            pestana.load(destino)
-                        } else if (pestana.loadId == cargaPrevia) {
-                            pestana.load()
-                        }
-                        // Si loadId cambió, otro camino —el re-resolve de la vuelta a
-                        // primer plano— ya relanzó la carga: no se pisa.
-                    }
-                },
+                onRetryTab = { pestana -> red.reintentar(pestana, context, alcance) { configVigente } },
                 onBackToPanel = { pantalla = Screen.PANEL },
                 onDownloadLink = { enlace, tipo -> envio.dePestana(enlace, tipo) },
                 onDownloadFile = { fichero -> envio.deFichero(fichero) },
@@ -782,7 +700,7 @@ private fun Contenido(
 
         Screen.PANEL -> Dashboard(
             config = config,
-            away = away,
+            away = red.fuera,
             status = status,
             refreshing = refrescando,
             onRefresh = { refrescarEstado() },
@@ -797,7 +715,7 @@ private fun Contenido(
                     }
 
                     servicio.openExternal ->
-                        abrirFuera(context, servicio, config.urlOf(servicio, away))
+                        abrirFuera(context, servicio, config.urlOf(servicio, red.fuera))
 
                     else -> abrirServicio(servicio)
                 }
@@ -820,7 +738,7 @@ private fun Contenido(
     if (envio.abierto) {
         SendLinkFlow(
             config = config,
-            away = away,
+            away = red.fuera,
             initialLinks = envio.enlaces,
             tipoEntrante = envio.tipo,
             ficheroEntrante = envio.fichero,
@@ -837,11 +755,11 @@ private fun Contenido(
     // Alguien responde en una dirección de casa, pero la red no es de las reconocidas.
     // Mientras no se conteste, la aplicación usa las direcciones de fuera: no se manda
     // nada a una máquina que podría no ser suya.
-    redDesconocida?.let { wifi ->
+    red.redDesconocida?.let { wifi ->
         AlertDialog(
             onDismissRequest = {
                 NetworkResolver.dismiss(wifi)
-                redDesconocida = null
+                red.redDesconocida = null
             },
             title = { Text(stringResource(R.string.network_unknown_title)) },
             text = { Text(stringResource(R.string.network_unknown_body, wifi), fontSize = 14.sp) },
@@ -849,13 +767,13 @@ private fun Contenido(
                 TextButton(onClick = {
                     guardar(config.copy(homeSsids = config.homeSsids + wifi))
                     NetworkResolver.invalidate()
-                    redDesconocida = null
+                    red.redDesconocida = null
                 }) { Text(stringResource(R.string.network_unknown_mine)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     NetworkResolver.dismiss(wifi)
-                    redDesconocida = null
+                    red.redDesconocida = null
                 }) { Text(stringResource(R.string.network_unknown_not_mine)) }
             }
         )
