@@ -83,6 +83,10 @@ android {
             // Minificada, con sus reglas en `proguard-rules.pro`. Sin esas reglas la
             // compilación ni terminaba, y lo que se guarda en disco dejaba de poder leerse.
             isMinifyEnabled = true
+            // Quita también los recursos que nadie usa, casi todos de las librerías. Es seguro
+            // porque la aplicación nunca busca un recurso por su nombre (`getIdentifier`):
+            // si algún día lo hiciera, ese recurso habría que declararlo en `res/raw/keep.xml`.
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
