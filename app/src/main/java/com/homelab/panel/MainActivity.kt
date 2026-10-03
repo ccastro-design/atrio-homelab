@@ -12,15 +12,10 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -442,6 +437,12 @@ private fun Contenido(
         if (pestanas.vacia) pantalla = Screen.PANEL
     }
 
+    /** Abre la ficha de un servicio, dentro del grupo en que está. */
+    fun editarServicio(servicio: Service) {
+        val grupo = config.groups.firstOrNull { g -> g.services.any { it.id == servicio.id } }
+        servicioEnEdicion = servicio to grupo?.id.orEmpty()
+    }
+
     // La presentación, encima de todo lo demás. Al cerrarla se vuelve a donde se estaba,
     // que al abrir la aplicación es el panel y al pedirla desde Ajustes, los ajustes.
     if (tutorial) {
@@ -466,100 +467,36 @@ private fun Contenido(
     }
 
     if (avisoDeCarga != ConfigStore.Estado.NORMAL) {
-        val recuperada = avisoDeCarga == ConfigStore.Estado.RECUPERADA
-
-        AlertDialog(
-            onDismissRequest = {
+        AvisoDeConfiguracion(
+            recuperada = avisoDeCarga == ConfigStore.Estado.RECUPERADA,
+            onVisto = {
                 ConfigStore.avisoVisto()
                 avisoDeCarga = ConfigStore.Estado.NORMAL
-            },
-            title = {
-                Text(
-                    stringResource(
-                        if (recuperada) R.string.config_recovered_title
-                        else R.string.config_lost_title
-                    )
-                )
-            },
-            text = {
-                Text(
-                    stringResource(
-                        if (recuperada) R.string.config_recovered_body
-                        else R.string.config_lost_body
-                    ),
-                    fontSize = 14.sp
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    ConfigStore.avisoVisto()
-                    avisoDeCarga = ConfigStore.Estado.NORMAL
-                }) {
-                    Text(stringResource(R.string.ok))
-                }
             }
         )
     }
 
     if (preguntarRed) {
-        AlertDialog(
-            onDismissRequest = { preguntarRed = false },
-            title = { Text(stringResource(R.string.ask_network_title)) },
-            text = { Text(stringResource(R.string.ask_network_body), fontSize = 14.sp) },
-            confirmButton = {
-                TextButton(onClick = {
-                    preguntarRed = false
-                    irASeguridad = true
-                    pantalla = Screen.SETTINGS
-                }) { Text(stringResource(R.string.ask_network_go)) }
+        PreguntaRedDeCasa(
+            onIr = {
+                preguntarRed = false
+                irASeguridad = true
+                pantalla = Screen.SETTINGS
             },
-            dismissButton = {
-                TextButton(onClick = { preguntarRed = false }) {
-                    Text(stringResource(R.string.ask_network_later))
-                }
-            }
+            onLuego = { preguntarRed = false }
         )
     }
 
-    // Se ha tocado un servicio que no tiene con qué abrirse. Se dice por qué y se ofrece
-    // ir a su ficha, que es donde se arregla: allí se le elige otro servidor o se le pone
-    // una dirección propia.
     servicioSinDireccion?.let { servicio ->
-        val servidor = config.server(servicio.serverId)
-
-        AlertDialog(
-            onDismissRequest = { servicioSinDireccion = null },
-            title = { Text(stringResource(R.string.no_address_title, servicio.name)) },
-            text = {
-                Text(
-                    when (config.motivoSinDireccion(servicio, red.fuera)) {
-                        NoSePuedeAbrir.SERVIDOR_BORRADO ->
-                            stringResource(R.string.no_address_server_gone)
-
-                        NoSePuedeAbrir.SERVIDOR_SIN_DIRECCION ->
-                            stringResource(
-                                R.string.no_address_server_empty,
-                                servidor?.name.orEmpty()
-                            )
-
-                        else -> stringResource(R.string.no_address_none)
-                    },
-                    fontSize = 14.sp
-                )
+        AvisoSinDireccion(
+            servicio = servicio,
+            config = config,
+            fuera = red.fuera,
+            onEditar = {
+                servicioSinDireccion = null
+                editarServicio(servicio)
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    val grupo = config.groups
-                        .firstOrNull { g -> g.services.any { it.id == servicio.id } }
-                    servicioSinDireccion = null
-                    servicioEnEdicion = servicio to grupo?.id.orEmpty()
-                }) { Text(stringResource(R.string.edit)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { servicioSinDireccion = null }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+            onCancelar = { servicioSinDireccion = null }
         )
     }
 
@@ -610,33 +547,7 @@ private fun Contenido(
             onOpenDownloads = { pantalla = Screen.DOWNLOADS },
             onOpenScan = { pantalla = Screen.SCAN },
             onShowTutorial = { tutorial = true },
-            onCerrarApp = {
-                // Se cierra la aplicación **matando el proceso**, no solo la pantalla: lo
-                // que hay que vaciar es la memoria del motor del navegador, donde quedan
-                // las credenciales de los servicios que las piden por su propia ventana, y
-                // a esa memoria no llega ninguna función de Android. Muere con el proceso
-                // y de ninguna otra forma; por eso el interruptor de «borrar sesiones al
-                // salir» sí funciona: allí el proceso también acaba muriendo.
-                //
-                // El retardo deja ver el aviso de que se ha borrado, y da margen a que
-                // termine de escribirse la configuración.
-                val actividad = context as? android.app.Activity
-                val cola = android.os.Handler(android.os.Looper.getMainLooper())
-                cola.postDelayed({
-                    actividad?.finishAffinity()
-
-                    // El cierre y la muerte del proceso van en **dos mensajes separados**,
-                    // no seguidos. Entre uno y otro, Android ejecuta el ciclo de cierre de
-                    // la pantalla, y ahí es donde el sistema espera a que terminen las
-                    // escrituras que quedaran encoladas y donde se aplica «borrar las
-                    // sesiones al salir» si el usuario lo tiene puesto. Haciéndolo todo de
-                    // una tacada, ese cierre no llegaba a ocurrir: se mataba el proceso
-                    // antes y se perdían las dos cosas.
-                    cola.postDelayed({
-                        android.os.Process.killProcess(android.os.Process.myPid())
-                    }, 600)
-                }, 1_200)
-            },
+            onCerrarApp = { cerrarLaAplicacion(context) },
             onSessionsCleared = {
                 // Las pestañas abiertas se cierran. Borrar las cookies no echa de un sitio
                 // en el que ya estás dentro: la página sigue cargada y funcionando, y el
@@ -708,11 +619,7 @@ private fun Contenido(
                 when {
                     // Un ejemplo no apunta a ninguna máquina: al tocarlo se abre su
                     // ficha, para que enseñe cómo se configura un servicio.
-                    servicio.isExample -> {
-                        val grupo = config.groups
-                            .firstOrNull { g -> g.services.any { it.id == servicio.id } }
-                        servicioEnEdicion = servicio to grupo?.id.orEmpty()
-                    }
+                    servicio.isExample -> editarServicio(servicio)
 
                     servicio.openExternal ->
                         abrirFuera(context, servicio, config.urlOf(servicio, red.fuera))
@@ -752,32 +659,49 @@ private fun Contenido(
         )
     }
 
-    // Alguien responde en una dirección de casa, pero la red no es de las reconocidas.
-    // Mientras no se conteste, la aplicación usa las direcciones de fuera: no se manda
-    // nada a una máquina que podría no ser suya.
     red.redDesconocida?.let { wifi ->
-        AlertDialog(
-            onDismissRequest = {
-                NetworkResolver.dismiss(wifi)
+        PreguntaRedDesconocida(
+            wifi = wifi,
+            onEsMia = {
+                guardar(config.copy(homeSsids = config.homeSsids + wifi))
+                NetworkResolver.invalidate()
                 red.redDesconocida = null
             },
-            title = { Text(stringResource(R.string.network_unknown_title)) },
-            text = { Text(stringResource(R.string.network_unknown_body, wifi), fontSize = 14.sp) },
-            confirmButton = {
-                TextButton(onClick = {
-                    guardar(config.copy(homeSsids = config.homeSsids + wifi))
-                    NetworkResolver.invalidate()
-                    red.redDesconocida = null
-                }) { Text(stringResource(R.string.network_unknown_mine)) }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    NetworkResolver.dismiss(wifi)
-                    red.redDesconocida = null
-                }) { Text(stringResource(R.string.network_unknown_not_mine)) }
+            onNoEsMia = {
+                NetworkResolver.dismiss(wifi)
+                red.redDesconocida = null
             }
         )
     }
+}
+
+/**
+ * Cierra la aplicación **matando el proceso**, no solo la pantalla.
+ *
+ * Lo que hay que vaciar es la memoria del motor del navegador, donde quedan las credenciales
+ * de los servicios que las piden por su propia ventana, y a esa memoria no llega ninguna
+ * función de Android. Muere con el proceso y de ninguna otra forma; por eso el interruptor de
+ * «borrar sesiones al salir» sí funciona: allí el proceso también acaba muriendo.
+ *
+ * El retardo deja ver el aviso de que se ha borrado, y da margen a que termine de escribirse
+ * la configuración.
+ */
+private fun cerrarLaAplicacion(context: Context) {
+    val actividad = context as? android.app.Activity
+    val cola = android.os.Handler(android.os.Looper.getMainLooper())
+    cola.postDelayed({
+        actividad?.finishAffinity()
+
+        // El cierre y la muerte del proceso van en **dos mensajes separados**, no seguidos.
+        // Entre uno y otro, Android ejecuta el ciclo de cierre de la pantalla, y ahí es donde
+        // el sistema espera a que terminen las escrituras que quedaran encoladas y donde se
+        // aplica «borrar las sesiones al salir» si el usuario lo tiene puesto. Haciéndolo todo
+        // de una tacada, ese cierre no llegaba a ocurrir: se mataba el proceso antes y se
+        // perdían las dos cosas.
+        cola.postDelayed({
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }, 600)
+    }, 1_200)
 }
 
 /**
