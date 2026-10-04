@@ -18,22 +18,12 @@ import java.net.URL
 import javax.net.ssl.SSLException
 
 /**
- * Busca servicios en la red local, en dos pasos.
+ * Busca servicios en la red local, en dos pasos: primero se listan los **equipos** de la
+ * red, y cuando el usuario elige uno se escanean **todos** sus puertos, se descarta lo que
+ * no hable HTTP y se identifica cada panel por su título o por la cabecera `Server`.
  *
- * El primer diseño buscaba una lista fija de puertos en toda la red y presentaba cada
- * puerto abierto como un servicio. Falló por tres motivos, todos comprobados en una red
- * doméstica real:
- *
- *  - Una lista de puertos **no encuentra los puertos personalizados**. Un aMule en el
- *    58711 en vez del 4711 de fábrica era invisible.
- *  - Una impresora con el 80, el 443 y el 8080 abiertos **salía tres veces**, igual que
- *    el router o el Pi-hole. Un equipo no es un servicio por cada puerto que tenga.
- *  - Ofrecía puertos que no son paneles web (SSH, carpetas compartidas, impresión), que
- *    solo hacen ruido.
- *
- * Ahora: primero se listan los **equipos** de la red, y cuando el usuario elige uno se
- * escanean **todos** sus puertos, se descarta lo que no hable HTTP y se identifica cada
- * panel por su título o por la cabecera `Server`, que delata aparatos sin título.
+ * Una lista de puertos **no encuentra los puertos personalizados**, y un equipo no es un
+ * servicio por cada puerto que tenga.
  */
 object NetworkScan {
 
@@ -86,12 +76,8 @@ object NetworkScan {
     /**
      * Un rango de direcciones donde buscar, del tipo `192.168.1.`
      *
-     * No basta con mirar la red activa del móvil. Con una VPN levantada, **la red activa
-     * es la VPN**: se leía su dirección (del rango `100.64.0.0/10` en el caso de Tailscale) y se
-     * recorría ese rango, que no es una red de verdad —las direcciones de una malla se
-     * reparten por todo el espacio, no por subredes—, así que no aparecía nada. Y al
-     * encender la WiFi seguía saliendo la VPN, porque el sistema la mantiene como red por
-     * omisión.
+     * No basta con mirar la red activa del móvil: con una VPN levantada, **la red activa
+     * es la VPN**, porque el sistema la mantiene como red por omisión.
      */
     data class NetworkOption(
         /** Los tres primeros octetos con el punto: `192.168.1.` Vacío si hay [hosts]. */
@@ -165,10 +151,9 @@ object NetworkScan {
                     }
                 }
 
-                // Equipos de la malla. Aquí no hay rango que recorrer —cada equipo tiene
-                // una dirección suelta dentro de un espacio enorme—, pero el túnel trae
-                // una ruta de una sola dirección por cada equipo conocido: esa es la
-                // lista, y es la única forma de que buscar funcione estando fuera de casa.
+                // Equipos de la malla. No hay rango que recorrer, pero el túnel trae una
+                // ruta de una sola dirección por cada equipo conocido: esa es la lista, y
+                // es la única forma de que buscar funcione estando fuera de casa.
                 val equipos = propiedades.routes
                     .mapNotNull { it.destination }
                     .filter { it.prefixLength == 32 }
@@ -449,9 +434,6 @@ object NetworkScan {
                 isHtml = tipo.contains("text/html")
             )
         } catch (e: SSLException) {
-            // Un servidor cifrado de verdad falla por el certificado; un puerto que no
-            // habla TLS (SSH, BitTorrent) falla porque lo que llega no es TLS.
-            //
             // Aun siendo TLS no se puede mirar dentro, así que no hay forma de saber si
             // es un panel o una interfaz de programación como la de Docker en el 2376.
             // Solo se ofrece si el puerto es uno de los que sirven paneles cifrados.
@@ -504,7 +486,6 @@ object NetworkScan {
         }
     }.getOrNull()
 
-    /** Título de una dirección concreta. */
     private fun tituloDe(url: String): String? = respuestaHttp(url)?.title
 
     private fun cabeceraServer(url: String): String? = respuestaHttp(url)?.server

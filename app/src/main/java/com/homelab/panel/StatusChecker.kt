@@ -26,8 +26,7 @@ data class ServiceStatus(val state: ServiceState)
  *
  * Solo trabaja mientras el panel está en pantalla: no hay servicios en segundo plano,
  * ni notificaciones, ni despertares programados. Así no hace falta pelearse con el
- * ahorro de batería de cada fabricante ni pedir permisos, y el usuario ve el estado
- * justo cuando le interesa, que es cuando está mirando el panel.
+ * ahorro de batería de cada fabricante ni pedir permisos.
  */
 class StatusMap {
 

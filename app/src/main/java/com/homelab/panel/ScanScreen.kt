@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** Pasos del buscador. */
 private enum class ScanStep { INTRO, DEVICES, SERVICES }
 
 /**
@@ -57,7 +56,7 @@ fun ScanScreen(
     var aviso by remember { mutableStateOf<String?>(null) }
 
     // Las redes se releen cada vez que se abre el selector: encender la WiFi con la VPN
-    // puesta cambia la respuesta, y antes se quedaba con la primera lectura para siempre.
+    // puesta cambia la respuesta.
     var redes by remember { mutableStateOf(NetworkScan.networks(context)) }
     var red by remember { mutableStateOf(redes.firstOrNull()) }
     var eligiendoRed by remember { mutableStateOf(false) }
@@ -334,8 +333,7 @@ private fun Intro(
  *
  * Hace falta porque el móvil puede estar en varias a la vez y el sistema no siempre da la
  * que interesa: con la VPN puesta, la red por omisión es la VPN aunque la WiFi esté
- * encendida. Y con un enrutador de subred, la red de casa aparece aquí también cuando se
- * está fuera, que es justo cuando más se agradece.
+ * encendida.
  */
 @Composable
 private fun SelectorDeRed(

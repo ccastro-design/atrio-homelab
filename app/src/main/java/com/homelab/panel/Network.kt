@@ -66,14 +66,9 @@ object Reachability {
  * El nombre de la red WiFi a la que está conectado el móvil.
  *
  * Hace falta porque «alguien responde en la dirección de mi NAS» no significa que sea mi
- * NAS: `192.168.1.254:8080` existe en media España, y en casa de un amigo con homelab la
- * comprobación de alcance daba «estoy en casa» y el panel acababa entrando en su máquina
- * —y mandándole las contraseñas guardadas—.
- *
- * Se intentó primero deducir la red sin permisos, por su subred, su puerta de enlace y sus
- * servidores DNS. No vale: `192.168.1.0/24` con el router en el `.1` y el DNS de Cloudflare
- * es la instalación por omisión de medio mundo, así que dos casas salían idénticas. El
- * nombre de la WiFi sí las distingue, y además el usuario lo entiende y lo controla.
+ * NAS: en casa de un amigo con homelab el panel acababa entrando en su máquina —y
+ * mandándole las contraseñas guardadas—. Deducir la red sin permisos, por su subred, su
+ * puerta de enlace y sus servidores DNS, no vale: dos casas salían idénticas.
  *
  * **El precio es el permiso de ubicación**, que es lo que Android exige para leerlo. Ver
  * `AndroidManifest.xml`.
@@ -163,9 +158,6 @@ data class NetworkVerdict(
  * Cuando no hay nombre que leer —por cable, sin permiso, o con la ubicación apagada— se
  * cae al método de siempre: comprobar si la dirección de casa responde. Es menos seguro,
  * pero es preferible a dejar el panel inservible.
- *
- * El resultado se recuerda mientras no cambie la red, para no repetir la comprobación
- * cada vez que se pinta el panel.
  */
 object NetworkResolver {
 
@@ -214,12 +206,9 @@ object NetworkResolver {
             respondeAlgo = responde
         )
 
-        // Un «fuera» dictado a ciegas —sin nombre de WiFi legible y sin que nadie
-        // contestara— muchas veces no es «fuera»: es la aplicación recién abierta con la
-        // WiFi todavía asociándose, y en 1.200 ms no contesta nadie. Se devuelve marcado
-        // como provisional, porque algo hay que contestar ya, pero **no se cachea**: la
-        // siguiente consulta debe volver a mirar, no arrastrar 30 segundos una decisión
-        // tomada antes de que la red existiera.
+        // Un «fuera» dictado a ciegas muchas veces no es «fuera»: es la aplicación recién
+        // abierta con la WiFi todavía asociándose. Se devuelve como provisional, pero **no
+        // se cachea**: la siguiente consulta debe volver a mirar.
         val aCiegas = veredicto.away && wifi.isBlank() && !responde
         if (aCiegas) return veredicto.copy(provisional = true)
 
@@ -231,10 +220,7 @@ object NetworkResolver {
 
     /**
      * La decisión, sin red ni Android de por medio: entran datos y sale el veredicto.
-     *
-     * Está separada para poder probarla. Comprobar a mano el caso que importa —estar en una
-     * WiFi ajena donde algo responde en la dirección de casa— exige irse físicamente a otra
-     * casa; aquí son cuatro datos inventados. Ver `NetworkResolverTest`.
+     * Está separada para poder probarla. Ver `NetworkResolverTest`.
      *
      * @param wifi nombre de la WiFi actual, o vacío si no se puede leer o se va por cable.
      * @param descartada si el usuario ya dijo que esta WiFi no es suya.
@@ -259,13 +245,8 @@ object NetworkResolver {
         }
 
         // Sin ninguna red declarada, por cable, o sin poder leer el nombre: lo de siempre,
-        // decidir por quién contesta.
-        //
-        // Aquí **no** se aprende la red sola. Se hacía, y el resultado era que al pulsar
-        // «Olvidar» la lista se quedaba vacía, esta rama la volvía a aprender en el acto y
-        // el botón parecía roto. Y de fondo: que la red sea la tuya lo dice el usuario,
-        // desde la tarjeta del final de la presentación o desde Ajustes › Seguridad.
-        // Adivinarlo es lo que se quería evitar.
+        // decidir por quién contesta. Aquí **no** se aprende la red sola: que la red sea
+        // la tuya lo dice el usuario. Adivinarlo es lo que se quería evitar.
         return NetworkVerdict(away = !respondeAlgo)
     }
 
