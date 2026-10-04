@@ -2,24 +2,15 @@ package com.homelab.panel
 
 import kotlinx.serialization.Serializable
 
-/**
- * Cómo se decide qué dirección usar para llegar a los servicios.
- *
- * AUTO comprueba si la dirección de casa responde; si no, usa la de fuera. Se eligió
- * la alcanzabilidad en vez del nombre de la red WiFi porque no necesita permiso de
- * ubicación, funciona igual por cable y no depende de que el usuario escriba bien el
- * nombre de su red.
- */
+/** Cómo se decide qué dirección usar para llegar a los servicios. */
 enum class NetworkProfile { AUTO, HOME, AWAY }
 
 /**
  * Tipos de enlace que la aplicación sabe entregar a un servicio de descarga.
  *
- * No hay tipo para «enlace directo» a propósito. Existió mientras estuvo previsto pyLoad,
- * y era un problema: un enlace directo es **cualquier dirección web**, así que con un
- * destino así configurado toda página pasaba a ser enviable y la aplicación se ofrecía a
- * descargar cualquier cosa que se compartiera con ella. Los cuatro tipos de aquí son
- * inequívocos: se reconocen por el propio enlace y no se confunden con navegar.
+ * No hay tipo para «enlace directo» a propósito: un enlace directo es **cualquier dirección
+ * web**, así que con un destino así configurado toda página pasaba a ser enviable. Los
+ * cuatro tipos de aquí son inequívocos: se reconocen por el propio enlace.
  */
 enum class LinkKind { ED2K, MAGNET, TORRENT, NZB }
 
@@ -107,10 +98,9 @@ data class Service(
     /**
      * Avisar en la tarjeta de que este servicio va sin cifrar.
      *
-     * Se puede quitar servicio a servicio, igual que la comprobación: en una red de casa
-     * casi todo va por HTTP y el aviso repetido quince veces deja de avisar de nada. Lo
-     * que **no** se puede desactivar es la confirmación de un certificado desconocido:
-     * eso no es un aviso, es una decisión.
+     * Se puede quitar servicio a servicio: en una red de casa casi todo va por HTTP y el
+     * aviso repetido quince veces deja de avisar de nada. Lo que **no** se puede desactivar
+     * es la confirmación de un certificado desconocido: eso no es un aviso, es una decisión.
      */
     val warnCleartext: Boolean = true,
 
@@ -201,10 +191,9 @@ data class PanelConfig(
     // «#RRGGBB» y no como número para que un fichero de configuración exportado se pueda
     // leer y entender de un vistazo.
 
-    // De cada color hay dos: el del tema claro y el del oscuro. Un color fijo no puede
-    // seguir al tema —el blanco que se lee sobre un fondo oscuro desaparece sobre uno
-    // claro—, así que se guardan por separado. **El de oscuro vacío significa «el mismo
-    // que en claro»**, con lo que una configuración de las de antes se sigue viendo igual.
+    // De cada color hay dos: el del tema claro y el del oscuro. Un color fijo no puede seguir
+    // al tema, así que se guardan por separado. **El de oscuro vacío significa «el mismo que
+    // en claro»**, con lo que una configuración de las de antes se sigue viendo igual.
 
     /** Fondo del panel. */
     val backgroundColor: String = "",
@@ -370,21 +359,14 @@ data class PanelConfig(
      * Las dos direcciones de un servicio juntas, para saber si su icono sigue valiendo.
      *
      * El icono se guarda por servicio y no por dirección, o se perdería cada vez que se
-     * sale de casa. Pero entonces hay que notar cuándo el servicio **se muda de verdad**:
-     * si cambia de máquina o de puerto, el icono guardado puede ser el de otro programa.
-     * Van las dos direcciones porque cualquiera de ellas puede cambiar sola.
+     * sale de casa. Pero entonces hay que notar cuándo el servicio **se muda de verdad**,
+     * y van las dos direcciones porque cualquiera de ellas puede cambiar sola.
      */
     fun iconOrigin(service: Service): String =
         urlOf(service, away = false) + "|" + urlOf(service, away = true)
 
     /**
      * Por qué un servicio no se puede abrir, o `null` si sí tiene dirección.
-     *
-     * Un servicio saca su dirección de un servidor —que guarda la de la red local y la de
-     * fuera— o de la suya propia, que es lo que se usa para páginas de internet. Cuando no
-     * queda ninguna de las dos no hay nada que abrir, y antes tocar la tarjeta **no hacía
-     * absolutamente nada**: el panel se lo callaba y parecía que la aplicación se había
-     * quedado colgada.
      *
      * El caso corriente es borrar un servidor: sus servicios siguen en el panel apuntando
      * a un identificador que ya no existe.
@@ -439,7 +421,6 @@ data class PanelConfig(
     val hasExamples: Boolean get() = allServices.any { it.isExample }
 }
 
-/** Une esquema, equipo, puerto y ruta en una dirección completa. */
 /**
  * Motivos por los que un servicio no tiene con qué abrirse.
  *
@@ -479,16 +460,9 @@ fun buildUrl(scheme: String, host: String, port: Int, path: String): String {
 }
 
 /**
- * Endereza una dirección escrita a mano antes de usarla.
- *
- * Cambia las barras invertidas por normales. Parece una tontería y no lo es: escribir
- * `http:\\equipo` en el teclado del móvil es fácil, y el resultado era que **la aplicación
- * se contradecía a sí misma**. La pestaña abría la web sin quejarse, porque el WebView es
- * Chromium y los navegadores enderezan esas barras en silencio desde siempre; pero
- * `java.net.URI` considera la barra invertida un carácter ilegal y lanza excepción, así que
- * la comprobación de estado se quedaba sin equipo al que llamar y marcaba el servicio como
- * caído. El usuario veía su web cargando perfectamente con el cartel de «Sin conexión».
- *
+ * Endereza una dirección escrita a mano antes de usarla: cambia las barras invertidas por
+ * normales. El WebView es Chromium y los navegadores enderezan esas barras en silencio;
+ * pero `java.net.URI` considera la barra invertida un carácter ilegal y lanza excepción.
  * Se aplica **al guardar y también al leer**, para que las direcciones ya guardadas con el
  * fallo se curen solas sin tener que migrar nada.
  */

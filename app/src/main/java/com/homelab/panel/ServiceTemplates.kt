@@ -4,10 +4,9 @@ package com.homelab.panel
  * Servicios conocidos del mundo autoalojado, con su puerto habitual, su categoría y si
  * necesitan la versión de escritorio.
  *
- * Sirven para dos cosas: rellenar la ficha al añadir un servicio a mano, y reconocer lo
- * que encuentre el buscador de red. Aquí solo hay nombres y números de puerto, es decir
- * referencias por su nombre a programas conocidos: no se distribuye ningún logotipo ni
- * material de marca.
+ * Sirven para rellenar la ficha al añadir un servicio a mano, y reconocer lo que encuentre
+ * el buscador de red. Aquí solo hay nombres y números de puerto: no se distribuye ningún
+ * logotipo ni material de marca.
  */
 data class ServiceTemplate(
     val name: String,

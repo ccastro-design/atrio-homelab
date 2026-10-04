@@ -3,14 +3,8 @@ package com.homelab.panel
 /**
  * Configuración de prueba para verificar la aplicación desde el ordenador.
  *
- * Solo se usa desde las ayudas de depuración de [MainActivity], que están dentro de un
- * `if (BuildConfig.DEBUG)`. No forma parte del producto: sirve para poder comprobar el
- * estado de los servicios, las pestañas y el envío de enlaces en un móvil donde no se
- * pueden simular toques por adb.
- *
- * Las direcciones son de ejemplo y hay que ajustarlas a la máquina contra la que se vaya
- * a probar. No se deja aquí la del autor: este fichero acaba en un repositorio público y
- * la dirección de su nodo de la VPN no pinta nada ahí.
+ * No forma parte del producto. Las direcciones son de ejemplo y hay que ajustarlas a la
+ * máquina contra la que se vaya a probar. Este fichero acaba en un repositorio público.
  */
 object DebugSeed {
 

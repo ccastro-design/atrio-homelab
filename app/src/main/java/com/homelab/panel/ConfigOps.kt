@@ -3,9 +3,7 @@ package com.homelab.panel
 /**
  * Operaciones sobre la configuración: alta, baja y reordenación de servicios y grupos.
  *
- * Están aquí, y no en cada pantalla, porque el panel y los ajustes hacen lo mismo y
- * tenerlo duplicado ya provocó un fallo: al guardar un servicio editado se colocaba al
- * final de su grupo en vez de quedarse donde estaba.
+ * Están aquí, y no en cada pantalla, porque el panel y los ajustes hacen lo mismo.
  */
 object ConfigOps {
 

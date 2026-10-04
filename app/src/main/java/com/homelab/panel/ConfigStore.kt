@@ -36,9 +36,8 @@ object ConfigStore {
 
     /**
      * Aviso pendiente de dar. **Una lectura correcta no lo borra**: la configuración se lee
-     * dos veces al arrancar —una para saber si hay que pedir la huella y otra para la
-     * pantalla—, y la segunda ya encuentra el fichero arreglado. Se limpia cuando el
-     * usuario ha visto el aviso, con [avisoVisto].
+     * dos veces al arrancar, y la segunda ya encuentra el fichero arreglado. Se limpia
+     * cuando el usuario ha visto el aviso, con [avisoVisto].
      */
     var ultimoEstado: Estado = Estado.NORMAL
         private set
@@ -50,10 +49,7 @@ object ConfigStore {
     /**
      * Lee la configuración, recuperándose de un fichero dañado.
      *
-     * Antes, si el fichero no se podía leer se partía de cero **sin decir nada**, y en
-     * cuanto el usuario tocaba cualquier ajuste esa configuración vacía se guardaba encima:
-     * quien tuviera veinte servicios metidos a mano los perdía todos sin enterarse. Ahora
-     * el fichero ilegible se aparta en vez de machacarse, se prueba con la copia, y el
+     * El fichero ilegible se aparta en vez de machacarse, se prueba con la copia, y el
      * resultado queda en [ultimoEstado] para avisar.
      */
     fun load(context: Context): PanelConfig =
@@ -104,8 +100,6 @@ object ConfigStore {
      *
      * Se escribe en un fichero aparte, se comprueba que lo escrito se puede volver a leer y
      * solo entonces se pone en su sitio con un renombrado, que el sistema hace de una pieza.
-     * Escribiendo directamente sobre el fichero bueno, un apagón a mitad lo dejaba cortado
-     * y la configuración se perdía.
      */
     fun save(context: Context, config: PanelConfig) = saveIn(context.filesDir, config)
 

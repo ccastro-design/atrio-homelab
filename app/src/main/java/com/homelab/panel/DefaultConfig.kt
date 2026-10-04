@@ -5,32 +5,20 @@ import android.content.Context
 /**
  * Cómo viene la aplicación recién instalada.
  *
- * Empieza **vacía de servicios reales**: cuatro grupos con ejemplos dentro que no se
- * conectan a ninguna parte. Su dirección es literalmente una instrucción
- * («http://IP-DE-TU-SERVIDOR:9000») y al pulsarlos se abre su ficha explicada, así que
- * enseñan cómo se configura un servicio en vez de dar la sensación de que la aplicación
- * viene rota. Hay un botón para quitarlos todos de golpe.
- *
- * Los grupos están puestos por **máquina** y no por tipo de servicio, que es la idea que
- * más cuesta transmitir del panel: la dirección se define una vez por equipo y cada
- * servicio indica solo su puerto. Quien vea «servidor local» y «servidor externo» entiende
- * la estructura antes de leer nada.
+ * Empieza **vacía de servicios reales**: ejemplos que no se conectan a ninguna parte y al
+ * pulsarlos se abre su ficha explicada. Los grupos están puestos por **máquina** y no por
+ * tipo de servicio, que es la idea que más cuesta transmitir del panel.
  *
  * Las dos webs del último grupo **sí funcionan**: no son ejemplos.
  */
 object DefaultConfig {
 
     /**
-     * Aspecto de fábrica, tal como quedó tras probarlo en pantalla.
-     *
-     * Está aparte para que los ajustes puedan compararse con él: un color que coincide con
-     * el de fábrica se enseña como «el del tema» y no como un código, porque el usuario no
-     * ha elegido nada ahí.
+     * Aspecto de fábrica. Está aparte para que los ajustes puedan compararse con él: un
+     * color que coincide con el de fábrica se enseña como «el del tema» y no como un código.
      *
      * **Los colores y el fondo van juntos y no se pueden separar**: los nombres en blanco
-     * se leen porque debajo está el fondo «Atrio», que es oscuro. Si algún día se cambia el
-     * fondo de partida, hay que revisar estos colores en el mismo movimiento o el panel de
-     * estreno saldrá ilegible.
+     * se leen porque debajo está el fondo «Atrio», que es oscuro.
      */
     val APARIENCIA = PanelConfig(
         backgroundImage = SystemBackgrounds.value("atrio"),
@@ -38,8 +26,7 @@ object DefaultConfig {
         showAddress = false,
         // El aviso de «Sin cifrar» viene apagado. En una red doméstica casi todo va por
         // HTTP plano, así que encendido pinta la marca en casi todas las tarjetas y deja de
-        // avisar de nada. Quien quiera verlo lo enciende en Ajustes › Seguridad, y sigue
-        // estando por servicio en cada ficha.
+        // avisar de nada.
         warnCleartext = false,
         textColorDark = "#FFFFFF",
         serviceNameColor = "#FFFFFF",
@@ -131,13 +118,11 @@ object DefaultConfig {
     )
 
     /**
-     * Las dos webs que vienen puestas. Estas **no** son ejemplos: son enlaces que funcionan,
-     * así que se comprueban y se abren como cualquier otro servicio.
+     * Las dos webs que vienen puestas. Estas **no** son ejemplos: son enlaces que funcionan.
      *
      * **Se abren dentro de la aplicación, no en el navegador del móvil**, y por eso ninguna
      * lleva `openExternal`. No es un descuido: son lo único del panel de estreno que enseña
-     * que aquí se puede navegar por webs igual que por los servicios propios, y en la
-     * misma pestaña que mantiene la sesión. Quien las abre fuera nunca llega a descubrirlo.
+     * que aquí se puede navegar por webs igual que por los servicios propios.
      *
      * La del código fuente solo aparece cuando hay repositorio: un enlace de fábrica que
      * lleva a un 404 es peor que no tenerlo. Ver [Proyecto].

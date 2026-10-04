@@ -12,13 +12,8 @@ import kotlin.math.absoluteValue
  * Iconos de categoría del panel.
  *
  * Se usan los iconos de Material, que son obra de Google con licencia Apache 2.0 y por
- * tanto libres para uso comercial. Son dibujos genéricos (una película, una carpeta, un
- * escudo), no logotipos de marcas: eso evita distribuir marcas registradas de terceros,
- * que es el problema que tenía la versión personal con los logotipos de Plex, Jellyfin,
- * Portainer y compañía.
- *
- * Además dan coherencia visual: todos comparten trazo y peso, cosa que no ocurre
- * mezclando logotipos de sitios distintos.
+ * tanto libres para uso comercial. Son dibujos genéricos, no logotipos de marcas: eso
+ * evita distribuir marcas registradas de terceros.
  */
 data class Category(val id: String, val icon: ImageVector, val labelRes: Int)
 
@@ -69,11 +64,8 @@ object Categories {
 /**
  * Color de fondo del icono de un servicio, derivado de su nombre.
  *
- * Todos los iconos se dibujan sobre este fondo, vengan del juego de categorías, del
- * favicon del servicio o de una imagen del usuario. Resuelve un problema real: los
- * iconos que sirven los servicios son de todo tipo, unos con fondo blanco y otros casi
- * negros, y en modo oscuro la mitad se volvían ilegibles. Con un fondo propio siempre
- * hay contraste, y de paso el panel se ve ordenado.
+ * Los iconos que sirven los servicios son de todo tipo, unos con fondo blanco y otros casi
+ * negros: con un fondo propio siempre hay contraste.
  */
 fun chipColors(seed: String, dark: Boolean): Pair<Color, Color> {
     val tono = (seed.lowercase().hashCode().absoluteValue % 360).toFloat()
