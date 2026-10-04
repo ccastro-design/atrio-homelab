@@ -210,6 +210,7 @@ internal fun PaginaDeSeguridad(
                 }
             }
 
+            AvisoDeRedSinUsar(config)
             BotonesDeRed(config, onConfigChange)
         }
 
@@ -355,6 +356,103 @@ internal fun PaginaDeSeguridad(
             }
         }
     }
+}
+
+/** Por qué las redes apuntadas no se están usando. Ver [AvisoDeRedSinUsar]. */
+internal enum class RedSinUsar { SIN_PERMISO, SIN_UBICACION }
+
+/** El motivo, o null si se usan (o si no hay ninguna apuntada, que no hay nada que avisar). */
+internal fun redSinUsar(hayRedes: Boolean, permiso: Boolean, ubicacion: Boolean): RedSinUsar? = when {
+    !hayRedes -> null
+    !permiso -> RedSinUsar.SIN_PERMISO
+    !ubicacion -> RedSinUsar.SIN_UBICACION
+    else -> null
+}
+
+/**
+ * Las redes apuntadas no se están usando: sin el permiso de ubicación precisa, o con la
+ * ubicación apagada, Android no dice en qué WiFi estás y el panel decide por si responde el
+ * servidor. Pasó el 04/10/2026: la red estaba apuntada, el permiso no, y solo se había dicho
+ * una vez, en un aviso breve al apuntarla.
+ *
+ * Se vuelve a mirar al volver a la pantalla: los dos se cambian en los ajustes de Android.
+ */
+@Composable
+private fun AvisoDeRedSinUsar(config: PanelConfig) {
+    val context = LocalContext.current
+    var permiso by remember { mutableStateOf(WifiNetwork.hasPermission(context)) }
+    var ubicacion by remember { mutableStateOf(WifiNetwork.locationEnabled(context)) }
+
+    /** Denegado del todo: Android ya no enseña la pregunta y solo queda la ficha de la app. */
+    var bloqueado by remember { mutableStateOf(false) }
+
+    DisposableEffect(context) {
+        val ciclo = (context as? androidx.activity.ComponentActivity)?.lifecycle
+        val observador = androidx.lifecycle.LifecycleEventObserver { _, evento ->
+            if (evento == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                permiso = WifiNetwork.hasPermission(context)
+                ubicacion = WifiNetwork.locationEnabled(context)
+            }
+        }
+        ciclo?.addObserver(observador)
+        onDispose { ciclo?.removeObserver(observador) }
+    }
+
+    val pedirPermiso = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        permiso = WifiNetwork.hasPermission(context)
+        if (permiso) {
+            NetworkResolver.invalidate()
+        } else {
+            val actividad = context as? android.app.Activity
+            bloqueado = actividad != null && !androidx.core.app.ActivityCompat
+                .shouldShowRequestPermissionRationale(actividad, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    val motivo = redSinUsar(config.homeSsids.isNotEmpty(), permiso, ubicacion) ?: return
+
+    Text(
+        stringResource(
+            if (motivo == RedSinUsar.SIN_PERMISO) R.string.network_unused_no_permission
+            else R.string.network_unused_location_off
+        ),
+        fontSize = 12.sp,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier.padding(top = 4.dp)
+    )
+
+    OutlinedButton(
+        onClick = {
+            when {
+                motivo == RedSinUsar.SIN_UBICACION ->
+                    abrirAjusteDeAndroid(context, android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                bloqueado ->
+                    abrirAjusteDeAndroid(context, android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, deEstaApp = true)
+                else -> pedirPermiso.launch(WifiNetwork.PERMISSIONS)
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp)
+    ) {
+        Text(
+            stringResource(
+                when {
+                    motivo == RedSinUsar.SIN_UBICACION -> R.string.network_turn_on_location
+                    bloqueado -> R.string.network_open_permissions
+                    else -> R.string.network_grant
+                }
+            )
+        )
+    }
+}
+
+private fun abrirAjusteDeAndroid(context: android.content.Context, accion: String, deEstaApp: Boolean = false) {
+    val intent = android.content.Intent(accion)
+    if (deEstaApp) intent.data = android.net.Uri.fromParts("package", context.packageName, null)
+    runCatching { context.startActivity(intent) }
 }
 
 /**

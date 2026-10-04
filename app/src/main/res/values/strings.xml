@@ -382,6 +382,15 @@
         panel cannot tell which WiFi you are on.</string>
     <string name="network_needs_location">Turn on location: Android will not reveal the
         WiFi name while it is off.</string>
+    <string name="network_unused_no_permission">Not in use right now: without the precise
+        location permission, Android does not tell the panel which WiFi you are on, so it goes
+        by whether the server answers.</string>
+    <string name="network_unused_location_off">Not in use right now: with the phone\'s location
+        off, Android does not tell the panel which WiFi you are on, so it goes by whether the
+        server answers.</string>
+    <string name="network_grant">Grant permission</string>
+    <string name="network_open_permissions">Open the app\'s permissions</string>
+    <string name="network_turn_on_location">Turn on location</string>
     <string name="network_unknown_title">Is this your network?</string>
     <string name="network_unknown_body">Something answers at your home addresses, but you
         are on the WiFi “%1$s”, which is not one of yours: it could be someone else\'s

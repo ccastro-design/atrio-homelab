@@ -374,6 +374,15 @@
         panel no puede saber en qué WiFi estás.</string>
     <string name="network_needs_location">Enciende la ubicación del móvil: Android no deja
         leer el nombre de la WiFi con ella apagada.</string>
+    <string name="network_unused_no_permission">Ahora no se usan: sin el permiso de ubicación
+        precisa, Android no le dice al panel en qué WiFi estás, y decide por si responde el
+        servidor.</string>
+    <string name="network_unused_location_off">Ahora no se usan: con la ubicación del móvil
+        apagada, Android no le dice al panel en qué WiFi estás, y decide por si responde el
+        servidor.</string>
+    <string name="network_grant">Dar el permiso</string>
+    <string name="network_open_permissions">Abrir los permisos de la aplicación</string>
+    <string name="network_turn_on_location">Encender la ubicación</string>
     <string name="network_unknown_title">¿Es esta tu red?</string>
     <string name="network_unknown_body">Algo responde en las direcciones de tu casa, pero
         estás en la WiFi «%1$s», que no es de las tuyas: podría ser el equipo de otra
