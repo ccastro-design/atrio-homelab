@@ -18,9 +18,7 @@ data class SystemBackground(val id: String, val labelRes: Int)
 /**
  * Fondos propios del panel.
  *
- * Se dibujan, no se guardan como imagen. Un PNG a pantalla completa serían dos o tres
- * megas por fondo dentro del instalador, se vería borroso en las pantallas más densas y
- * habría que decidir su licencia; dibujados no ocupan nada, salen nítidos a cualquier
+ * Se dibujan, no se guardan como imagen: dibujados no ocupan nada, salen nítidos a cualquier
  * tamaño y son obra propia, que en un proyecto con licencia libre no es un detalle menor.
  *
  * En [PanelConfig.backgroundImage] se guardan como `sys:<id>`, para distinguirlos del

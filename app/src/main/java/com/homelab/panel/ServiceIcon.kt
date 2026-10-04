@@ -62,19 +62,15 @@ fun ServiceIcon(
         modifier
             .size(size)
             .clip(RoundedCornerShape(size / 4))
-            // Los dibujos propios van sin cama de color. El fondo está para que los iconos
-            // que sirve cada servicio —unos con fondo blanco, otros casi negros— se lean en
-            // los dos temas; estos están dibujados a propósito, con su contorno y sus
-            // colores, y con la cama detrás se veía un recuadro de color alrededor del
-            // dibujo que no pintaba nada.
+            // Los dibujos propios van sin cama de color: están dibujados a propósito, con su
+            // contorno y sus colores, y con la cama detrás se veía un recuadro de color
+            // alrededor del dibujo que no pintaba nada.
             .background(if (propio != null) Color.Transparent else fondo),
         contentAlignment = Alignment.Center
     ) {
         when {
-            // La imagen llena el hueco entero. Antes se dibujaba al 64 %, para que el
-            // fondo de color se viera alrededor, y el logotipo del servicio quedaba
-            // diminuto dentro de un cuadro casi vacío. El fondo sigue debajo, que es lo
-            // que hace legibles los iconos con transparencia.
+            // La imagen llena el hueco entero. El fondo sigue debajo, que es lo que hace
+            // legibles los iconos con transparencia.
             imagen != null -> Image(
                 bitmap = imagen,
                 contentDescription = null,

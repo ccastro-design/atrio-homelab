@@ -3,11 +3,8 @@ package com.homelab.panel
 /**
  * Iconos dibujados para la aplicación, para servicios que no sirven ninguno propio.
  *
- * **Todos son obra del autor.** Nada de logotipos de terceros: son marcas registradas con
- * sus reglas de uso, distribuirlas dentro del instalador es motivo de rechazo en Play y en
- * F-Droid, y fue el problema que ya tuvo la versión personal del panel. Quien quiera el
- * logotipo exacto de un servicio lo tiene sin esto: la aplicación se lo pide al propio
- * servicio, igual que un navegador con las pestañas.
+ * Nada de logotipos de terceros: son marcas registradas con sus reglas de uso, distribuirlas
+ * dentro del instalador es motivo de rechazo en Play y en F-Droid.
  *
  * Van en `drawable-nodpi` a propósito. Son WebP con transparencia, ya al tamaño que hacen
  * falta, y sin `nodpi` Android los daría por hechos para pantalla de densidad media y los

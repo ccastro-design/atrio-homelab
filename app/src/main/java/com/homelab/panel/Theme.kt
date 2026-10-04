@@ -10,7 +10,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-/** Paleta propia del panel. */
 object PanelColors {
     val Primary = Color(0xFF2F6BD8)
     val PrimaryDark = Color(0xFF5B93F0)

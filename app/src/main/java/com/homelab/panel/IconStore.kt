@@ -14,13 +14,11 @@ import java.net.URI
 import java.net.URL
 
 /**
- * Iconos guardados en el dispositivo: los que aporta el usuario y los que sirve cada
- * servicio.
+ * Iconos guardados en el dispositivo: los que aporta el usuario y los que sirve cada servicio.
  *
- * El icono del servicio se le pide al propio servidor del usuario, igual que hace un
- * navegador al mostrar una pestaña. No se consulta ningún repositorio de iconos ni
- * ningún servidor ajeno: la aplicación solo habla con las máquinas que el usuario ha
- * configurado.
+ * El icono del servicio se le pide al propio servidor del usuario. No se consulta ningún
+ * repositorio de iconos ni ningún servidor ajeno: la aplicación solo habla con las máquinas
+ * que el usuario ha configurado.
  */
 /** Qué hacer con un icono ya guardado. Ver [IconStore.decidirSobreElIcono]. */
 enum class QueHacerConElIcono {
@@ -38,19 +36,16 @@ object IconStore {
 
     private const val TAG = "Panel"
     /**
-     * Lado mayor con el que se guarda un icono.
-     *
-     * 192 y no 96: desde que la imagen llena la tarjeta entera —hasta 54 dp en tamaño
-     * cómodo, que en una pantalla densa son más de 160 píxeles— a 96 se veía blanda.
+     * Lado mayor con el que se guarda un icono: la imagen llena la tarjeta entera, hasta 54 dp
+     * en tamaño cómodo, que en una pantalla densa son más de 160 píxeles.
      */
     private const val TAMANO = 192
     /** Lado mayor de la imagen de fondo. De sobra para cualquier pantalla de móvil. */
     private const val TAMANO_FONDO = 1440
     private const val MAX_HTML = 64 * 1024
     /**
-     * Tope de descarga de una imagen. Generoso a propósito: el logotipo que tenía el
-     * autor en su Homer pesaba 684 kB y con un límite de 512 kB se descartaba sin decir
-     * nada. Como después se escala a [TAMANO], el peso original da igual.
+     * Tope de descarga de una imagen. Generoso a propósito: como después se escala a
+     * [TAMANO], el peso original da igual.
      */
     private const val MAX_IMAGEN = 4 * 1024 * 1024
     private const val TIMEOUT = 4_000
@@ -61,8 +56,7 @@ object IconStore {
     /**
      * Cuánto se recuerda que un servicio **no** tiene icono. Mucho menos que un icono bueno:
      * ese «no tiene» puede ser mentira —el servicio estaba apagado, la red falló, o la
-     * aplicación lo pidió mal— y con treinta días se quedaba un mes sin icono por un tropiezo
-     * de un segundo. Tres días son suficientes para no repetir la pregunta a cada rato.
+     * aplicación lo pidió mal—. Tres días son suficientes para no repetir la pregunta a cada rato.
      */
     private const val CADUCIDAD_SIN_ICONO_MS = 3L * 24 * 60 * 60 * 1000
 
@@ -110,14 +104,8 @@ object IconStore {
         }.onFailure { Log.w(TAG, "No se pudo guardar la imagen elegida", it) }.getOrNull()
 
     /**
-     * Lee una imagen sin cargarla entera cuando es más grande de lo que se va a usar.
-     *
-     * Antes se leía siempre entera y se reducía después: una foto de 12 Mpx de la galería
-     * ocupaba 48 MB de memoria **solo para tirar casi todo** al escalarla, y una de 50 Mpx
-     * —el modo de máxima resolución de muchos móviles— 200 MB. Es la receta de la
-     * documentación de Android («Loading large bitmaps efficiently»): primero se leen solo
-     * las medidas, y después se lee saltando píxeles en potencias de dos (`inSampleSize`) sin
-     * bajar nunca de [ladoMaximo]. El ajuste fino lo sigue haciendo [escalar].
+     * Lee una imagen sin cargarla entera cuando es más grande de lo que se va a usar. Es la
+     * receta de la documentación de Android («Loading large bitmaps efficiently»).
      *
      * Recibe cómo abrir la imagen, y no la imagen abierta, porque hay que leerla dos veces y
      * un flujo ya leído no se puede rebobinar.
@@ -146,11 +134,8 @@ object IconStore {
     }
 
     /**
-     * Un icono o un logotipo guardados, para pintarlos.
-     *
-     * Lo que guarda la aplicación ya cabe en [TAMANO], así que el factor sale 1 y se lee igual
-     * que siempre. La lectura acotada está para que un fichero que no haya pasado por aquí
-     * no se cargue entero.
+     * Un icono o un logotipo guardados, para pintarlos. La lectura acotada está para que un
+     * fichero que no haya pasado por aquí no se cargue entero.
      */
     fun leerIcono(fichero: File): Bitmap? = leerFichero(fichero, TAMANO)
 
@@ -189,12 +174,9 @@ object IconStore {
     }
 
     /**
-     * Borra la imagen propia de un servicio que se elimina.
-     *
-     * Al cambiar la imagen de un servicio la anterior sí se borraba, pero al borrar el
-     * servicio entero se quedaba en el móvil para siempre. Se comprueba antes que no la
-     * esté usando otro: normalmente cada servicio tiene la suya, con su identificador en
-     * el nombre, pero un panel importado puede traer la misma para varios.
+     * Borra la imagen propia de un servicio que se elimina. Se comprueba antes que no la esté
+     * usando otro: normalmente cada servicio tiene la suya, con su identificador en el nombre,
+     * pero un panel importado puede traer la misma para varios.
      */
     fun deleteServiceIcon(context: Context, config: PanelConfig, service: Service) {
         if (service.iconFile.isBlank()) return
@@ -207,21 +189,10 @@ object IconStore {
 
     /**
      * Olvida la marca de «este servicio no da icono», para que se vuelva a preguntar.
+     * **Solo borra el fichero si está vacío**: un icono bueno no se toca nunca desde aquí.
      *
-     * **Solo borra el fichero si está vacío**, es decir, si es la marca. Un icono bueno no
-     * se toca nunca desde aquí.
-     *
-     * Hace falta porque esa marca dura [CADUCIDAD_SIN_ICONO_MS] y **no la invalidaba nada**:
-     * ni poner la contraseña que faltaba, ni activar el autocompletado. Las credenciales
-     * viven en [SecureStore], fuera del modelo, así que no entran en la cadena de origen
-     * que sirve para caducar lo guardado. El resultado era el peor posible: un servicio que
-     * exige autenticación —Transmission responde 401 hasta al favicon— se marcaba como «sin
-     * icono» por no tener credenciales, y después el usuario las ponía y la aplicación
-     * seguía sin intentarlo, porque ni llegaba a mirar si ahora había con qué. Tres días
-     * enseñando la inicial, y cada intento fallido reiniciaba el reloj.
-     *
-     * Se llama al guardar la ficha del servicio: es el momento en que pueden haber
-     * aparecido —o desaparecido— las credenciales.
+     * Las credenciales viven en [SecureStore], fuera de lo que caduca lo guardado: por eso se
+     * llama al guardar la ficha del servicio, cuando pueden haber aparecido las que faltaban.
      */
     fun olvidarMarcaSinIcono(context: Context, serviceId: String) {
         val fichero = ficheroDeFavicon(context, serviceId)
@@ -233,8 +204,7 @@ object IconStore {
      *
      * Se guarda con el **identificador del servicio**, no con su dirección. Un servicio
      * tiene dos —la de casa y la de la VPN—, así que atándolo a la dirección el icono
-     * desaparecía al salir de casa: para la aplicación pasaba a ser otro servicio, y había
-     * que volver a pedírselo por el túnel. Es el mismo icono, y se descarga una vez.
+     * desaparecía al salir de casa.
      */
     fun cachedFavicon(context: Context, serviceId: String, origen: String?): File? {
         val destino = ficheroDeFavicon(context, serviceId)
@@ -282,10 +252,7 @@ object IconStore {
      * Qué hacer con el icono que hay guardado, mirando solo lo que se sabe de él.
      *
      * Está aparte, sin disco ni Android de por medio, porque **aquí ya se colaron dos
-     * fallos** y los dos daban la misma cara —el servicio sin icono— por motivos opuestos:
-     * primero atarlo a la dirección, que lo perdía al salir de casa; y después tirarlo
-     * cuando quien lo pedía no sabía las direcciones, que lo borraba con solo abrir la
-     * ficha del servicio. Ver `IconStoreTest`.
+     * fallos** y los dos daban la misma cara —el servicio sin icono—. Ver `IconStoreTest`.
      */
     fun decidirSobreElIcono(
         existe: Boolean,
@@ -308,10 +275,9 @@ object IconStore {
     /**
      * Dónde se apunta con qué direcciones se consiguió el icono.
      *
-     * El icono se guarda por servicio para que no se pierda al salir de casa, pero eso solo
-     * no basta: si el servicio cambia de máquina o de puerto, lo guardado deja de valer y
-     * **esperar a que caduque serían treinta días** con el icono de otro programa. Anotando
-     * la dirección, un cambio se nota en el acto.
+     * Si el servicio cambia de máquina o de puerto, lo guardado deja de valer y **esperar a
+     * que caduque serían treinta días** con el icono de otro programa. Anotando la dirección,
+     * un cambio se nota en el acto.
      */
     private fun ficheroDeOrigen(context: Context, serviceId: String): File =
         File(carpetaFavicons(context), "${claveDeServicio(serviceId)}.origen")
@@ -341,10 +307,8 @@ object IconStore {
      * servicio.
      *
      * **Solo hereda los que tienen algo dentro.** Un fichero vacío es la marca de «este
-     * servicio no da icono», y esa marca puede ser de la otra red: qBittorrent sirve el
-     * suyo en casa y no por el túnel, así que heredarla dejaría al servicio sin icono en
-     * los dos sitios. Sin marca se vuelve a intentar, y en cuanto salga bien una vez queda
-     * guardado para las dos direcciones.
+     * servicio no da icono», y esa marca puede ser de la otra red: heredarla dejaría al
+     * servicio sin icono en los dos sitios.
      */
     private fun heredarIconoViejo(context: Context, origen: String, destino: File): File? {
         // El origen lleva las dos direcciones del servicio; el icono viejo puede estar
@@ -388,17 +352,11 @@ object IconStore {
             runCatching { destino.delete() }
         }
 
-        // Ya descargado y reciente: no se vuelve a molestar al servidor.
-        //
-        // Aquí se exigía además que el guardado midiera 128 px, para re-pedir los de la
-        // época en que se guardaban a 96. Se quitó: [escalar] nunca amplía, así que un
-        // favicon legítimo de 32 px **no podía cumplir la condición jamás** y cada pasada
-        // por aquí era otra descarga con su riesgo de fallo. Un icono pequeño se ve peor;
-        // uno re-pedido sin fin acaba, tarde o temprano, en la marca de abajo.
-        //
-        // Un fichero vacío recuerda que este servicio no tiene icono, para no reintentarlo
-        // en cada arranque. Esa marca vale mucho menos tiempo que un icono bueno: ver
-        // [CADUCIDAD_SIN_ICONO_MS].
+        // Ya descargado y reciente: no se vuelve a molestar al servidor. Un fichero vacío
+        // recuerda que este servicio no tiene icono, para no reintentarlo en cada arranque.
+        // Esa marca vale mucho menos tiempo que un icono bueno: ver [CADUCIDAD_SIN_ICONO_MS].
+        // ⚠ Sin tamaño mínimo: [escalar] nunca amplía, así que un favicon legítimo de 32 px
+        // no podría cumplirlo jamás y se volvería a pedir sin fin.
         val edad = System.currentTimeMillis() - destino.lastModified()
         val vacio = destino.exists() && destino.length() == 0L
 
@@ -417,32 +375,17 @@ object IconStore {
         if (origen != null) anotarOrigen(context, serviceId, origen)
 
         if (bitmap == null) {
-            // **Un fallo de descarga no destruye lo último bueno.** Aquí se escribía la
-            // marca de «sin icono» incondicionalmente, y eso era el icono de Transmission
-            // desapareciendo cada pocos días: ese servidor responde 401 a todo sin
-            // credenciales, así que su icono depende de una única vía, y al primer
-            // tropiezo transitorio —el NAS ocupado, la red a medio levantar— la marca
-            // pisaba el icono que ya había y la inicial se quedaba tres días
-            // ([CADUCIDAD_SIN_ICONO_MS], y el patrón del usuario era exactamente ese: se
-            // iba y volvía solo a los tres días justos). La marca solo tiene sentido
-            // cuando no había nada que enseñar.
+            // **Un fallo de descarga no destruye lo último bueno.** La marca solo tiene
+            // sentido cuando no había nada que enseñar.
             if (destino.length() > 0L) return@withContext destino
             runCatching { destino.writeBytes(ByteArray(0)) }
             return@withContext null
         }
 
-        // Se escribe a un fichero aparte y se renombra encima al terminar.
-        //
-        // Escribir directamente sobre el destino lo deja **vacío mientras dura la
-        // escritura**, y un fichero de cero bytes es justo lo que aquí significa «este
-        // servicio no da icono»: [olvidarMarcaSinIcono] lo borraría, y otro que estuviera
-        // mirando en ese instante lo tomaría por la marca. Son milisegundos, pero el panel
-        // pinta el mismo servicio en varios sitios a la vez. Además, una escritura que
-        // falle a medias no deja medio icono: deja una mentira que dura días.
-        //
-        // El renombrado es instantáneo y ocurre entero o no ocurre, así que el icono
-        // aparece completo o no aparece. El nombre lleva el instante para que dos
-        // descargas del mismo servicio a la vez no se pisen el fichero intermedio.
+        // Escribir directamente sobre el destino lo deja **vacío mientras dura la escritura**,
+        // y un fichero de cero bytes es justo lo que aquí significa «este servicio no da icono».
+        // El nombre lleva el instante para que dos descargas del mismo servicio a la vez no
+        // se pisen el fichero intermedio.
         val temporal = File(carpetaFavicons(context), "${destino.name}.${System.nanoTime()}.tmp")
         runCatching {
             temporal.outputStream().use { escalar(bitmap).compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -457,11 +400,7 @@ object IconStore {
      *
      * **Se intenta primero sin credenciales y solo después con ellas.** Parece al revés de
      * lo lógico y no lo es: mandar una cabecera `Authorization` a un servicio que no usa
-     * autenticación básica puede **cerrar** una puerta que estaba abierta. qBittorrent es
-     * el caso: sirve su icono a cualquiera sin pedir nada, pero al recibir un `Authorization`
-     * que no entiende lo toma por un acceso con credenciales malas y responde 401 a todo,
-     * incluido el icono. Transmission es el contrario: sin credenciales no da ni el
-     * `favicon.ico`. Probando en este orden funcionan los dos.
+     * autenticación básica puede **cerrar** una puerta que estaba abierta.
      */
     private fun descargarIcono(url: String, auth: String?): Bitmap? {
         val base = runCatching { URI(url) }.getOrNull() ?: return null
@@ -483,11 +422,8 @@ object IconStore {
     /** Un intento completo de encontrar el icono, con o sin credenciales. */
     private fun buscar(pagina: String, origen: String, auth: String?): Bitmap? {
         val candidatos = buildList {
-            // **Primero la página del servicio, con su ruta.** Es donde mira un navegador, y
-            // es lo que faltaba: se preguntaba solo por la raíz del servidor, así que un
-            // servicio que vive en una subruta se quedaba sin icono para siempre. Pi-hole es
-            // el caso claro —está en `/admin` y su raíz responde **403**—, pero le pasa a
-            // cualquiera que cuelgue sus servicios de un proxy inverso por rutas.
+            // **Primero la página del servicio, con su ruta.** Es donde mira un navegador: un
+            // servicio que vive en una subruta se quedaba sin icono para siempre.
             declaradoEnHtml(pagina, auth)?.let { add(it) }
 
             // Y después la raíz, que es donde lo declaran los que sirven desde `/`.
@@ -514,9 +450,7 @@ object IconStore {
      * Lee el principio del HTML y saca el href del primer `<link rel="...icon...">`.
      *
      * La dirección del icono se resuelve contra **la página que se acabó leyendo**, no
-     * contra la raíz del servidor. Transmission lo dejó claro: redirige de `/` a
-     * `/transmission/web/` y declara su icono como `./images/favicon.ico`, así que
-     * pegándolo a la raíz salía `/./images/favicon.ico`, que no existe.
+     * contra la raíz del servidor.
      */
     private fun declaradoEnHtml(origen: String, auth: String?): String? = runCatching {
         // La definitiva tras las redirecciones, que es contra la que hay que resolver.
@@ -541,7 +475,7 @@ object IconStore {
 
             // Después de leer, no antes: hasta que no se consume la respuesta la conexión
             // ni siquiera se ha hecho, y `url` sigue siendo la que se pidió, sin las
-            // redirecciones. Ahí estaba el fallo con Transmission.
+            // redirecciones.
             base = conexion.url?.toString() ?: origen
             texto
         } ?: return null
@@ -561,12 +495,9 @@ object IconStore {
      * La dirección absoluta del icono, a partir de la página donde se declaró.
      *
      * **La base se normaliza para que siempre tenga ruta, aunque sea solo `/`.** No es un
-     * detalle: `java.net.URI.resolve` de Android, con una base sin ruta como
-     * `http://192.168.1.254:8085`, pega el relativo sin separador y devuelve
-     * `http://192.168.1.254:8085images/qbittorrent32.png`. El JDK del ordenador hace lo
-     * correcto con la misma llamada, así que el fallo solo aparece en el móvil y una prueba
-     * de escritorio lo da por bueno. Así se cayó el icono de qBittorrent, que declara el
-     * suyo como `images/qbittorrent32.png`.
+     * detalle: `java.net.URI.resolve` de Android, con una base sin ruta, pega el relativo sin
+     * separador. El JDK del ordenador hace lo correcto con la misma llamada, así que el fallo
+     * solo aparece en el móvil y una prueba de escritorio lo da por bueno.
      */
     fun resolverIcono(base: String, href: String): String? = runCatching {
         val uri = URI(base)
@@ -606,10 +537,8 @@ object IconStore {
     /**
      * Abre la conexión con tiempos de espera cortos: un servicio caído no debe esperar.
      *
-     * Con credenciales guardadas se mandan desde la primera petición. Sin ellas, los
-     * servicios que piden contraseña —Transmission, qBittorrent, SABnzbd— responden 401
-     * hasta al `favicon.ico`, así que se quedaban sin icono para siempre y no había forma
-     * de saber por qué.
+     * Con credenciales guardadas se mandan desde la primera petición: sin ellas, los
+     * servicios que piden contraseña responden 401 hasta al `favicon.ico`.
      */
     private fun abrir(url: String, auth: String? = null): HttpURLConnection? = runCatching {
         (URL(url).openConnection() as HttpURLConnection).apply {
@@ -628,12 +557,6 @@ object IconStore {
      * la vida —301, 302 y 303—. Los 307 y 308 los deja pasar tal cual, porque obligan a
      * repetir el método original y Java prefiere no decidir por su cuenta. Aquí sí se puede
      * decidir: solo se piden iconos y páginas, siempre por GET.
-     *
-     * **No es un caso raro.** Pi-hole responde 308 al redirigir `/admin` a `/admin/`, y con
-     * eso su icono era inalcanzable: [descargarBitmap] veía un código fuera de 200..299,
-     * devolvía null, el servicio quedaba marcado como «sin icono» durante
-     * [CADUCIDAD_SIN_ICONO_MS], y al caducar la marca se repetía el mismo choque. Un bucle
-     * que no se rompía solo nunca. Detrás del 308 esperaba un `apple-touch-icon` de 180x180.
      */
     private fun abrirSiguiendo(url: String, auth: String? = null): HttpURLConnection? {
         var actual = url
