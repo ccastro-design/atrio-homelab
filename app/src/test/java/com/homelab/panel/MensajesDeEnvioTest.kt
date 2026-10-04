@@ -57,4 +57,27 @@ class MensajesDeEnvioTest {
             aviso(Entrega.Rechazada("invalid or corrupt torrent file")))
         assertEquals(Texto(R.string.send_refused, listOf(nombre, "")), aviso(Entrega.Rechazada("")))
     }
+
+    @Test
+    fun `si llego todo es un aviso breve`() {
+        assertEquals(Desenlace.Todo(4), desenlace(4, 4, emptyList()))
+    }
+
+    /** El 04/10/2026 llegaron 3 de 4 a aMule y el aviso se calló el motivo. */
+    @Test
+    fun `si llego solo una parte se dice por que fallo el resto`() {
+        val colgo = "«aMule» ha cortado la conexión sin contestar."
+        assertEquals(Desenlace.Parte(3, 4, listOf(colgo)), desenlace(4, 3, listOf(colgo)))
+    }
+
+    @Test
+    fun `los motivos repetidos se dicen una vez`() {
+        assertEquals(Desenlace.Parte(1, 4, listOf("X.", "Y.")), desenlace(4, 1, listOf("X.", "X.", "Y.")))
+    }
+
+    @Test
+    fun `si no llego ninguno se dice el primer motivo`() {
+        assertEquals(Desenlace.Nada("X."), desenlace(2, 0, listOf("X.", "Y.")))
+        assertEquals(Desenlace.Nada(null), desenlace(0, 0, emptyList()))
+    }
 }

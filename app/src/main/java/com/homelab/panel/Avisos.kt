@@ -46,6 +46,22 @@ fun AvisoDeConfiguracion(recuperada: Boolean, onVisto: () -> Unit) {
     )
 }
 
+/**
+ * No llegó todo lo enviado a un programa de descargas. En una ventana y no en un aviso breve:
+ * Android corta esos a dos líneas, y lo que se cortaba era justo el motivo.
+ */
+@Composable
+fun AvisoDeEnvio(mensaje: String, onVisto: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onVisto,
+        title = { Text(stringResource(R.string.send_failed_title)) },
+        text = { Text(mensaje, fontSize = 14.sp) },
+        confirmButton = {
+            TextButton(onClick = onVisto) { Text(stringResource(R.string.ok)) }
+        }
+    )
+}
+
 /** Al terminar la presentación por primera vez: ofrecer apuntar la red de casa. */
 @Composable
 fun PreguntaRedDeCasa(onIr: () -> Unit, onLuego: () -> Unit) {

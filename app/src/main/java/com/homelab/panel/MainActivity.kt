@@ -249,6 +249,8 @@ private fun Contenido(
     var irASeguridad by remember { mutableStateOf(false) }
     /** Servicio que se ha tocado y no tiene ninguna dirección con la que abrirse. */
     var servicioSinDireccion by remember { mutableStateOf<Service?>(null) }
+    /** Lo que se dice de un envío en el que no llegó todo. Sobrevive a girar el móvil. */
+    var avisoDeEnvio by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
 
     val alcance = rememberCoroutineScope()
 
@@ -551,16 +553,24 @@ private fun Contenido(
             ficheroEntrante = envio.fichero,
             esperandoMas = envio.recogiendo,
             onConfigChange = { guardar(it) },
-            onFinished = { mensaje ->
-                Registro.traza("Envío") { "Aviso al usuario: $mensaje" }
+            onFinished = { mensaje, fallo ->
+                Registro.traza("Envío") { "Aviso al usuario${if (fallo) ", en ventana" else ""}: $mensaje" }
                 envio.cerrar()
-                Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+                if (fallo) {
+                    avisoDeEnvio = mensaje
+                } else {
+                    Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+                }
             },
             onCancel = {
                 Registro.traza("Envío") { "Cancelado por el usuario" }
                 envio.cerrar()
             }
         )
+    }
+
+    avisoDeEnvio?.let { mensaje ->
+        AvisoDeEnvio(mensaje = mensaje, onVisto = { avisoDeEnvio = null })
     }
 
     red.redDesconocida?.let { wifi ->

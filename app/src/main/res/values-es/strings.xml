@@ -315,7 +315,12 @@
         <item quantity="one">%1$d enlace enviado a «%2$s»</item>
         <item quantity="other">%1$d enlaces enviados a «%2$s»</item>
     </plurals>
-    <string name="send_ok_partial">Enviados %1$d de %2$d a «%3$s»</string>
+    <!-- La cantidad es la de los que fallaron; %4$s, sus motivos. -->
+    <plurals name="send_ok_partial">
+        <item quantity="one">Enviados %1$d de %2$d a «%3$s». El que falló: %4$s</item>
+        <item quantity="other">Enviados %1$d de %2$d a «%3$s». Los que fallaron: %4$s</item>
+    </plurals>
+    <string name="send_failed_title">No se ha podido enviar todo</string>
     <plurals name="send_count">
         <item quantity="one">1 enlace</item>
         <item quantity="other">%1$d enlaces</item>

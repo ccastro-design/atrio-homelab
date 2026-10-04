@@ -41,7 +41,8 @@ fun SendLinkFlow(
     /** Cierto mientras pueden llegar más enlaces de la misma ráfaga: no se decide aún. */
     esperandoMas: Boolean = false,
     onConfigChange: (PanelConfig) -> Unit,
-    onFinished: (String) -> Unit,
+    /** [fallo]: no llegó todo, y el mensaje va en una ventana en vez de en un aviso breve. */
+    onFinished: (mensaje: String, fallo: Boolean) -> Unit,
     onCancel: () -> Unit
 ) {
     val context = LocalContext.current
@@ -95,17 +96,15 @@ fun SendLinkFlow(
             // Si lo que hay es un fichero, se sube entero: no hay enlaces que repartir ni
             // nada que contar, es uno y va de una vez.
             if (ficheroEntrante != null) {
-                onFinished(
-                    when (val hecho = LinkSender.sendFile(context, destino, direccion, ficheroEntrante)) {
-                        is SendResult.Ok -> context.getString(R.string.send_ok, destino.name)
-                        is SendResult.Failed -> hecho.message
-                    }
-                )
+                when (val hecho = LinkSender.sendFile(context, destino, direccion, ficheroEntrante)) {
+                    is SendResult.Ok -> onFinished(context.getString(R.string.send_ok, destino.name), false)
+                    is SendResult.Failed -> onFinished(hecho.message, true)
+                }
                 return@launch
             }
 
             var enviados = 0
-            var primerFallo: String? = null
+            val motivos = mutableListOf<String>()
 
             // De uno en uno: aMule sirve las peticiones en serie y con varias a la vez
             // pierde alguna sin decir nada.
@@ -118,29 +117,32 @@ fun SendLinkFlow(
                         Registro.traza("Envío") { "$cual: entregado" }
                     }
                     is SendResult.Failed -> {
-                        if (primerFallo == null) primerFallo = resultado.message
+                        motivos += resultado.message
                         Registro.traza("Envío") { "$cual: FALLA: ${resultado.message}" }
                     }
                 }
             }
 
-            onFinished(
-                when {
-                    enviados == 0 ->
-                        primerFallo ?: context.getString(R.string.send_invalid)
-
-                    enviados < enlaces.size -> context.getString(
-                        R.string.send_ok_partial, enviados, enlaces.size, destino.name
-                    )
-
-                    enlaces.size == 1 ->
+            when (val fin = desenlace(enlaces.size, enviados, motivos)) {
+                is Desenlace.Todo -> onFinished(
+                    if (fin.cuantos == 1) {
                         context.getString(R.string.send_ok, destino.name)
+                    } else {
+                        context.resources.getQuantityString(R.plurals.send_ok_many, fin.cuantos, fin.cuantos, destino.name)
+                    },
+                    false
+                )
 
-                    else -> context.resources.getQuantityString(
-                        R.plurals.send_ok_many, enviados, enviados, destino.name
-                    )
-                }
-            )
+                is Desenlace.Parte -> onFinished(
+                    context.resources.getQuantityString(
+                        R.plurals.send_ok_partial, fin.total - fin.enviados,
+                        fin.enviados, fin.total, destino.name, fin.motivos.joinToString(" ")
+                    ),
+                    true
+                )
+
+                is Desenlace.Nada -> onFinished(fin.motivo ?: context.getString(R.string.send_invalid), true)
+            }
         }
     }
 
@@ -153,7 +155,8 @@ fun SendLinkFlow(
             preferido != null -> enviar(preferido)
             candidatos.size == 1 -> enviar(candidatos.first())
             candidatos.isEmpty() -> onFinished(
-                context.getString(R.string.send_no_target, linkKindName(context, kind))
+                context.getString(R.string.send_no_target, linkKindName(context, kind)),
+                true
             )
             else -> eligiendo = true
         }
@@ -357,6 +360,27 @@ private fun IconoDeDestino(config: PanelConfig, destino: DownloadTarget, away: B
 }
 
 private val numeroDeEnvio = java.util.concurrent.atomic.AtomicInteger()
+
+/**
+ * Cómo acabó un envío de enlaces, todavía sin palabras. Si no llegó todo, el motivo va en una
+ * ventana: un aviso breve de Android se corta a dos líneas, y el motivo es lo que no se puede
+ * perder.
+ */
+internal sealed interface Desenlace {
+    data class Todo(val cuantos: Int) : Desenlace
+
+    /** [motivos] sin repetir: varios enlaces suelen fallar por lo mismo. */
+    data class Parte(val enviados: Int, val total: Int, val motivos: List<String>) : Desenlace
+
+    /** [motivo] es el del primero que falló, o null si no había ningún enlace que mandar. */
+    data class Nada(val motivo: String?) : Desenlace
+}
+
+internal fun desenlace(total: Int, enviados: Int, motivos: List<String>): Desenlace = when {
+    enviados == 0 -> Desenlace.Nada(motivos.firstOrNull())
+    enviados < total -> Desenlace.Parte(enviados, total, motivos.distinct())
+    else -> Desenlace.Todo(total)
+}
 
 /** «http://192.168.1.254:8085/» -> «192.168.1.254:8085», para emparejar direcciones. */
 private fun maquinaYPuerto(url: String): String? = runCatching {

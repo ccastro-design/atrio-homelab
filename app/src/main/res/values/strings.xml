@@ -325,7 +325,12 @@
         <item quantity="one">%1$d link sent to “%2$s”</item>
         <item quantity="other">%1$d links sent to “%2$s”</item>
     </plurals>
-    <string name="send_ok_partial">Sent %1$d of %2$d to “%3$s”</string>
+    <!-- The quantity is how many failed; %4$s, why. -->
+    <plurals name="send_ok_partial">
+        <item quantity="one">Sent %1$d of %2$d to “%3$s”. The one that failed: %4$s</item>
+        <item quantity="other">Sent %1$d of %2$d to “%3$s”. The ones that failed: %4$s</item>
+    </plurals>
+    <string name="send_failed_title">Could not send everything</string>
     <plurals name="send_count">
         <item quantity="one">1 link</item>
         <item quantity="other">%1$d links</item>
