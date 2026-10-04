@@ -45,7 +45,7 @@ fun linkKindLabels(): Map<LinkKind, String> = mapOf(
 /**
  * Ajustes de descargas: los destinos y qué hacer con cada tipo de enlace.
  *
- * Está en su propia sección a propósito: metido entre los demás ajustes, con cinco
+ * Está en su propia sección a propósito: metido entre los demás ajustes, con cuatro
  * clases de servicio y sus credenciales, la lista se haría interminable.
  */
 @Composable

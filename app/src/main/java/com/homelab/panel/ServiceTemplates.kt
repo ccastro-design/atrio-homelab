@@ -93,8 +93,8 @@ object ServiceTemplates {
     ).sortedBy { it.name.lowercase() }
 
     /**
-     * Puertos que merece la pena sondear al buscar servicios en la red, de mayor a
-     * menor probabilidad de encontrar algo.
+     * Puertos que merece la pena sondear al buscar servicios en la red: los de los
+     * programas conocidos, por orden alfabético, y después los genéricos.
      */
     val scanPorts: List<Int> = (all.map { it.port } + listOf(80, 443, 8080, 8443, 5000, 9000))
         .distinct()

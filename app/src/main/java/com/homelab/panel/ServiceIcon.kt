@@ -31,12 +31,13 @@ import kotlinx.coroutines.withContext
  *
  *   1. la imagen que haya puesto el usuario,
  *   2. el icono que sirva el propio servicio,
- *   3. el icono de su categoría,
+ *   3. el dibujo o el icono de su categoría,
  *   4. su inicial, cuando no tiene categoría asignada.
  *
- * Se dibuja siempre sobre un fondo de color derivado del nombre. Sin ese fondo, los
- * iconos que sirven los servicios (unos con fondo blanco, otros casi negros) resultan
- * ilegibles en uno de los dos temas.
+ * Se dibuja sobre un fondo de color derivado del nombre, salvo los dibujos propios de la
+ * aplicación ([OwnIcons]), que van sin él. Sin ese fondo, los iconos que sirven los
+ * servicios (unos con fondo blanco, otros casi negros) resultan ilegibles en uno de los
+ * dos temas.
  */
 @Composable
 fun ServiceIcon(

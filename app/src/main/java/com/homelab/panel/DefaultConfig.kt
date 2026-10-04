@@ -174,9 +174,9 @@ object DefaultConfig {
         // y, sobre todo, pedirlo taparía el icono elegido, porque el del servicio manda
         // sobre el de la lista.
         useFavicon = false,
-        // Y sin el aviso de «Sin cifrar»: todas estas direcciones son `http://` de mentira,
-        // así que el aviso saldría en las siete tarjetas del estreno avisando de nada. En
-        // los servicios que añada el usuario sigue activo, que es donde importa.
+        // Y sin el aviso de «Sin cifrar»: cinco de estas siete direcciones son `http://` de
+        // mentira, así que el aviso saldría en cinco tarjetas del estreno avisando de nada.
+        // En los servicios que añada el usuario sigue activo, que es donde importa.
         warnCleartext = false,
         isExample = true
     )

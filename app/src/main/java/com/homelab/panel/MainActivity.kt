@@ -282,8 +282,8 @@ private fun Contenido(
     }
 
     // Una web que lanza varios enlaces los suelta en ráfaga, así que se espera un momento
-    // a que dejen de llegar y se envían juntos: una sola pregunta y un solo aviso. Medio
-    // segundo y no más: esta espera es tiempo en el que no pasa nada.
+    // a que dejen de llegar y se envían juntos: una sola pregunta y un solo aviso. 600 ms y
+    // no más: esta espera es tiempo en el que no pasa nada.
     LaunchedEffect(envio.enlaces, envio.recogiendo) {
         if (!envio.recogiendo) return@LaunchedEffect
 

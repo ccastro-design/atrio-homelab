@@ -82,8 +82,8 @@ object IconStore {
     /**
      * Igual, pero para la imagen de fondo del panel.
      *
-     * Se guarda mucho más grande que un icono: a 96 píxeles, estirada a pantalla completa,
-     * lo que se ve es una mancha de colores.
+     * Se guarda mucho más grande que un icono: a los [TAMANO] píxeles de un icono, estirada a
+     * pantalla completa, lo que se ve es una mancha de colores.
      */
     fun saveBackground(context: Context, uri: Uri): String? =
         guardarImagen(context, uri, "fondo", TAMANO_FONDO)

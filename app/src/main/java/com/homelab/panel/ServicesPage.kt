@@ -299,9 +299,10 @@ fun EditorDeGrupo(
 /**
  * Colores de grupo. El primero, vacío, es «sin color».
  *
- * Todos son tonos medios a propósito: el color se usa en el borde de la tarjeta y en el
- * nombre del grupo, así que tiene que verse tanto sobre el fondo claro como sobre el
- * oscuro. Los muy claros desaparecen en el tema claro y los muy oscuros, en el oscuro.
+ * Salvo el blanco y el negro, son tonos medios a propósito: el color se usa en el borde de
+ * la tarjeta y en el nombre del grupo, así que tiene que verse tanto sobre el fondo claro
+ * como sobre el oscuro. Los muy claros desaparecen en el tema claro y los muy oscuros, en
+ * el oscuro.
  */
 private val ColoresDeGrupo = listOf(
     "",

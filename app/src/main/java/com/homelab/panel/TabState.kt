@@ -20,7 +20,8 @@ class TabState(val service: Service, url: String) {
         private set
 
     /**
-     * Sube en cada carga. Sirve para rearmar el tiempo límite: vigilando solo la
+     * Sube cada vez que la aplicación lanza una carga ([load]), no al pulsar enlaces dentro
+     * de la página. Sirve para rearmar el tiempo límite: vigilando solo la
      * primera carga, una recarga que se colgaba dejaba la pantalla en negro para
      * siempre.
      */
