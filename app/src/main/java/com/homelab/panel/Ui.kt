@@ -33,8 +33,7 @@ import androidx.compose.ui.unit.sp
 /**
  * Título de sección, el mismo en todos los ajustes y fichas.
  *
- * Del tamaño de las cabeceras de grupo del panel (20 sp): a 12 sp no se leían y cada
- * pantalla llevaba el suyo, así que las secciones no se distinguían del texto de ayuda.
+ * Del tamaño de las cabeceras de grupo del panel (20 sp).
  */
 @Composable
 fun TituloDeSeccion(texto: String, modifier: Modifier = Modifier) {
@@ -96,7 +95,7 @@ fun Burbuja(
  * Fila pulsable de los ajustes.
  *
  * Va dentro de un recuadro con borde y con la flecha a la derecha, para que se vea que
- * se puede pulsar. Sin eso no había forma de adivinarlo: parecía texto suelto.
+ * se puede pulsar.
  */
 @Composable
 fun ClickableRow(
@@ -183,9 +182,7 @@ fun ClickableRow(
  * Campo de contraseña que deja claro cuándo ya hay una guardada.
  *
  * Mientras el usuario no escriba, muestra unos puntos para que se vea que hay algo
- * guardado, y un texto de aviso debajo. Al escribir, los puntos desaparecen y la nueva
- * contraseña sustituye a la anterior. No se usa el `placeholder` de Material porque solo
- * se ve al enfocar el campo, así que no servía para avisar de nada.
+ * guardado. No se usa el `placeholder` de Material porque solo se ve al enfocar el campo.
  */
 @Composable
 fun PasswordField(
@@ -305,11 +302,7 @@ fun TextPromptDialog(
  *
  * Está aquí, en un solo sitio, porque hay dos navegaciones distintas —la de las pantallas
  * grandes, en `MainActivity`, y la de las páginas de Ajustes— y si cada una define su propia
- * animación acaban descuadradas: se nota que entrar en Ajustes se siente distinto a entrar
- * en Apariencia, aunque no se sepa decir por qué.
- *
- * Dura poco a propósito. Una transición sirve para contar de dónde sale lo que estás
- * mirando; pasado un cuarto de segundo ya no cuenta nada y solo hace esperar.
+ * animación acaban descuadradas.
  */
 internal fun transicionDePantalla(entrada: Int, salida: Int): ContentTransform =
     (
@@ -326,8 +319,6 @@ internal fun transicionDePantalla(entrada: Int, salida: Int): ContentTransform =
  * Android deja apagarlas en las opciones del sistema, y quien lo hace suele tener un motivo:
  * el movimiento en pantalla marea a bastante gente, y en un móvil viejo cada animación se
  * nota. Una aplicación que anima igualmente está pasando por encima de esa decisión.
- *
- * Si el ajuste no se puede leer se dan por activadas, que es lo normal.
  */
 @Composable
 internal fun duracionesDeTransicion(): Pair<Int, Int> {

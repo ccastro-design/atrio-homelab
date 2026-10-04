@@ -8,15 +8,13 @@ import androidx.compose.runtime.setValue
 /**
  * Las pestañas abiertas y cuál se está viendo.
  *
- * Vivía suelto dentro de `Contenido`, mezclado con el resto del estado de la aplicación. Aquí
- * se puede probar sin pantalla: las cuentas con los índices tienen su porqué —mover una
+ * Aquí se puede probar sin pantalla: las cuentas con los índices tienen su porqué —mover una
  * pestaña no debe saltar a otra que no se ha pedido— y están fijadas en `PestanasTest`.
  */
 class Pestanas {
 
     val lista = mutableStateListOf<TabState>()
 
-    /** Índice de la que se está viendo. */
     var activa by mutableIntStateOf(0)
 
     val vacia: Boolean get() = lista.isEmpty()

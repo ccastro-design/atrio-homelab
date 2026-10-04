@@ -51,9 +51,8 @@ import kotlinx.coroutines.withContext
 /**
  * Pantalla principal: los servicios agrupados, con su estado y el buscador.
  *
- * Barra azul arriba y los servicios en una sola columna, uno por línea, como en la
- * versión de la que parte este proyecto: con el nombre a la derecha del icono se lee de
- * un vistazo y caben la descripción y el estado sin apretar nada.
+ * Barra azul arriba y los servicios en una sola columna, uno por línea: con el nombre a la
+ * derecha del icono se lee de un vistazo y caben la descripción y el estado sin apretar nada.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,11 +94,9 @@ fun Dashboard(
             onSettings = onSettings
         )
 
-        // Los dos mandos del panel, en una fila: el selector de red a la izquierda y la
-        // lupa a la derecha. El selector solo aparece si hay algo que elegir, es decir, si
-        // algún servidor tiene una dirección distinta para cuando no estás en casa; la
-        // lupa, solo si hay servicios propios que buscar. Si no hay ninguno de los dos la
-        // fila entera se va, para no dejar un hueco en blanco encima de las tarjetas.
+        // El selector solo aparece si hay algo que elegir; la lupa, solo si hay servicios
+        // propios que buscar. Si no hay ninguno de los dos la fila entera se va, para no
+        // dejar un hueco en blanco encima de las tarjetas.
         val hayPerfil = config.servers.any { it.hostAway.isNotBlank() }
         val hayQueBuscar = !config.isEmpty
 
@@ -203,9 +200,7 @@ fun Dashboard(
 /**
  * Imagen de fondo del panel, si el usuario ha puesto una.
  *
- * Se recorta para llenar la pantalla y se oscurece con un velo del color del fondo. El
- * velo no es un adorno: una foto con zonas claras y oscuras se come cualquier color de
- * texto, y sin él el panel deja de leerse en cuanto se elige una imagen con contraste.
+ * Se recorta para llenar la pantalla y se oscurece con un velo del color del fondo.
  */
 @Composable
 private fun FondoDelPanel(config: PanelConfig) {
@@ -338,9 +333,7 @@ private fun BarraDelPanel(
         }
 
         // La lupa se ha retirado a propósito: con cuatro acciones la barra se apiñaba y
-        // el subtítulo no cabía. El buscador sigue construido y funcionando (ver
-        // `buscando` más arriba); solo le falta un punto de entrada, pendiente de dar
-        // con una colocación mejor.
+        // el subtítulo no cabía.
 
         if (mostrarRefrescar) {
             IconButton(onClick = onRefresh, enabled = !refrescando) {
@@ -438,10 +431,9 @@ private fun SelectorDePerfil(
     }
 
     Box(modifier) {
-        // Con los colores de la barra: es el mismo mando del panel, aunque caiga debajo.
-        // Va la pastilla entera y no solo el texto, porque el selector se dibuja sobre el
-        // fondo —que puede ser una imagen cualquiera— y un texto suelto del color de la
-        // barra desaparecería en cuanto el fondo se le pareciera.
+        // Con los colores de la barra: es el mismo mando del panel, aunque caiga debajo. Va la
+        // pastilla entera y no solo el texto, porque el selector se dibuja sobre el fondo y un
+        // texto suelto del color de la barra desaparecería en cuanto el fondo se le pareciera.
         AssistChip(
             onClick = { abierto = true },
             label = { Text(texto, fontSize = 13.sp) },
@@ -500,13 +492,9 @@ private fun BurbujaDeBusqueda(onClick: () -> Unit) {
 /**
  * El buscador, en una ventana aparte.
  *
- * Se abre con el teclado puesto y con la lista entera delante, no en blanco: así vale
- * igual para buscar por nombre que para llegar a un servicio concreto sin recorrer el
- * panel. Al elegir uno se cierra sola y lo abre, que es a lo que se venía.
- *
- * Los resultados van agrupados como en el panel. Un servicio suelto no dice de qué máquina
- * es, y quien tiene el mismo nombre repetido en dos servidores —cosa corriente en un
- * homelab— necesita el grupo para saber cuál está eligiendo.
+ * Se abre con la lista entera delante, no en blanco: así vale igual para buscar por nombre
+ * que para llegar a un servicio concreto sin recorrer el panel. Los resultados van agrupados
+ * como en el panel: quien tiene el mismo nombre repetido en dos servidores necesita el grupo.
  */
 @Composable
 private fun VentanaDeBusqueda(
@@ -690,8 +678,7 @@ private fun TarjetaDeServicio(
 
     // Compacta es compacta: una línea por servicio. La descripción, la dirección y el
     // aviso de «sin cifrar» son lo que hace crecer la tarjeta a tres líneas, así que en
-    // este tamaño no salen. Lo que se quiere aquí es ver muchos servicios de un vistazo;
-    // el detalle está a un toque, en su ficha.
+    // este tamaño no salen.
     val compacta = tamano == "COMPACT"
 
     Surface(
@@ -733,8 +720,7 @@ private fun TarjetaDeServicio(
 
                 // La descripción y la dirección siguen al color del nombre, no al del
                 // tema: quien pone el nombre en blanco porque su fondo es oscuro espera
-                // que lo de debajo haga lo mismo. Y con más cuerpo del que tenían, que
-                // al 60 % de opacidad y sobre una imagen no se leían.
+                // que lo de debajo haga lo mismo.
                 val colorBase = colorDelNombre ?: MaterialTheme.colorScheme.onSurface
 
                 if (service.subtitle.isNotBlank() && !compacta) {
@@ -797,10 +783,9 @@ private fun TarjetaDeServicio(
 /** Punto de color y su significado escrito al lado. */
 @Composable
 private fun Estado(status: ServiceStatus) {
-    // Sobre fondo oscuro hacen falta tonos más claros: el verde y el rojo de siempre son
-    // los correctos sobre blanco, pero sobre una imagen oscura se apagan. Se mira la
-    // luminosidad del fondo que hay de verdad, no el ajuste de tema, porque el usuario
-    // puede haber puesto un fondo claro con el tema oscuro o al revés.
+    // Sobre fondo oscuro hacen falta tonos más claros. Se mira la luminosidad del fondo
+    // que hay de verdad, no el ajuste de tema, porque el usuario puede haber puesto un
+    // fondo claro con el tema oscuro o al revés.
     val sobreOscuro = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     val (color, texto) = when (status.state) {

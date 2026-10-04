@@ -43,13 +43,9 @@ private val PASOS = listOf(
 /**
  * Presentación de la aplicación, la primera vez que se abre.
  *
- * Existe porque casi nada de lo que hace se adivina mirando el panel: que los servicios
- * se abren dentro, que una máquina puede tener dos direcciones, o que un enlace de
- * descarga se puede mandar al servidor. Sin contarlo, se descubre por accidente o no se
- * descubre.
- *
- * Se puede saltar desde la primera pantalla y volver a ver desde Ajustes: nadie debería
- * quedarse atrapado en una presentación.
+ * Existe porque casi nada de lo que hace se adivina mirando el panel. Se puede saltar desde
+ * la primera pantalla y volver a ver desde Ajustes: nadie debería quedarse atrapado en una
+ * presentación.
  */
 @Composable
 fun Tutorial(onFinish: () -> Unit) {

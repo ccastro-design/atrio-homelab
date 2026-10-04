@@ -5,24 +5,15 @@ import android.content.Intent
 
 /**
  * Ayudas para probar la aplicación desde el ordenador. Este móvil no permite simular
- * toques por adb (HyperOS revierte en silencio el ajuste que lo autoriza), así que se
- * abren las pantallas por intent:
+ * toques por adb, así que se abren las pantallas por intent:
  *
  * Ojo al nombre del componente: la parte de la izquierda es el `applicationId` y la de
- * la derecha el paquete del código, que **no coinciden** desde que se fijó el
- * identificador definitivo.
+ * la derecha el paquete del código, que **no coinciden**.
  *
  *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e pantalla ajustes
- *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e pantalla descargas
- *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e servicio <id>
- *   adb shell am start -n io.github.ccastrodesign.atrio/com.homelab.panel.MainActivity -e sembrar 1
  *
  * Solo funciona en compilaciones de depuración: en la de publicación `BuildConfig.DEBUG` es
- * siempre falso y R8 elimina todo esto al minificar. Comprobado en el APK de la 1.8: ni
- * `DebugSeed` ni los textos de los extras aparecen en él.
- *
- * Estaba dentro de `MainActivity`; vive aparte para que lo que se publica y lo que solo
- * sirve para probar no se mezclen al leer.
+ * siempre falso y R8 elimina todo esto al minificar.
  */
 internal object Depuracion {
 

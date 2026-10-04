@@ -8,8 +8,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 
 /*
- * Los avisos de la pantalla principal. Vivían dentro de `Contenido`; aquí solo se pintan, y
- * qué pasa al contestarlos lo decide quien los llama.
+ * Los avisos de la pantalla principal: aquí solo se pintan, y qué pasa al contestarlos lo
+ * decide quien los llama.
  */
 
 /**

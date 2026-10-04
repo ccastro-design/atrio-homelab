@@ -20,7 +20,6 @@ import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Pantallas de la aplicación. */
 private enum class Screen { PANEL, TABS, SETTINGS, DOWNLOADS, SCAN }
 
 class MainActivity : FragmentActivity() {
@@ -77,8 +76,6 @@ class MainActivity : FragmentActivity() {
         super.onStop()
         salidaEn = android.os.SystemClock.elapsedRealtime()
 
-        // Al cerrarla del todo, y si el usuario lo ha pedido, no se dejan sesiones vivas
-        // en las pestañas.
         if (isFinishing && ConfigStore.load(this).clearSessionsOnExit) {
             WebSessions.clear(this)
         }
@@ -86,8 +83,7 @@ class MainActivity : FragmentActivity() {
 
     /**
      * Al volver a la aplicación se vuelve a pedir el desbloqueo si ha pasado el tiempo
-     * configurado. Antes solo se pedía al arrancar en frío: quien cogiera el móvil
-     * desbloqueado entraba directamente, con las pestañas abiertas y sus sesiones.
+     * configurado.
      */
     override fun onStart() {
         super.onStart()
@@ -225,11 +221,7 @@ private fun Contenido(
     var tutorial by remember { mutableStateOf(!config.tutorialSeen) }
     /** Ofrecer añadir la red de casa al terminar la presentación. */
     var preguntarRed by remember { mutableStateOf(false) }
-    /**
-     * Si la configuración no se pudo leer al arrancar, hay que decirlo. Perder el panel en
-     * silencio es lo peor que puede hacer esta aplicación, y enterarse a las dos semanas,
-     * peor todavía.
-     */
+    /** Si la configuración no se pudo leer al arrancar, hay que decirlo. */
     var avisoDeCarga by remember { mutableStateOf(ConfigStore.ultimoEstado) }
     /** Entrar en Ajustes directamente por Seguridad, no por su menú. */
     var irASeguridad by remember { mutableStateOf(false) }
@@ -253,8 +245,7 @@ private fun Contenido(
      *
      * Respeta el interruptor general de Ajustes › Seguridad, igual que la automática: si
      * el usuario ha dicho que la aplicación no sondee su red, ningún gesto ni ningún
-     * botón puede saltárselo. El botón de la barra ya no se enseña, pero el gesto de
-     * tirar hacia abajo sí llegaba aquí.
+     * botón puede saltárselo.
      */
     fun refrescarEstado() {
         if (refrescando || !config.checkStatus) return
@@ -291,11 +282,8 @@ private fun Contenido(
     }
 
     // Una web que lanza varios enlaces los suelta en ráfaga, así que se espera un momento
-    // a que dejen de llegar y se envían juntos: una sola pregunta y un solo aviso.
-    //
-    // Medio segundo y no más: el aviso de «enviando» sale desde el primer toque, pero
-    // esta espera es tiempo en el que no pasa nada, y de nada sirve un aviso puntual si
-    // luego se queda parado dos segundos.
+    // a que dejen de llegar y se envían juntos: una sola pregunta y un solo aviso. Medio
+    // segundo y no más: esta espera es tiempo en el que no pasa nada.
     LaunchedEffect(envio.enlaces, envio.recogiendo) {
         if (!envio.recogiendo) return@LaunchedEffect
 
@@ -306,8 +294,7 @@ private fun Contenido(
     fun abrirServicio(servicio: Service) {
         val destino = config.urlOf(servicio, red.fuera)
 
-        // Sin dirección no hay nada que abrir, pero callarse tampoco vale: hasta ahora se
-        // volvía sin más y tocar la tarjeta no hacía absolutamente nada.
+        // Sin dirección no hay nada que abrir, pero callarse tampoco vale.
         if (destino.isBlank()) {
             servicioSinDireccion = servicio
             return
@@ -348,12 +335,8 @@ private fun Contenido(
                 tutorial = false
 
                 // Solo la primera vez: es el momento en que acaba de leer para qué sirve.
-                // Volver a preguntarlo cada vez que alguien repase la presentación desde
-                // Ajustes sería pesado.
-                //
                 // Se ofrece aunque la aplicación ya haya aprendido una red sola, porque
-                // eso es una conjetura —«la primera WiFi donde algo respondió»— y esto es
-                // que lo diga el usuario, que es lo único que vale de verdad.
+                // eso es una conjetura y esto es que lo diga el usuario.
                 if (!config.tutorialSeen) {
                     guardar(config.copy(tutorialSeen = true))
                     preguntarRed = true
@@ -446,10 +429,8 @@ private fun Contenido(
             onShowTutorial = { tutorial = true },
             onCerrarApp = { cerrarLaAplicacion(context) },
             onSessionsCleared = {
-                // Las pestañas abiertas se cierran. Borrar las cookies no echa de un sitio
-                // en el que ya estás dentro: la página sigue cargada y funcionando, y el
-                // usuario ve que «no ha pasado nada». Cerrarlas es además lo que espera
-                // cualquiera que pulsa algo llamado «borrar sesiones».
+                // Borrar las cookies no echa de un sitio en el que ya estás dentro: la
+                // página sigue cargada y funcionando.
                 pestanas.cerrarTodas()
                 if (pantalla == Screen.TABS) pantalla = Screen.PANEL
             },
@@ -577,8 +558,7 @@ private fun Contenido(
  *
  * Lo que hay que vaciar es la memoria del motor del navegador, donde quedan las credenciales
  * de los servicios que las piden por su propia ventana, y a esa memoria no llega ninguna
- * función de Android. Muere con el proceso y de ninguna otra forma; por eso el interruptor de
- * «borrar sesiones al salir» sí funciona: allí el proceso también acaba muriendo.
+ * función de Android. Muere con el proceso y de ninguna otra forma.
  *
  * El retardo deja ver el aviso de que se ha borrado, y da margen a que termine de escribirse
  * la configuración.
@@ -592,9 +572,7 @@ private fun cerrarLaAplicacion(context: Context) {
         // El cierre y la muerte del proceso van en **dos mensajes separados**, no seguidos.
         // Entre uno y otro, Android ejecuta el ciclo de cierre de la pantalla, y ahí es donde
         // el sistema espera a que terminen las escrituras que quedaran encoladas y donde se
-        // aplica «borrar las sesiones al salir» si el usuario lo tiene puesto. Haciéndolo todo
-        // de una tacada, ese cierre no llegaba a ocurrir: se mataba el proceso antes y se
-        // perdían las dos cosas.
+        // aplica «borrar las sesiones al salir».
         cola.postDelayed({
             android.os.Process.killProcess(android.os.Process.myPid())
         }, 600)
@@ -604,7 +582,6 @@ private fun cerrarLaAplicacion(context: Context) {
 /**
  * Abre un servicio fuera del panel.
  *
- * Si el usuario eligió una aplicación en la ficha, se abre esa por su nombre de paquete.
  * Sin aplicación elegida se lanza la dirección y decide el sistema, que en la práctica
  * significa el navegador: ver [ExternalApps] para por qué Android no puede deducir la
  * aplicación de un servicio autoalojado a partir de su dirección.

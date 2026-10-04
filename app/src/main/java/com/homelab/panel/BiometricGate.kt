@@ -14,14 +14,11 @@ import androidx.fragment.app.FragmentActivity
  *  - Huella **no reconocida**: no pasa nada, el diálogo sigue en pantalla y se puede
  *    reintentar. No abre.
  *  - **Demasiados intentos fallidos** (el sistema bloquea el lector): se pide el **código
- *    del móvil**, y si ahí también se falla o se cancela, la aplicación se cierra. Antes
- *    este caso llegaba como «error» y se colaba por la puerta de los fallos técnicos:
- *    cinco huellas mal y adentro.
+ *    del móvil**, y si ahí también se falla o se cancela, la aplicación se cierra.
  *  - **Cancelar** a propósito: no abre.
  *  - **No hay con qué comprobar** —lector estropeado, sin huellas registradas, sin código
  *    de pantalla—: **abre igualmente**. Si no, un móvil al que se le rompe el sensor
- *    dejaría a su dueño fuera de su propio panel para siempre, y encima sin forma de
- *    desactivar el desbloqueo desde dentro.
+ *    dejaría a su dueño fuera de su propio panel para siempre.
  */
 object BiometricGate {
 

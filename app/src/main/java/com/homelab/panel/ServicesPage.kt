@@ -65,9 +65,7 @@ fun ServicesPage(
 
 
     // Mientras se arrastra un grupo se muestran solo los nombres de grupo. Con todas las
-    // filas iguales, mover un grupo es igual de simple que mover un servicio; midiendo
-    // el alto real de cada grupo había que arrastrar casi dos pantallas para saltarse
-    // uno grande, y al saltar el brinco era de ese mismo tamaño.
+    // filas iguales, mover un grupo es igual de simple que mover un servicio.
     val ordenandoGrupos = grupoArrastrado != null
 
     val filas = remember(config, ordenandoGrupos) {
@@ -161,8 +159,6 @@ fun ServicesPage(
                                     val altura = alturaFila
                                     if (altura <= 0f) return@detectDragGesturesAfterLongPress
 
-                                    // Se mueve de uno en uno cada vez que el dedo recorre
-                                    // el alto de una fila.
                                     val pasos = (desplazamiento / altura).toInt()
                                     if (pasos == 0) return@detectDragGesturesAfterLongPress
 
@@ -383,8 +379,7 @@ private fun CabeceraDeGrupo(
  * Fila de un servicio.
  *
  * No lleva menú de acciones: tocarla abre su ficha, que es donde se cambia todo y donde
- * está el botón de borrar, y de grupo se cambia arrastrando. Un engranaje al lado solo
- * repetía lo que ya se puede hacer.
+ * está el botón de borrar, y de grupo se cambia arrastrando.
  */
 @Composable
 private fun FilaDeServicio(
