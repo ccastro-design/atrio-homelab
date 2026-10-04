@@ -161,19 +161,8 @@ fun TabbedBrowser(
     }
 
     // El tiempo límite cuenta desde que **empieza cada carga**, incluidas las que lanza el
-    // usuario pulsando enlaces dentro de la página.
-    //
-    // Antes se rearmaba solo con `loadId`, que únicamente cambia cuando la carga la dispara
-    // la aplicación. El resultado era que abrías un servicio, cargaba en dos segundos,
-    // seguías navegando tranquilamente, y a los doce segundos del principio despertaba el
-    // temporizador, veía que en ese instante había algo cargando y **te cortaba la
-    // navegación** con un «no ha respondido». Se notaba sobre todo por WiFi, porque se
-    // navega más rápido y es más fácil estar cargando justo en ese momento.
-    //
-    // Añadir `loading` a las claves hace que cada carga tenga sus doce segundos enteros. Y
-    // si una página va moviendo el progreso, el plazo se renueva y no salta nunca: correcto,
-    // porque lo que este aviso debe cazar es un servicio **colgado**, y algo que responde no
-    // lo está.
+    // usuario pulsando enlaces. Si una página va moviendo el progreso, el plazo se renueva:
+    // correcto, porque lo que este aviso debe cazar es un servicio **colgado**.
     LaunchedEffect(activa.key, activa.loadId, activa.loading) {
         if (!activa.loading) return@LaunchedEffect
 
@@ -332,8 +321,7 @@ private fun DialogoDeAutenticacion(
  * Empieza por un carácter nulo a propósito, para que ningún mensaje de error de verdad
  * pueda coincidir con ella. Tiene que ir escrita como secuencia de escape y **nunca como
  * el carácter suelto**: un byte nulo dentro del fichero hace que las herramientas de
- * búsqueda lo tomen por binario y **se salten el fichero entero sin avisar**. Estuvo así y
- * dejaba este fichero fuera de cualquier búsqueda.
+ * búsqueda lo tomen por binario y **se salten el fichero entero sin avisar**.
  */
 private const val TIMEOUT_MARCA = "\u0000timeout"
 
@@ -419,8 +407,7 @@ private fun TiraDePestanas(
 
             // Cada pestaña se identifica por su clave, no por el sitio que ocupa. Sin
             // esto, al cambiarlas de orden Compose reutiliza el hueco para otra pestaña,
-            // el detector de gestos se reinicia y el arrastre se suelta solo: había que
-            // volver a pulsar para cada posición.
+            // el detector de gestos se reinicia y el arrastre se suelta solo.
             key(tab.key) {
                 Surface(
                     onClick = { onSelect(indice) },
@@ -611,19 +598,15 @@ private fun crearWebView(
      * Ficheros que la página ofrece descargar.
      *
      * Un WebView no descarga nada por su cuenta: si nadie atiende esto, pulsar un
-     * `.torrent` **no hace absolutamente nada**, ni siquiera un aviso, porque el motor no
-     * sabe pintar ese contenido y se calla. Un `.torrent` o un `.nzb` no hay que
-     * descargarlos: se le pasa su dirección al programa de descargas, que se lo baja él.
-     * Lo demás se deja al navegador del móvil, que para eso tiene gestor de descargas.
+     * `.torrent` **no hace absolutamente nada**. Un `.torrent` o un `.nzb` no hay que
+     * descargarlos: se le pasa su dirección al programa de descargas.
      */
     setDownloadListener { url, _, contentDisposition, mimeType, _ ->
         val cabecera = contentDisposition.orEmpty()
 
-        // De qué es el fichero. La dirección es la peor pista de las tres: los buscadores
-        // de NZB sirven todo por `…/api?t=get&id=123&apikey=…`, que no acaba en `.nzb` ni
-        // se le parece, y lo mismo hacen los indexadores de torrent. **El tipo se averigua
-        // aquí y viaja con el enlace**: quien lo reciba después ya no tiene de dónde
-        // sacarlo, y antes lo rechazaba por no reconocerlo.
+        // La dirección es la peor pista de las tres: los buscadores de NZB sirven todo
+        // por `…/api?t=get&id=123&apikey=…`, que no acaba en `.nzb`. **El tipo se averigua
+        // aquí y viaja con el enlace**: quien lo reciba después ya no tiene de dónde sacarlo.
         val tipo = when {
             Links.detect(url) != null -> Links.detect(url)
 
@@ -642,8 +625,7 @@ private fun crearWebView(
 
             // Un `blob:` no es una dirección: es un fichero que la propia página ha armado
             // aquí dentro, y fuera de esta pestaña no existe. Pasárselo al programa de
-            // descargas no sirve de nada —lo rechaza sin poder decir por qué—, así que se
-            // lee el contenido y se manda entero. Binsearch funciona así.
+            // descargas no sirve de nada, así que se lee el contenido y se manda entero.
             if (url.startsWith("blob:", ignoreCase = true)) {
                 leerFicheroDeLaPagina(vistaDelBlob, url, nombreDeFichero(cabecera, tipo), tipo) { fichero ->
                     if (fichero == null) {
@@ -687,9 +669,8 @@ private fun crearWebView(
          * Un enlace de descarga no es una página.
          *
          * Sin esto, pulsar un `ed2k://` dentro de una pestaña dejaba la pestaña en un
-         * error de esquema desconocido: el WebView intentaba cargarlo como si fuera una
-         * dirección web. Ahora se entrega al servicio de descargas y la web se queda donde
-         * estaba, que es lo que espera quien pulsa «Ejecutar enlaces» en una página.
+         * error de esquema desconocido. Se entrega al servicio de descargas y la web se queda
+         * donde estaba, que es lo que espera quien pulsa «Ejecutar enlaces» en una página.
          */
         override fun shouldOverrideUrlLoading(
             v: WebView?,
@@ -771,12 +752,7 @@ private fun crearWebView(
          * «básica»), no con un formulario dentro de la página.
          *
          * Un WebView no enseña ningún diálogo por su cuenta: si nadie atiende esto, la
-         * pestaña se queda en un «401 Unauthorized» y parece que el servicio está roto,
-         * mientras que en Chrome funciona porque él sí pregunta. Le pasa a Transmission,
-         * a muchos routers y a cualquier cosa puesta detrás de un nginx con contraseña.
-         *
-         * Se prueban primero las credenciales guardadas del servicio, y solo si no valen
-         * se le pregunta al usuario.
+         * pestaña se queda en un «401 Unauthorized» y parece que el servicio está roto.
          */
         override fun onReceivedHttpAuthRequest(
             v: WebView?,
@@ -929,18 +905,11 @@ private fun PantallaDeError(
  *
  * Hace falta porque una web moderna hace `URL.createObjectURL(blob)`, dispara la descarga
  * y **revoca la dirección en el acto**: para cuando la aplicación se entera de que hay una
- * descarga, ese `blob:` ya no existe. Medido con Binsearch, que fallaba a los 15 ms.
- *
- * Se envuelve `createObjectURL` para leer el contenido **en el momento en que se crea** y
- * se guarda en la propia página. Siempre se delega en la función original, así que la web
- * sigue comportándose igual. Solo se guarda lo que baja de 8 MB: un `.nzb` o un `.torrent`
- * no se acercan, y así una página con un vídeo en memoria no se lleva por delante la del
- * móvil.
+ * descarga, ese `blob:` ya no existe. Solo se guarda lo que baja de 8 MB: así una página
+ * con un vídeo en memoria no se lleva por delante la del móvil.
  *
  * A propósito no se usa `addJavascriptInterface`, que sería más cómodo: eso deja un puente
- * permanente por el que cualquier web abierta en una pestaña podría llamar a la aplicación
- * cuando quisiera. Aquí no se abre nada: el contenido se queda en la página y se recoge
- * cuando hace falta.
+ * permanente por el que cualquier web abierta en una pestaña podría llamar a la aplicación.
  */
 private val GUARDIAN_DE_FICHEROS = """
     (function () {

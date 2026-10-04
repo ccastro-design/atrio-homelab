@@ -17,17 +17,9 @@ data class InstalledApp(
 /**
  * Abrir un servicio en la aplicación nativa que tenga instalada el usuario.
  *
- * **Por qué hay que elegir la aplicación a mano.** Lo natural sería lanzar la dirección
- * del servicio con `ACTION_VIEW` y dejar que Android decida; eso es lo que se hacía y no
- * funcionaba nunca. Desde Android 12, una dirección `http(s)` solo llega a una aplicación
- * que no sea un navegador si esa aplicación tiene *verificado* el dominio: su desarrollador
- * ha publicado un `assetlinks.json` en ese servidor. Un servicio autoalojado en
- * `http://192.168.1.254:2283` no tiene —ni puede tener— nada de eso, así que el enlace
- * acaba siempre en el navegador. Immich, Plex, Jellyfin y compañía declaran como mucho su
- * dominio público, no la máquina del usuario.
- *
- * La única vía que funciona de verdad es que el usuario diga qué aplicación corresponde a
- * cada servicio y abrirla por su nombre de paquete.
+ * **Por qué hay que elegir la aplicación a mano.** Desde Android 12, una dirección
+ * `http(s)` solo llega a una aplicación que no sea un navegador si esa aplicación tiene
+ * *verificado* el dominio, y un servicio autoalojado no tiene —ni puede tener— nada de eso.
  */
 object ExternalApps {
 

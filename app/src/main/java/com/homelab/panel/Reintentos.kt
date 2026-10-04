@@ -7,22 +7,13 @@ import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 
 /**
- * Qué hacer cuando un servidor **acepta la conexión y cuelga sin contestar**.
+ * Qué hacer cuando un servidor **acepta la conexión y cuelga sin contestar**. Es lo que hace
+ * la web de aMule (`amuleweb`) cuando pierde su conexión interna con aMule: se cierra a
+ * propósito y deja que lo que la vigila la vuelva a arrancar.
  *
- * Es lo que hace la web de aMule (`amuleweb`) cuando pierde su conexión interna con aMule:
- * se cierra a propósito, a mitad de lo que estuviera sirviendo, y deja que lo que la vigila
- * —Docker, systemd— la vuelva a arrancar. Lo dice su propio código, en
- * `CRemoteConnect::OnLost`: «External Connection lost — exiting.». Desde fuera se ve como
- * `net::ERR_EMPTY_RESPONSE` en la pestaña y como un envío fallido, y un segundo intento poco
- * después funciona. Le pasaba al autor tras un rato sin usar su aMule (03/10/2026): la página
- * de entrada cargaba, y al meter la contraseña —lo primero que ya necesita a aMule de
- * verdad— colgaba.
- *
- * La respuesta es la de los navegadores: la recarga automática de Chrome
- * (`NetErrorAutoReloader`) vuelve a pedir la página a los 1 s, 5 s, 30 s, 1 min… Aquí se
- * usan solo las dos primeras esperas, porque hay alguien mirando la pantalla: si no basta, se
- * le enseña el error y decide él. Y como Chrome, nunca se reenvía un formulario: se vuelve a
- * empezar desde el principio.
+ * La respuesta es la de los navegadores, la recarga automática de Chrome
+ * (`NetErrorAutoReloader`): aquí se usan solo las dos primeras esperas, porque hay alguien
+ * mirando la pantalla. Y como Chrome, nunca se reenvía un formulario.
  */
 object Reintentos {
 
@@ -61,10 +52,8 @@ object Reintentos {
      * demasiado— sale como [ServidorColgo].
      *
      * Se distingue por el momento y no por el tipo de excepción, que depende de la versión de
-     * Android. Medido en el móvil con un servidor de mentira (03/10/2026): colgar sin contestar
-     * da `IOException: unexpected end of stream` o `SocketException: Connection reset`, y
-     * siempre **al leer**; un servicio apagado falla **al conectar** (`ConnectException`). Y
-     * Android no repite nada por su cuenta: el servidor recibe una sola conexión.
+     * Android: un servicio apagado falla **al conectar** (`ConnectException`), y colgar sin
+     * contestar, siempre **al leer**.
      */
     inline fun <T> HttpURLConnection.conectarY(resto: HttpURLConnection.() -> T): T {
         // Aquí fallan «apagado» y «no responde», que no se repiten.
