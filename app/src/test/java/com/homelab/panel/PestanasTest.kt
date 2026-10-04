@@ -64,7 +64,6 @@ class PestanasTest {
         assertEquals("a", p.vista())
     }
 
-    /** Mover otra por encima o por debajo de la que se ve no cambia la que se ve. */
     @Test
     fun `mover otra no cambia la que se ve`() {
         val p = tres()
@@ -91,7 +90,6 @@ class PestanasTest {
         assertEquals("abc", p.orden())
     }
 
-    /** Se cierra la que se ve, y pasa a verse la que ocupa su sitio. */
     @Test
     fun `cerrar la que se ve ensena la siguiente`() {
         val p = tres()
@@ -101,7 +99,6 @@ class PestanasTest {
         assertEquals("c", p.vista())
     }
 
-    /** Y si era la última, la anterior. */
     @Test
     fun `cerrar la ultima ensena la anterior`() {
         val p = tres()

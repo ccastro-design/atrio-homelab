@@ -12,9 +12,7 @@ import java.io.File
  * El guardado de la configuración.
  *
  * Es donde un fallo cuesta más caro: alguien con veinte servicios metidos a mano se los
- * encuentra borrados. Antes pasaba de verdad —se escribía encima del fichero bueno y, si no
- * se podía leer, se partía de cero sin avisar— y comprobarlo exigía corromper el fichero en
- * un móvil. Aquí se hace en medio segundo.
+ * encuentra borrados.
  */
 class ConfigStoreTest {
 
@@ -73,7 +71,6 @@ class ConfigStoreTest {
         assertTrue("y la deja guardada", fichero("config.json").exists())
     }
 
-    /** Al leer una configuración buena se deja copia, que es la red de seguridad. */
     @Test
     fun `al arrancar bien deja una copia de seguridad`() {
         ConfigStore.saveIn(carpeta, mia)
@@ -91,7 +88,6 @@ class ConfigStoreTest {
         ConfigStore.saveIn(carpeta, mia)
         cargar() // deja la copia
 
-        // Se corta el fichero por la mitad, como lo dejaría un apagón.
         val bueno = fichero("config.json")
         val entero = bueno.readText()
         bueno.writeText(entero.substring(0, entero.length / 2))
@@ -143,7 +139,6 @@ class ConfigStoreTest {
         assertEquals("otro", cargar().title)
     }
 
-    /** Lo que se exporta se tiene que poder volver a importar. */
     @Test
     fun `lo exportado se puede importar`() {
         val texto = ConfigStore.export(mia)

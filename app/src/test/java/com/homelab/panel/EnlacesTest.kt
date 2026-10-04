@@ -8,9 +8,7 @@ import org.junit.Test
  * Reconocimiento de enlaces de descarga por su dirección.
  *
  * Lo que se prueba aquí no es solo lo que reconoce, sino **lo que no puede reconocer**, que
- * es lo que obliga a que el tipo viaje junto al enlace desde el navegador: comprobado el
- * 30/07/2026 contra un servidor de pruebas, un enlace de buscador de NZB llegaba al cuadro
- * de envío y salía «eso no parece un enlace que la aplicación pueda enviar».
+ * es lo que obliga a que el tipo viaje junto al enlace desde el navegador.
  */
 class EnlacesTest {
 
@@ -30,11 +28,9 @@ class EnlacesTest {
     }
 
     /**
-     * **El caso que obliga a llevar el tipo aparte.** Así sirven los NZB casi todos los
-     * buscadores, y los indexadores de torrent hacen lo mismo: la dirección no dice nada y
-     * el tipo solo se sabe por la cabecera con la que responde el servidor, que la ve el
-     * navegador. Si esto algún día devolviera algo distinto de `null`, sería que alguien
-     * ha metido adivinanzas por el nombre, que es justo lo que no se quiere.
+     * **El caso que obliga a llevar el tipo aparte**: la dirección no dice nada y el tipo solo
+     * se sabe por la cabecera con la que responde el servidor. Si esto algún día devolviera algo
+     * distinto de `null`, sería que alguien ha metido adivinanzas por el nombre.
      */
     @Test
     fun `no reconoce el enlace de un buscador de nzb`() {
@@ -42,7 +38,6 @@ class EnlacesTest {
         assertNull(Links.detect("https://indexador.com/download/123456"))
     }
 
-    /** Una dirección web a secas no es un enlace de descarga. */
     @Test
     fun `una pagina normal no es un enlace de descarga`() {
         assertNull(Links.detect("https://elhumoviral.com"))

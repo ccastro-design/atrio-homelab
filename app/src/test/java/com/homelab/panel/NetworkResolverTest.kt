@@ -9,9 +9,7 @@ import org.junit.Test
  * La decisión de usar las direcciones de casa o las de fuera.
  *
  * Es la pieza donde un fallo tiene la peor consecuencia de toda la aplicación: dar por
- * buena la máquina de otra persona y mandarle las contraseñas guardadas. Y es la más
- * incómoda de probar a mano, porque el caso que importa exige estar físicamente en otra
- * casa con un equipo que responda en la misma dirección.
+ * buena la máquina de otra persona y mandarle las contraseñas guardadas.
  */
 class NetworkResolverTest {
 
@@ -31,8 +29,8 @@ class NetworkResolverTest {
     }
 
     /**
-     * El caso que dio origen a todo esto: en casa de un amigo con un equipo en la misma
-     * dirección. Tiene que irse por la VPN **y** preguntar, nunca dar por buena la máquina.
+     * En casa de un amigo con un equipo en la misma dirección: tiene que irse por la VPN
+     * **y** preguntar, nunca dar por buena la máquina.
      */
     @Test
     fun `en una wifi ajena donde algo responde va por vpn y pregunta`() {

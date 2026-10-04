@@ -8,10 +8,7 @@ import org.junit.Test
 /**
  * Qué se le dice al usuario después de cada entrega. Ver [LinkSender.textoDe].
  *
- * Antes cada conector escribía sus avisos; desde que están en un solo sitio, aquí se fija qué
- * texto corresponde a cada resultado, para que nadie los cruce al tocar ese sitio. Que los
- * conectores sigan llegando al mismo resultado que antes se comprobó en el móvil, contra
- * programas de mentira, grabando lo de antes y lo de después (`atrio-medidas/golden`).
+ * Aquí se fija qué texto corresponde a cada resultado, para que nadie los cruce.
  */
 class MensajesDeEnvioTest {
 
@@ -53,7 +50,7 @@ class MensajesDeEnvioTest {
         )
     }
 
-    /** Transmission pasa su resultado tal cual, aunque venga vacío: así era antes y así sigue. */
+    /** Transmission pasa su resultado tal cual, aunque venga vacío. */
     @Test
     fun `un rechazo con su motivo lo repite tal cual`() {
         assertEquals(Texto(R.string.send_refused, listOf(nombre, "invalid or corrupt torrent file")),

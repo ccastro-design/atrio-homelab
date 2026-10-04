@@ -63,7 +63,6 @@ class EnvioDeEnlacesTest {
         assertTrue(e.abierto)
     }
 
-    /** El botón de la pestaña empieza de cero: nada de lo que hubiera de antes. */
     @Test
     fun `el boton de la pestana empieza de cero`() {
         val e = EnvioDeEnlaces()

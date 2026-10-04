@@ -8,13 +8,7 @@ import org.junit.Test
  * Por qué un servicio se queda sin dirección con la que abrirse.
  *
  * Importa porque el síntoma es de los peores: tocabas la tarjeta y **no pasaba nada**, sin
- * mensaje ni pista, y lo normal era pensar que la aplicación se había colgado. El caso que
- * lo destapó es borrar un servidor: sus servicios se quedan en el panel apuntando a un
- * identificador que ya no existe.
- *
- * Se prueba aquí y no a mano porque montar cada caso en el móvil exige romper la
- * configuración a propósito, y los tres se distinguen por matices que a simple vista se
- * confunden.
+ * mensaje ni pista, y lo normal era pensar que la aplicación se había colgado.
  */
 class SinDireccionTest {
 
@@ -42,7 +36,7 @@ class SinDireccionTest {
         assertNull(config.motivoSinDireccion(config.allServices.first(), away = false))
     }
 
-    /** El caso que lo destapó: se borró el servidor y el servicio se quedó colgando. */
+    /** Se borró el servidor y el servicio se quedó colgando. */
     @Test
     fun `si el servidor ya no existe lo dice`() {
         val config = panel(
@@ -91,7 +85,6 @@ class SinDireccionTest {
         assertNull(config.motivoSinDireccion(config.allServices.first(), away = true))
     }
 
-    /** Con dirección propia solo de casa pasa lo mismo: fuera se intenta con esa. */
     @Test
     fun `fuera de casa con direccion propia solo de casa se intenta igual`() {
         val config = panel(Service(id = "s", name = "Router", urlOwn = "http://192.168.1.1"))

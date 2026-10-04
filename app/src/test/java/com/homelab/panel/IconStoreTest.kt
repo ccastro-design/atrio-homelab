@@ -7,12 +7,9 @@ import org.junit.Test
 /**
  * La dirección del icono declarado por un servicio.
  *
- * **Cuidado con estos tests**: se ejecutan con el Java del ordenador, y el fallo que
- * motivó esta función solo se daba con el `java.net.URI` de Android, que resuelve
- * `http://host:8085` + `images/x.png` como `http://host:8085images/x.png` —sin barra—
- * mientras que el del ordenador lo hace bien. Así que **pasar estos tests no demuestra que
- * funcione en el móvil**; lo que hacen es fijar el resultado esperado para que nadie
- * simplifique la normalización pensando que sobra.
+ * **Cuidado con estos tests**: se ejecutan con el Java del ordenador, y el fallo solo se daba
+ * con el `java.net.URI` de Android. **Pasar estos tests no demuestra que funcione en el móvil**;
+ * fijan el resultado esperado para que nadie simplifique la normalización pensando que sobra.
  */
 class IconStoreTest {
 
@@ -73,8 +70,8 @@ class IconStoreTest {
     // -------------------------------------------------------------------------------
     // Qué hacer con el icono guardado.
     //
-    // Aquí se colaron dos fallos seguidos, y los dos dejaban al servicio sin icono por
-    // motivos contrarios. Se prueban los dos casos, uno frente al otro.
+    // Dos fallos dejaban al servicio sin icono por motivos contrarios. Se prueban los dos
+    // casos, uno frente al otro.
     // -------------------------------------------------------------------------------
 
     private val enCasaYFuera = "http://192.168.1.254:8085/|http://100.64.0.10:8085/"
@@ -159,10 +156,9 @@ class IconStoreTest {
     // Cuánto se reduce una imagen al leerla.
     //
     // Esto sí es cuenta pura, sin Android de por medio: lo que se prueba aquí vale igual
-    // en el móvil. Lo que hace el decodificador con el factor se midió aparte, en el móvil.
+    // en el móvil.
     // -------------------------------------------------------------------------------
 
-    /** Una foto de 12 Mpx para el fondo: se lee a la mitad, 2000x1500, y no a 4000x3000. */
     @Test
     fun `una foto de 12 Mpx para el fondo se lee a la mitad`() {
         assertEquals(2, IconStore.factorDeReduccion(4000, 3000, 1440))

@@ -14,9 +14,7 @@ import java.net.SocketTimeoutException
 /**
  * Cuándo se repite algo que el servidor dejó sin contestar. Ver [Reintentos].
  *
- * Aquí solo la decisión, que es cuenta pura y vale igual en el móvil. Lo que hace de verdad
- * el HttpURLConnection del móvil cuando el servidor cuelga se midió en el móvil, y la entrega a
- * aMule entera también, contra un aMule de mentira: ver `atrio-medidas`, fuera del repositorio.
+ * Aquí solo la decisión, que es cuenta pura y vale igual en el móvil.
  */
 class ReintentosTest {
 
@@ -46,7 +44,7 @@ class ReintentosTest {
         assertEquals(emptyList<Long>(), guion.esperas)
     }
 
-    /** El caso del aMule del autor: cuelga una vez y al segundo lo siguiente ya entra. */
+    /** El caso del aMule: cuelga una vez y al segundo lo siguiente ya entra. */
     @Test
     fun `si cuelga, repite al segundo`() = runTest {
         val guion = Guion(colgo(), 200)
@@ -102,7 +100,6 @@ class ReintentosTest {
         assertEquals(1, guion.intentos)
     }
 
-    /** Y un fallo distinto a mitad de la tanda la corta, con ese fallo. */
     @Test
     fun `otro fallo a mitad de la tanda la corta`() = runTest {
         val guion = Guion(colgo(), SocketTimeoutException("lento"), 200)
@@ -118,7 +115,6 @@ class ReintentosTest {
     // La pestaña, que decide por el nombre del error de red.
     // -------------------------------------------------------------------------------
 
-    /** Lo que vio el autor en la pantalla de error de aMule. */
     @Test
     fun `la pestana repite el ERR_EMPTY_RESPONSE dos veces`() {
         assertTrue(Reintentos.repetirLaPestana("net::ERR_EMPTY_RESPONSE", 0))

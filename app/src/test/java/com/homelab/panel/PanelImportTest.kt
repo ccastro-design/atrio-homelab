@@ -10,10 +10,6 @@ import org.junit.Test
 /**
  * El lector de paneles ajenos: el `config.yml` de Homer y el JSON de Homarr, Heimdall y
  * compañía.
- *
- * Probarlo a mano cuesta un rato largo —conseguir un fichero, pasarlo al móvil, importarlo,
- * mirar el resultado— y por eso se probaba poco. Aquí caben todos los casos raros juntos:
- * ficheros a medias, sin puertos, con direcciones repetidas o con basura dentro.
  */
 class PanelImportTest {
 
@@ -140,7 +136,6 @@ class PanelImportTest {
         assertTrue("sin servicios no hay nada que importar", r == null || r.serviceCount == 0)
     }
 
-    /** Un fichero cortado a la mitad no puede reventar la importación. */
     @Test
     fun `un fichero a medias no revienta`() {
         val cortado = homer.substring(0, homer.length / 2)
@@ -152,7 +147,6 @@ class PanelImportTest {
         if (r != null) assertTrue("lo que devuelva tiene que ser coherente", r.serviceCount >= 0)
     }
 
-    /** Sin iconos relativos no hay que pedirle al usuario la dirección del panel viejo. */
     @Test
     fun `sin iconos relativos no pide la direccion de origen`() {
         val json = """{ "apps": [ { "name": "Immich", "url": "http://192.168.1.254:2283" } ] }"""
@@ -162,7 +156,6 @@ class PanelImportTest {
         assertFalse("no hay iconos que traer", r.hasRelativeLogos)
     }
 
-    /** Una dirección con nombre de máquina, no IP, también tiene que funcionar. */
     @Test
     fun `entiende direcciones con nombre de maquina`() {
         val json = """{ "apps": [ { "name": "NAS", "url": "http://nas.local:5000" } ] }"""
