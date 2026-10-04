@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** Etiqueta traducida de un tipo de enlace. */
 @Composable
 fun linkKindLabel(kind: LinkKind): String = stringResource(
     when (kind) {
@@ -71,8 +70,7 @@ fun DownloadsScreen(
                 {
                     // La contraseña del destino no vive en la configuración sino en el
                     // almacén cifrado, así que quitarlo de la lista no la borra: sin esto
-                    // se queda en el móvil para siempre. Con los servicios ya se hacía
-                    // —ver `AutoLogin.forget`—, y aquí faltaba.
+                    // se queda en el móvil para siempre.
                     SecureStore.forgetTarget(context, destino.id)
                     onConfigChange(borrarDestino(config, destino.id))
                     enEdicion = null
@@ -296,8 +294,7 @@ private fun TargetEditor(
             // Sitio para el teclado: sin esto tapa los últimos campos de la ficha.
             .imePadding()
     ) {
-        // La misma barra que las fichas de servicio y servidor: guardar y borrar como
-        // iconos. Antes iban con su nombre escrito y esta era la única ficha distinta.
+        // La misma barra que las fichas de servicio y servidor: guardar y borrar como iconos.
         BarraDeEdicion(
             titulo = stringResource(
                 if (onDelete == null) R.string.target_new else R.string.target_edit

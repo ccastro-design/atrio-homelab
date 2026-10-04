@@ -4,19 +4,14 @@ import org.json.JSONObject
 import java.util.Base64
 
 /**
- * Entrega de enlaces a Transmission por su control remoto (RPC).
- *
- * Todo pasa por una sola dirección, `/transmission/rpc`, con un JSON que dice qué hacer.
- * Tiene dos peculiaridades que hay que respetar, comprobadas contra un Transmission 4.1.3
- * de verdad:
+ * Entrega de enlaces a Transmission por su control remoto (RPC). Tiene dos peculiaridades
+ * que hay que respetar, comprobadas contra un Transmission 4.1.3 de verdad:
  *
  *  - **El baile del 409.** La primera petición se rechaza siempre con un 409 que trae la
- *    cabecera `X-Transmission-Session-Id`; hay que repetirla con ese valor. Es su defensa
- *    contra peticiones lanzadas desde una web cualquiera. El identificador caduca, así que
- *    no basta con pedirlo una vez: cuando vuelva un 409, se repite con el nuevo.
+ *    cabecera `X-Transmission-Session-Id`; hay que repetirla con ese valor. El identificador
+ *    caduca: cuando vuelva un 409, se repite con el nuevo.
  *  - **La lista blanca.** Transmission solo atiende a las direcciones de su `rpc-whitelist`
- *    y responde 403 al resto. Es el fallo más común al configurarlo, y por eso tiene
- *    mensaje propio: sin él, «no se pudo enviar» no dice dónde mirar.
+ *    y responde 403 al resto.
  */
 object TransmissionClient : Conector {
 
@@ -50,11 +45,8 @@ object TransmissionClient : Conector {
     }
 
     /**
-     * Lee la respuesta del RPC.
-     *
-     * Un enlace que ya estaba en la lista se contesta con `torrent-duplicate` y resultado
-     * correcto. No es un fallo, pero decir «enviado» sin más haría pensar que se ha
-     * añadido algo nuevo.
+     * Lee la respuesta del RPC. Un enlace que ya estaba en la lista se contesta con
+     * `torrent-duplicate` y resultado correcto.
      */
     private fun interpretar(cuerpo: String): Entrega {
         val json = runCatching { JSONObject(cuerpo) }.getOrNull()
@@ -99,11 +91,8 @@ object TransmissionClient : Conector {
     }
 
     /**
-     * Dirección del control remoto.
-     *
-     * El usuario escribe la del panel web (`http://192.168.1.254:9091`), que es la que
-     * conoce; el camino del RPC lo pone la aplicación. Si ya lo hubiera escrito él, no se
-     * repite.
+     * Dirección del control remoto. El usuario escribe la del panel web, que es la que
+     * conoce; el camino del RPC lo pone la aplicación.
      */
     private fun rpcUrl(baseUrl: String): String {
         val base = baseUrl.trimEnd('/')

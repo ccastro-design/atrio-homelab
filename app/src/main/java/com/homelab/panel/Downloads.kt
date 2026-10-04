@@ -13,13 +13,11 @@ import kotlinx.coroutines.withContext
  */
 object Links {
 
-    /** Reconoce de qué tipo es un enlace. */
     fun detect(text: String): LinkKind? {
         val t = text.trim()
 
         // La extensión se mira en la ruta, no en la dirección entera: muchos sitios
-        // sirven el fichero con parámetros detrás («…/x.torrent?descarga=1») y así
-        // acababa tomándose por un enlace directo cualquiera.
+        // sirven el fichero con parámetros detrás («…/x.torrent?descarga=1»).
         val ruta = t.substringBefore('?').substringBefore('#')
 
         return when {
@@ -33,11 +31,9 @@ object Links {
     }
 
     /**
-     * Todos los enlaces reconocibles de un texto, sin repetidos.
-     *
-     * Las webs de enlaces enseñan un cuadro con varios, uno por línea, y quien los copia
-     * los quiere todos. Un enlace nunca lleva espacios, así que separar por espacios y
-     * saltos de línea vale para todos los tipos.
+     * Todos los enlaces reconocibles de un texto, sin repetidos: las webs de enlaces enseñan
+     * un cuadro con varios, uno por línea. Un enlace nunca lleva espacios, así que separar
+     * por espacios y saltos de línea vale para todos los tipos.
      */
     fun extractAll(text: String?): List<String> {
         if (text.isNullOrBlank()) return emptyList()
@@ -63,14 +59,11 @@ object Links {
 /**
  * Un fichero de descarga que ha armado la propia web dentro del móvil.
  *
- * No todas las webs sirven un enlace: Binsearch genera el `.nzb` con JavaScript y lo
- * ofrece como un `blob:`, una dirección que **solo existe dentro de esa pestaña**. No hay
- * nada que pasarle al programa de descargas, así que se lee el contenido ahí mismo y se
- * sube entero.
+ * Binsearch genera el `.nzb` con JavaScript y lo ofrece como un `blob:`, una dirección que
+ * **solo existe dentro de esa pestaña**: se lee el contenido ahí mismo y se sube entero.
  */
 data class DownloadFile(val name: String, val content: String, val kind: LinkKind)
 
-/** Resultado de intentar entregar un enlace. */
 sealed interface SendResult {
     data class Ok(val targetName: String) : SendResult
     data class Failed(val message: String) : SendResult
@@ -86,14 +79,9 @@ data class DatosDeEntrega(
 )
 
 /**
- * Lo que pasó al entregar, todavía sin palabras.
- *
- * Cada conector solo sabe hablar con su programa y dice qué pasó; lo que se le cuenta al
- * usuario se decide en un solo sitio, [LinkSender.textoDe]. Antes cada conector escribía sus
- * propios avisos, y los mismos estaban repetidos en los cuatro.
- *
- * Los fallos de red no están aquí: los conectores los dejan salir como excepción, y también
- * se traducen en un solo sitio.
+ * Lo que pasó al entregar, todavía sin palabras: lo que se le cuenta al usuario se decide en
+ * un solo sitio, [LinkSender.textoDe]. Los fallos de red no están aquí: los conectores los
+ * dejan salir como excepción, y también se traducen en un solo sitio.
  */
 sealed interface Entrega {
     data object Hecha : Entrega
@@ -137,9 +125,8 @@ interface Conector {
     /**
      * Sube un fichero que la web armó en el móvil, en vez de un enlace.
      *
-     * De momento solo SABnzbd, que es donde se ha visto el caso y donde está probado:
-     * Transmission y qBittorrent admiten algo parecido, pero prometerlo sin haberlo
-     * comprobado contra sus instalaciones sería fiarse de la documentación.
+     * De momento solo SABnzbd, que es donde está probado: Transmission y qBittorrent admiten
+     * algo parecido, pero prometerlo sin haberlo comprobado sería fiarse de la documentación.
      */
     suspend fun subir(destino: DatosDeEntrega, fichero: DownloadFile): Entrega =
         Entrega.NoSabeSubirFicheros
@@ -149,11 +136,7 @@ object LinkSender {
 
     private const val TAG = "Panel"
 
-    /**
-     * Entrega el enlace al destino indicado.
-     *
-     * @param baseUrl dirección del servicio de descarga, ya resuelta según el perfil.
-     */
+    /** @param baseUrl dirección del servicio de descarga, ya resuelta según el perfil. */
     suspend fun send(
         context: Context,
         target: DownloadTarget,
@@ -265,7 +248,7 @@ object LinkSender {
 
     /**
      * Lo que se le dice al usuario, o null si salió bien. Aquí están los avisos de los cuatro
-     * programas; antes cada conector escribía los suyos.
+     * programas.
      */
     internal fun textoDe(entrega: Entrega, nombre: String): Texto? = when (entrega) {
         Entrega.Hecha -> null

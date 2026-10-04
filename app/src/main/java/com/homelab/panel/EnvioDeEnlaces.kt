@@ -9,8 +9,7 @@ import androidx.compose.runtime.setValue
  * el aviso de envío está abierto.
  *
  * Llegan por varios caminos —otra aplicación, una pestaña, un fichero armado por la web, los
- * botones de enviar— y cada uno deja el estado a su manera. Vivía suelto en `Contenido`;
- * aquí está junto y probado (`EnvioDeEnlacesTest`).
+ * botones de enviar— y cada uno deja el estado a su manera.
  */
 class EnvioDeEnlaces {
 
@@ -25,8 +24,7 @@ class EnvioDeEnlaces {
      * De qué son los enlaces que acaban de llegar, cuando quien los capturó ya lo sabía.
      *
      * Hace falta porque la dirección de un enlace de descarga muchas veces no dice nada:
-     * los buscadores de NZB sirven `…/api?t=get&id=123&apikey=…`, y deducir el tipo otra
-     * vez a partir de eso da «no parece un enlace que se pueda enviar».
+     * los buscadores de NZB sirven `…/api?t=get&id=123&apikey=…`.
      */
     var tipo by mutableStateOf<LinkKind?>(null)
         private set
@@ -39,7 +37,6 @@ class EnvioDeEnlaces {
     var recogiendo by mutableStateOf(false)
         private set
 
-    /** Un enlace llegado de otra aplicación. */
     fun deOtraAplicacion(enlace: String) {
         enlaces = listOf(enlace)
         abierto = true

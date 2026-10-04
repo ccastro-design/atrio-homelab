@@ -5,11 +5,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Las conexiones de los programas de descarga, todas hechas igual.
- *
- * Antes cada conector tenía su copia de esto —el mismo tiempo de espera, la misma forma de
- * abrir y de leer—, y un cambio había que hacerlo cuatro veces. Aquí solo va lo común: lo
- * que cada programa pide o contesta de particular se queda en su conector.
+ * Las conexiones de los programas de descarga, todas hechas igual. Aquí solo va lo común:
+ * lo que cada programa pide o contesta de particular se queda en su conector.
  */
 internal object Http {
 
@@ -31,7 +28,6 @@ internal object Http {
             cabeceras.forEach { (nombre, valor) -> setRequestProperty(nombre, valor) }
         }
 
-    /** Escribe un cuerpo de texto. */
     fun escribir(conexion: HttpURLConnection, cuerpo: String) {
         OutputStreamWriter(conexion.outputStream).use { it.write(cuerpo) }
     }

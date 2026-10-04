@@ -4,21 +4,15 @@ import org.json.JSONObject
 import java.net.URLEncoder
 
 /**
- * Entrega de enlaces a qBittorrent por su interfaz web (API v2).
- *
- * Son dos pasos: pedir una cookie de sesión con usuario y contraseña, y mandar el enlace
- * con ella. Comprobado contra un qBittorrent 5.2.3 real, donde salieron tres cosas que no
- * están en la documentación de siempre:
+ * Entrega de enlaces a qBittorrent por su interfaz web (API v2). Comprobado contra un
+ * qBittorrent 5.2.3 real, donde salieron tres cosas que no están en la documentación de
+ * siempre:
  *
  *  - El **nombre de la cookie lleva el puerto** (`QBT_SID_8085`), así que no vale buscar
  *    una llamada `SID`: se guarda entera tal como venga.
  *  - Un enlace **repetido responde 409**, no un error. No es un fallo: ya estaba.
  *  - Las versiones nuevas contestan al alta con un **JSON** que dice cuántos entraron
- *    (`success_count`, `failure_count`); las viejas contestaban `Ok.` a secas. Se admiten
- *    las dos formas, porque el usuario tendrá la versión que tenga.
- *
- * Se manda además la cabecera `Referer`. Esta versión no la exige, pero las 4.x sí, y
- * ponerla no cuesta nada: sin ella responden 403 sin explicar por qué.
+ *    (`success_count`, `failure_count`); las viejas contestaban `Ok.` a secas.
  */
 object QbittorrentClient : Conector {
 

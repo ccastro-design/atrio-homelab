@@ -15,13 +15,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
 /**
- * Envío de enlaces a un servicio de descarga.
- *
- * La regla es no preguntar salvo que haga falta:
- *  - un solo destino capaz de aceptar ese tipo, va directo;
- *  - varios y con uno fijado en los ajustes, va al fijado;
- *  - varios sin fijar, se pregunta una vez y se puede recordar la elección;
- *  - ninguno capaz, se avisa con claridad.
+ * Envío de enlaces a un servicio de descarga. La regla es no preguntar salvo que haga falta.
  *
  * Se admiten varios enlaces de una vez, que es como los sirven las webs de enlaces: un
  * cuadro con uno por línea y un botón para lanzarlos todos.
@@ -35,9 +29,7 @@ fun SendLinkFlow(
      * De qué son los enlaces recibidos, cuando quien los capturó ya lo sabía.
      *
      * La dirección de un enlace de descarga a menudo no delata nada: los buscadores de NZB
-     * sirven `…/api?t=get&id=123&apikey=…` y los indexadores de torrent hacen lo mismo. El
-     * tipo lo averigua el navegador por la cabecera del fichero y llega hasta aquí; sin
-     * esto, volver a mirarlo por la extensión daba «eso no parece un enlace».
+     * sirven `…/api?t=get&id=123&apikey=…` y los indexadores de torrent hacen lo mismo.
      */
     tipoEntrante: LinkKind? = null,
     /**
@@ -65,8 +57,7 @@ fun SendLinkFlow(
 
     /**
      * Los enlaces que llegan solos —de una pestaña o de otra aplicación— no enseñan el
-     * cuadro de pegar. Antes aparecía y desaparecía en menos de un segundo, un parpadeo
-     * que solo servía para dar la sensación de que algo se había ido mal.
+     * cuadro de pegar.
      */
     var decidiendo by remember {
         mutableStateOf(initialLinks.isNotEmpty() || ficheroEntrante != null)
@@ -155,8 +146,6 @@ fun SendLinkFlow(
         }
     }
 
-    // Un enlace que llega desde otra aplicación o de una pestaña no debe hacer preguntas
-    // si no hace falta.
     // Los enlaces de una ráfaga van llegando de uno en uno; sin esto solo contaba el
     // primero, porque el cuadro de texto se rellenaba una única vez al abrirse.
     LaunchedEffect(initialLinks) {
@@ -173,8 +162,7 @@ fun SendLinkFlow(
     }
 
     // Un solo aviso desde el primer toque hasta la respuesta: mientras se recogen los
-    // enlaces de la ráfaga, mientras se decide el destino y mientras se entrega. Antes
-    // había un hueco al principio y el aviso salía tarde y duraba un suspiro.
+    // enlaces de la ráfaga, mientras se decide el destino y mientras se entrega.
     if (esperandoMas || enviando != null || (decidiendo && !eligiendo)) {
         DialogoEnviando(if (ficheroEntrante != null) 1 else enlaces.size)
         return
@@ -252,11 +240,8 @@ fun SendLinkFlow(
 }
 
 /**
- * Aviso mientras se entrega el enlace.
- *
- * Entregar tarda lo que tarde el servidor en contestar, y sin nada a la vista parecía que
- * el toque no había hecho efecto. No lleva botones a propósito: no hay nada que decidir y
- * se cierra solo al terminar.
+ * Aviso mientras se entrega el enlace. No lleva botones a propósito: no hay nada que decidir
+ * y se cierra solo al terminar.
  */
 @Composable
 private fun DialogoEnviando(cuantos: Int) {
@@ -333,11 +318,8 @@ private fun SelectorDeDestino(
 }
 
 /**
- * Icono del destino: el mismo que enseña su servicio en el panel.
- *
- * Casi siempre el programa de descargas está también como servicio —es una web que el
- * usuario abre— así que se busca por dirección y se reutiliza su icono, incluido el que
- * haya puesto él a mano. Si no aparece por ninguna parte, queda el genérico de descargas.
+ * Icono del destino: el mismo que enseña su servicio en el panel. Casi siempre el programa de
+ * descargas está también como servicio, así que se busca por dirección y se reutiliza su icono.
  */
 @Composable
 private fun IconoDeDestino(config: PanelConfig, destino: DownloadTarget, away: Boolean) {

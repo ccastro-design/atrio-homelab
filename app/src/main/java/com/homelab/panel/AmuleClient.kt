@@ -53,7 +53,7 @@ object AmuleClient : Conector {
      * Devuelve la cookie de sesión, o null si la contraseña no fue aceptada.
      *
      * Cada petición pasa por `conectarY` hasta tener el código de respuesta: si aMule cuelga,
-     * es ahí donde se nota. Lo de después es como siempre.
+     * es ahí donde se nota.
      */
     private fun login(base: String, password: String): String? {
         val inicial = Http.abrir(base)
