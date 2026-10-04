@@ -544,7 +544,8 @@ private fun Contenido(
     }
     }
 
-    if (envio.abierto) {
+    // Cada tanda que sale de la cola abre su aviso desde cero, sin nada de la anterior.
+    if (envio.abierto) key(envio.tanda) {
         SendLinkFlow(
             config = config,
             away = red.fuera,
@@ -553,6 +554,7 @@ private fun Contenido(
             ficheroEntrante = envio.fichero,
             esperandoMas = envio.recogiendo,
             onConfigChange = { guardar(it) },
+            onSending = { envio.empiezaEnvio(it) },
             onFinished = { mensaje, fallo ->
                 Registro.traza("Envío") { "Aviso al usuario${if (fallo) ", en ventana" else ""}: $mensaje" }
                 envio.cerrar()

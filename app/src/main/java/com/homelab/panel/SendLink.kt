@@ -41,6 +41,8 @@ fun SendLinkFlow(
     /** Cierto mientras pueden llegar más enlaces de la misma ráfaga: no se decide aún. */
     esperandoMas: Boolean = false,
     onConfigChange: (PanelConfig) -> Unit,
+    /** Empieza la entrega de estos enlaces: lo que llegue desde ahora tiene que esperar. */
+    onSending: (List<String>) -> Unit,
     /** [fallo]: no llegó todo, y el mensaje va en una ventana en vez de en un aviso breve. */
     onFinished: (mensaje: String, fallo: Boolean) -> Unit,
     onCancel: () -> Unit
@@ -84,6 +86,7 @@ fun SendLinkFlow(
 
     fun enviar(destino: DownloadTarget) {
         enviando = destino
+        onSending(if (ficheroEntrante != null) emptyList() else enlaces)
         alcance.launch {
             val direccion = config.urlOf(destino, away)
             // Numerados para ver en el registro si dos envíos se solapan.
@@ -148,6 +151,8 @@ fun SendLinkFlow(
 
     /** Decide a dónde va, preguntando solo si es imprescindible. */
     fun continuar() {
+        // Uno a la vez: lo que llegue durante un envío espera su turno. Ver [EnvioDeEnlaces.enviando].
+        if (enviando != null) return
         val kind = tipo ?: return
 
         val preferido = config.preferredTarget(kind)
