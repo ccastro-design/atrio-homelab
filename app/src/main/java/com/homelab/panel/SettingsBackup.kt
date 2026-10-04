@@ -496,10 +496,7 @@ private fun fusionar(actual: PanelConfig, leido: PanelImport.Result): PanelConfi
  * Deja solo los servicios importados, conservando el resto de los ajustes.
  *
  * Lo delicado son los destinos de descarga: se conservan, pero cuelgan de servidores que
- * al reemplazar dejan de existir. Se reapuntan al servidor importado que tenga la misma
- * dirección y, si no hay ninguno, se les fija la dirección completa que tenían. Sin esto
- * la configuración de descargas sobrevivía al fichero pero se quedaba sin dirección, que
- * es como perderla.
+ * al reemplazar dejan de existir.
  */
 private fun reemplazar(actual: PanelConfig, leido: PanelImport.Result): PanelConfig {
     val destinos = actual.downloadTargets.map { destino ->

@@ -32,10 +32,8 @@ import androidx.compose.ui.unit.sp
 
 // Esta pantalla es solo el armazón de los ajustes: la barra, el menú y a qué página se
 // va. Cada página vive en su propio fichero —`SettingsAppearance`, `SettingsSecurity`,
-// `SettingsBackup`, `SettingsAbout`— porque juntas pasaban de dos mil líneas y encontrar
-// algo dentro era imposible.
+// `SettingsBackup`, `SettingsAbout`—.
 
-/** Pantallas dentro de Ajustes. */
 private enum class SettingsPage {
     MENU, SERVICES, SERVERS, APPEARANCE, SECURITY, BACKUP, SUPPORT, ABOUT
 }
@@ -65,7 +63,6 @@ fun SettingsScreen(
         mutableStateOf(if (empezarEnSeguridad) SettingsPage.SECURITY else SettingsPage.MENU)
     }
 
-    // Edición en curso: un servicio o un servidor.
     var servicioEnEdicion by remember { mutableStateOf<Pair<Service, String>?>(null) }
     var servidorEnEdicion by remember { mutableStateOf<Server?>(null) }
     /** Borrado de servidor pendiente de confirmar, porque tiene servicios colgando. */
@@ -207,11 +204,7 @@ fun SettingsScreen(
         Box(Modifier.weight(1f)) {
             // El mismo movimiento que al cambiar de pantalla grande: entrar en Apariencia
             // tiene que sentirse igual que entrar en Ajustes.
-            //
-            // La animación envuelve **las dos ramas**, no solo la de abajo. Servicios y
-            // grupos se dibuja aparte porque su lista es perezosa y no puede ir dentro de
-            // una que se desplaza; dejándola fuera del `AnimatedContent` era la única
-            // página de Ajustes que seguía apareciendo de golpe.
+            // La animación envuelve **las dos ramas**, no solo la de abajo.
             val (entrada, salida) = duracionesDeTransicion()
 
             AnimatedContent(

@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 
 // Piezas de las que tira la pantalla de Apariencia para elegir colores y fondo. Están
 // aparte de [PaginaDeApariencia] porque son diálogos y controles completos, no trozos de
-// esa pantalla: juntos eran ochocientas líneas en las que no se encontraba nada.
+// esa pantalla.
 
 /**
  * Colores que se ofrecen. Una paleta corta y elegida a mano en vez de una rueda de
@@ -145,9 +145,7 @@ internal fun SelectorDeColor(
 /**
  * Escribir un color a mano, para quien tenga uno concreto en la cabeza.
  *
- * Se admite con almohadilla o sin ella, y en mayúsculas o minúsculas. Mientras lo que
- * haya escrito no sea un color, el botón de aceptar no deja seguir y se ve una muestra
- * de lo que va quedando.
+ * Se admite con almohadilla o sin ella, y en mayúsculas o minúsculas.
  */
 @Composable
 private fun DialogoDeColorEscrito(
@@ -274,11 +272,9 @@ internal fun SelectorDeFondoPropio(
 /**
  * Dibuja la imagen con el encuadre elegido: 1 es «llena la pantalla».
  *
- * No se usa `ContentScale.Crop` porque **recorta antes de aplicar el zoom**: lo que sobra
- * se tira nada más entrar y, al empequeñecer luego, lo que encoge es el recorte y la
- * parte descartada no vuelve nunca. Con `Fit` cabe la imagen entera y es el zoom el que
- * decide qué se recorta; el factor de partida se calcula para que a 1 se vea exactamente
- * lo mismo que llenando la pantalla.
+ * No se usa `ContentScale.Crop` porque **recorta antes de aplicar el zoom**: al
+ * empequeñecer luego, la parte descartada no vuelve nunca. Con `Fit` cabe la imagen
+ * entera y es el zoom el que decide qué se recorta.
  */
 @Composable
 private fun ImagenEncuadrada(
@@ -314,10 +310,9 @@ private fun ImagenEncuadrada(
 /**
  * Encuadre de la imagen de fondo.
  *
- * Se enseña un recorte del alto de una pantalla y se mueve con el dedo o se acerca con
- * dos dedos, como cualquier visor de fotos. Hacía falta: una foto apaisada puesta de
- * fondo en un móvil se recorta por el centro, y lo que interesa casi nunca está justo
- * ahí. Lo que se guarda es el aumento y el desplazamiento, no otra copia de la imagen.
+ * Una foto apaisada puesta de fondo en un móvil se recorta por el centro, y lo que interesa
+ * casi nunca está justo ahí. Lo que se guarda es el aumento y el desplazamiento, no otra
+ * copia de la imagen.
  */
 @Composable
 internal fun EncuadreDeFondo(

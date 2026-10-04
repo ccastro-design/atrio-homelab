@@ -537,7 +537,6 @@ internal fun PaginaDeApariencia(config: PanelConfig, onConfigChange: (PanelConfi
                 }
             }
 
-            // Todo esto solo tiene sentido habiendo imagen.
             if (config.backgroundImage.isNotBlank()) {
                 Ajuste(
                     texto = stringResource(

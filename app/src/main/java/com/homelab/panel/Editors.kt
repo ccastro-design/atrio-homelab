@@ -85,10 +85,6 @@ fun ServiceEditor(
 
     /**
      * Todo lo que el usuario puede tocar en la ficha, junto, para saber si ha cambiado algo.
-     *
-     * Se compara con cómo estaba al abrirla. Antes, salir sin guardar —con «Cancelar» o con
-     * el botón atrás— se llevaba por delante el trabajo sin decir ni pío, y en una ficha
-     * larga como esta se pierde un buen rato.
      */
     fun estadoDeLaFicha(): List<Any?> = listOf(
         nombre, subtitulo, urlLocal, urlFuera, categoria, ficheroIcono, usarFavicon,
@@ -138,7 +134,6 @@ fun ServiceEditor(
         }
     }
 
-    // Máquina guardada a la que corresponde la dirección escrita, si es alguna.
     val servidorDetectado = remember(urlLocal, urlFuera, config.servers) {
         servidorPara(config, urlLocal, urlFuera)
     }
@@ -191,8 +186,7 @@ fun ServiceEditor(
                 }
 
                 // Se conserva la contraseña guardada solo si el usuario no ha tocado el
-                // campo: si lo vacía a propósito, es que quiere quitarla. Antes se
-                // conservaba igualmente y no había forma de borrarla desde la ficha.
+                // campo: si lo vacía a propósito, es que quiere quitarla.
                 val intacta = marcadorVisible && hayContrasenaGuardada
 
                 if (autoLogin && (contrasena.isNotEmpty() || intacta)) {
@@ -202,9 +196,8 @@ fun ServiceEditor(
                 }
 
                 // Guardar la ficha da otra oportunidad al icono. Un servicio que pide
-                // contraseña —Transmission responde 401 hasta al favicon— pudo quedar
-                // marcado como «sin icono» justo por no tenerla; ahora puede que sí, o al
-                // revés. Solo se olvida la marca: un icono bueno no se toca.
+                // contraseña pudo quedar marcado como «sin icono» justo por no tenerla;
+                // ahora puede que sí, o al revés.
                 IconStore.olvidarMarcaSinIcono(context, nuevo.id)
 
                 onSave(nuevo, grupo)
@@ -271,10 +264,7 @@ fun ServiceEditor(
 
             Burbuja {
             // Un solo botón que despliega de dónde sale el icono, igual que el logotipo del
-            // panel en Apariencia. Antes eran dos botones y un interruptor para lo mismo, y
-            // las combinaciones se pisaban entre ellas: la imagen tapaba al interruptor, el
-            // interruptor tapaba a la lista, y ninguno decía cuál estaba mandando. Aquí solo
-            // hay una respuesta posible a la vez.
+            // panel en Apariencia. Aquí solo hay una respuesta posible a la vez.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ServiceIcon(service = construir(), url = "", size = 52.dp)
                 Spacer(Modifier.width(14.dp))
@@ -568,10 +558,9 @@ fun ServerEditor(
 
 // ---- Direcciones del servicio ----
 //
-// El usuario escribe siempre direcciones completas. Que un servicio quede colgado de una
-// máquina guardada se deduce de lo escrito, no de un modo aparte del formulario: si la
-// dirección local es la de una máquina, se vincula, y así el día que cambie la dirección
-// de esa máquina el servicio se actualiza solo.
+// Que un servicio quede colgado de una máquina guardada se deduce de lo escrito, no de un
+// modo aparte del formulario: si la dirección local es la de una máquina, se vincula, y así
+// el día que cambie la dirección de esa máquina el servicio se actualiza solo.
 
 private fun direccionLocalDe(config: PanelConfig, service: Service): String =
     if (service.id.isBlank()) "" else config.urlOf(service, away = false)
@@ -1152,8 +1141,7 @@ fun SelectorDeCategoria(actual: String, onCancel: () -> Unit, onPick: (String) -
                             )
                         }
                         // Sin centrar el texto, los nombres que ocupan dos líneas
-                        // («Máquinas virtuales», «Copias de seguridad») quedaban
-                        // alineados a la izquierda dentro de su hueco y parecían
+                        // quedaban alineados a la izquierda dentro de su hueco y parecían
                         // descuadrados respecto al icono.
                         Text(
                             stringResource(categoria.labelRes),

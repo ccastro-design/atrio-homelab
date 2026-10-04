@@ -19,11 +19,9 @@ import androidx.compose.ui.unit.sp
  * Los tres borrados de Ajustes › Seguridad.
  *
  * @property exigeCerrar si hay que cerrar la aplicación para que el borrado sea de verdad.
- *   Lo exigen los dos que tocan sesiones o contraseñas: el motor del navegador guarda en
- *   memoria las credenciales de los servicios que las piden por su propia ventana
- *   —autenticación HTTP, como Transmission— y esa memoria **no se puede vaciar desde la
- *   aplicación**. Mientras el proceso siga vivo, ese servicio sigue entrando solo por muy
- *   a fondo que se haya borrado en disco. Al morir el proceso, desaparece.
+ *   El motor del navegador guarda en memoria las credenciales de los servicios que las
+ *   piden por su propia ventana —autenticación HTTP, como Transmission— y esa memoria
+ *   **no se puede vaciar desde la aplicación**. Al morir el proceso, desaparece.
  */
 private enum class Borrado(val exigeCerrar: Boolean) {
     SESIONES(exigeCerrar = true),
@@ -34,8 +32,7 @@ private enum class Borrado(val exigeCerrar: Boolean) {
 /**
  * Interruptor de una opción, con su explicación debajo.
  *
- * Del mismo tamaño en todas las pantallas de ajustes: cada una llevaba el suyo y en
- * Seguridad se leían más pequeños que en Apariencia.
+ * Del mismo tamaño en todas las pantallas de ajustes.
  */
 @Composable
 private fun InterruptorDeAjuste(
@@ -155,10 +152,8 @@ internal fun PaginaDeSeguridad(
                     val actividad = context as? androidx.fragment.app.FragmentActivity
                     if (actividad != null) {
                         BiometricGate.ask(actividad) { autorizado ->
-                            // Se dice siempre en qué quedó. El aviso se cerraba igual
-                            // tanto si la huella valía como si se cancelaba, así que
-                            // alguien podía quedarse creyendo que había borrado sus
-                            // contraseñas cuando seguían ahí.
+                            // Se dice siempre en qué quedó: alguien podía quedarse
+                            // creyendo que había borrado sus contraseñas cuando seguían ahí.
                             if (autorizado) {
                                 aplicarBorrado(que, context, config, onConfigChange, onSessionsCleared)
                                 avisar(context, R.string.erase_done)
@@ -189,10 +184,8 @@ internal fun PaginaDeSeguridad(
     Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
 
         // La primera de la pantalla: es de lo que depende que el panel no confunda tu
-        // casa con otra red, así que tiene que verse al entrar y no al final del todo.
-        // Siempre a la vista aunque no haya ninguna todavía: es donde hay que venir al
-        // cambiar de router, y una sección que solo aparece cuando ya hay algo dentro no
-        // se encuentra nunca.
+        // casa con otra red. Siempre a la vista aunque no haya ninguna todavía: es donde
+        // hay que venir al cambiar de router.
         TituloDeSeccion(stringResource(R.string.security_networks), Modifier.padding(start = 4.dp))
 
         Burbuja {

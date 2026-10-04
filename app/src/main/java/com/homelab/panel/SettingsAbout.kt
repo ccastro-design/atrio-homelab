@@ -101,9 +101,7 @@ internal fun PaginaAcercaDe() {
  * Apoyar el proyecto: donación suelta o patrocinio recurrente.
  *
  * **No se promete nada a cambio**, ni aquí ni en las páginas de destino. Google solo
- * permite enlazar donaciones desde una aplicación si quien dona no recibe nada por ello;
- * en cuanto se ofrece una función extra, una insignia o quitar anuncios, hay que pasar por
- * su pasarela y su 15 %.
+ * permite enlazar donaciones desde una aplicación si quien dona no recibe nada por ello.
  */
 @Composable
 internal fun PaginaDeApoyo() {
@@ -160,7 +158,6 @@ internal fun PaginaDeApoyo() {
     }
 }
 
-/** Sección de «Acerca de»: su título y un párrafo corto. */
 @Composable
 private fun TextoDeAcercaDe(titulo: String, cuerpo: String) {
     TituloDeSeccion(titulo, Modifier.padding(horizontal = 18.dp))

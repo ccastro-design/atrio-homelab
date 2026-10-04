@@ -10,13 +10,9 @@ import java.net.URI
  *
  * Se admiten dos cosas:
  *  - El `config.yml` de **Homer**, que es el panel autoalojado más extendido.
- *  - Cualquier **JSON** con una lista de accesos, que cubre a Homarr, Heimdall y demás
- *    sin atarse a la versión concreta de cada uno: se buscan objetos que tengan un nombre
- *    y una dirección, estén donde estén dentro del fichero.
+ *  - Cualquier **JSON** con una lista de accesos, que cubre a Homarr, Heimdall y demás.
  *
- * Además de traer los servicios, se **agrupan por máquina y se crean los servidores**:
- * un `config.yml` que repite la misma dirección en diez servicios queda con un solo
- * servidor y diez servicios que solo indican su puerto.
+ * Además de traer los servicios, se **agrupan por máquina y se crean los servidores**.
  */
 object PanelImport {
 
@@ -110,8 +106,7 @@ object PanelImport {
      *
      * Quien accede a su casa por VPN suele tener dos paneles: uno con las direcciones
      * locales y otro con las de fuera. Emparejando los servicios por su nombre se saca la
-     * dirección alternativa de cada máquina, que es lo que hace aparecer el selector de
-     * «en casa / fuera».
+     * dirección alternativa de cada máquina.
      *
      * @return la configuración nueva y cuántos servidores han recibido dirección de fuera.
      */
@@ -119,7 +114,6 @@ object PanelImport {
         config: PanelConfig,
         away: Result
     ): Pair<PanelConfig, Int> {
-        // Nombre normalizado -> dirección en el panel de fuera.
         val porNombre = away.groups
             .flatMap { it.services }
             .associateBy({ normalizar(it.name) }, { direccionDe(away, it) })
@@ -176,7 +170,6 @@ object PanelImport {
         return config.copy(servers = servidores, groups = grupos) to cuenta
     }
 
-    /** Dirección completa de un servicio dentro de un resultado importado. */
     private fun direccionDe(result: Result, service: Service): String {
         val servidor = result.servers.firstOrNull { it.id == service.serverId }
         return if (servidor == null) {
@@ -216,8 +209,7 @@ object PanelImport {
      *
      * Se hace a mano en vez de con una librería de YAML porque el formato de Homer es
      * fijo y sencillo, y así la aplicación no arrastra una dependencia entera para leer
-     * un fichero. Lo que no encaja se ignora, de modo que un fichero con cosas raras
-     * dentro sigue importando lo que sí se entiende.
+     * un fichero. Lo que no encaja se ignora.
      */
     private fun parseHomerYaml(text: String): Raw? {
         var title = ""
@@ -408,7 +400,6 @@ object PanelImport {
 
         val logos = mutableMapOf<String, String>()
 
-        // Cuántas veces aparece cada máquina, y si es de la red privada.
         val cuentaPorHost = validas
             .mapNotNull { hostOf(it.url).takeIf { host -> host.isNotBlank() } }
             .groupingBy { it }
