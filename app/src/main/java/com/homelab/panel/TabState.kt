@@ -64,6 +64,10 @@ class TabState(val service: Service, url: String) {
      *   —abrir, recargar, reintentar a mano— empieza una tanda de repeticiones nueva.
      */
     fun load(nueva: String = url, automatica: Boolean = false) {
+        Registro.traza("Pestañas") {
+            val como = if (automatica) "repite sola (${reintentosSolos}ª)" else "carga"
+            "«${service.name}» $como ${Registro.origen(nueva)}"
+        }
         url = nueva
         loading = true
         progress = 0

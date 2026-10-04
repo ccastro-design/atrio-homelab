@@ -33,6 +33,9 @@ class CasaOFuera {
      * una red por la que preguntar.
      */
     fun aplicar(veredicto: NetworkVerdict) {
+        if (veredicto.away != fuera) {
+            Registro.traza("Casa/fuera") { "Cambia a ${if (veredicto.away) "fuera" else "casa"}" }
+        }
         fuera = veredicto.away
         redDesconocida = veredicto.ask
     }

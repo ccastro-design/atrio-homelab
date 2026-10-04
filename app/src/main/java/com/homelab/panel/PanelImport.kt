@@ -1,6 +1,5 @@
 package com.homelab.panel
 
-import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
@@ -341,7 +340,7 @@ object PanelImport {
             }
 
             recorrer(raiz, "", entries)
-        }.onFailure { Log.w(TAG, "El JSON no se pudo leer", it) }
+        }.onFailure { Registro.aviso(TAG, "El JSON no se pudo leer", it) }
 
         return Raw(title, "", entries).takeIf { it.entries.isNotEmpty() }
     }

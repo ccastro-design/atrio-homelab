@@ -57,13 +57,20 @@ object Reintentos {
      */
     inline fun <T> HttpURLConnection.conectarY(resto: HttpURLConnection.() -> T): T {
         // Aquí fallan «apagado» y «no responde», que no se repiten.
-        connect()
+        try {
+            connect()
+        } catch (e: IOException) {
+            Registro.traza("Red") { "✗ No conecta: ${Registro.motivo(e)}" }
+            throw e
+        }
         return try {
             resto()
         } catch (e: SocketTimeoutException) {
             // Conectó pero no contesta a tiempo: está vivo y ocupado, no reiniciándose.
+            Registro.traza("Red") { "✗ Conecta pero no contesta a tiempo" }
             throw e
         } catch (e: IOException) {
+            Registro.traza("Red") { "✗ Conecta y cuelga: ${Registro.motivo(e)}" }
             throw ServidorColgo(e)
         }
     }
@@ -85,10 +92,13 @@ object Reintentos {
             e
         }
 
-        for (espera in ESPERAS_MS) {
+        for ((n, espera) in ESPERAS_MS.withIndex()) {
+            Registro.traza("Reintentos") { "Se repite en ${espera / 1000} s (${n + 1} de ${ESPERAS_MS.size})" }
             esperar(espera)
             try {
-                return intento()
+                val hecho = intento()
+                Registro.traza("Reintentos") { "Sale a la repetición ${n + 1}" }
+                return hecho
             } catch (otro: ServidorColgo) {
                 // Sigue colgando: a la siguiente espera.
             } catch (otro: ConnectException) {
@@ -96,6 +106,7 @@ object Reintentos {
             }
         }
 
+        Registro.traza("Reintentos") { "Se rinde tras ${ESPERAS_MS.size} repeticiones" }
         throw primero
     }
 }

@@ -33,6 +33,8 @@ class MainActivity : FragmentActivity() {
     private var debugService by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Antes que nada: lo que falle al restaurar la pantalla también debe quedar apuntado.
+        Registro.iniciar(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -75,6 +77,7 @@ class MainActivity : FragmentActivity() {
     override fun onStop() {
         super.onStop()
         salidaEn = android.os.SystemClock.elapsedRealtime()
+        Registro.traza("Ciclo") { "Deja de verse" }
 
         if (isFinishing && ConfigStore.load(this).clearSessionsOnExit) {
             WebSessions.clear(this)
@@ -87,6 +90,14 @@ class MainActivity : FragmentActivity() {
      */
     override fun onStart() {
         super.onStart()
+        Registro.traza("Ciclo") {
+            if (salidaEn == 0L) {
+                "Se ve"
+            } else {
+                val segundos = (android.os.SystemClock.elapsedRealtime() - salidaEn) / 1000
+                "Vuelve a verse tras ${segundos / 60} min ${segundos % 60} s"
+            }
+        }
 
         val config = ConfigStore.load(this)
         val minutos = config.relockMinutes
@@ -122,10 +133,21 @@ class MainActivity : FragmentActivity() {
         if (intent == null) return null
 
         val delEsquema = intent.data?.toString()
-        if (delEsquema != null && Links.detect(delEsquema) != null) return delEsquema
+        if (delEsquema != null && Links.detect(delEsquema) != null) {
+            Registro.traza("Envío") { "Pulsado fuera de Atrio: ${Registro.enlace(delEsquema)}" }
+            return delEsquema
+        }
 
         if (intent.action == Intent.ACTION_SEND) {
-            return Links.extract(intent.getStringExtra(Intent.EXTRA_TEXT))
+            val texto = intent.getStringExtra(Intent.EXTRA_TEXT)
+            val compartido = Links.extract(texto)
+            Registro.traza("Envío") {
+                val todos = Links.extractAll(texto)
+                "Compartido desde otra aplicación: ${todos.size} enlaces en ${texto?.length ?: 0} caracteres" +
+                    (todos.firstOrNull()?.let { ", el primero ${Registro.enlace(it)}" } ?: "") +
+                    "; se recoge ${if (compartido == null) "nada" else "${Links.extractAll(compartido).size}"}"
+            }
+            return compartido
         }
 
         return null
@@ -530,10 +552,14 @@ private fun Contenido(
             esperandoMas = envio.recogiendo,
             onConfigChange = { guardar(it) },
             onFinished = { mensaje ->
+                Registro.traza("Envío") { "Aviso al usuario: $mensaje" }
                 envio.cerrar()
                 Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
             },
-            onCancel = { envio.cerrar() }
+            onCancel = {
+                Registro.traza("Envío") { "Cancelado por el usuario" }
+                envio.cerrar()
+            }
         )
     }
 

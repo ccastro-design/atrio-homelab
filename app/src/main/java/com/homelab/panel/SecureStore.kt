@@ -3,7 +3,6 @@ package com.homelab.panel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -38,7 +37,7 @@ object SecureStore {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
-    }.onFailure { Log.e(TAG, "No se pudo abrir el almacén cifrado", it) }.getOrNull()
+    }.onFailure { Registro.error(TAG, "No se pudo abrir el almacén cifrado", it) }.getOrNull()
 
     fun save(context: Context, key: String, value: String) {
         prefs(context)?.edit()?.putString(key, value)?.apply()

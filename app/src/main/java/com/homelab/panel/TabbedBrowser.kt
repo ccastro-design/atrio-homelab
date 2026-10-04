@@ -12,6 +12,7 @@ import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -168,6 +169,7 @@ fun TabbedBrowser(
 
         delay(ESPERA_MAXIMA_MS)
         if (activa.loading && activa.error == null) {
+            Registro.traza("Pestañas") { "«${activa.service.name}» no termina en ${ESPERA_MAXIMA_MS / 1000} s: se para" }
             // Hay que llamar a stopLoading, no basta con dar el error por mostrado: un
             // servicio que no responde bloquea el repintado de toda la interfaz.
             activa.view?.stopLoading()
@@ -521,6 +523,7 @@ private fun ContenedorDeWebViews(
                     context, tab, config, away, onCertRequest, onDownloadLink, onDownloadFile,
                     onHttpAuthRequest
                 ).also {
+                    Registro.traza("Pestañas") { "«${tab.service.name}» abre ${Registro.origen(tab.url)}" }
                     it.loadUrl(tab.url)
                 }
             }
@@ -621,7 +624,7 @@ private fun crearWebView(
         }
 
         if (tipo == LinkKind.TORRENT || tipo == LinkKind.NZB) {
-            if (BuildConfig.DEBUG) Log.w("Panel", "Descarga capturada ($tipo): $url")
+            Registro.traza("Pestañas") { "Descarga capturada ($tipo): ${Registro.enlace(url)}" }
 
             // Un `blob:` no es una dirección: es un fichero que la propia página ha armado
             // aquí dentro, y fuera de esta pestaña no existe. Pasárselo al programa de
@@ -657,6 +660,7 @@ private fun crearWebView(
 
         override fun onConsoleMessage(m: ConsoleMessage): Boolean {
             if (m.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
+                // Al registro del sistema y no al fichero: ver [Registro].
                 Log.w("Panel", "[${tab.service.name}] ${m.message()}")
             }
             return true
@@ -683,15 +687,15 @@ private fun crearWebView(
             // el WebView lo cargara para enterarse por el tipo de contenido costaba uno o
             // dos segundos de espera en los que no pasaba nada a la vista.
             if (tipo == LinkKind.TORRENT || tipo == LinkKind.NZB) {
-                if (BuildConfig.DEBUG) Log.w("Panel", "Fichero de descarga: $destino")
+                Registro.traza("Pestañas") { "Fichero de descarga: ${Registro.enlace(destino.toString())}" }
                 onDownloadLink(destino.toString(), tipo)
                 return true
             }
 
             return if (destino.scheme?.lowercase() in ESQUEMAS_DE_DESCARGA) {
-                // Solo los enlaces capturados, y solo en depuración: registrar cada
+                // Solo los enlaces capturados, y nunca en la publicada: registrar cada
                 // navegación sería llevar un diario de lo que visita el usuario.
-                if (BuildConfig.DEBUG) Log.w("Panel", "Enlace capturado: $destino")
+                Registro.traza("Pestañas") { "Enlace capturado: ${Registro.enlace(destino.toString())}" }
                 onDownloadLink(destino.toString(), tipo)
                 true
             } else {
@@ -737,13 +741,33 @@ private fun crearWebView(
                 val descripcion = err?.description?.toString().orEmpty()
                 val hechos = tab.reintentosSolos
 
-                when {
+                val que = when {
                     // Colgó sin contestar: se repite sola en un momento. Ver [Reintentos].
-                    Reintentos.repetirLaPestana(descripcion, hechos) -> tab.reintentoPendiente = true
-                    Reintentos.colgoLaPestana(descripcion, hechos) -> tab.error = COLGO_MARCA
-                    else -> tab.error = descripcion
+                    Reintentos.repetirLaPestana(descripcion, hechos) -> {
+                        tab.reintentoPendiente = true
+                        "se repetirá sola"
+                    }
+                    Reintentos.colgoLaPestana(descripcion, hechos) -> {
+                        tab.error = COLGO_MARCA
+                        "colgó, también al repetir"
+                    }
+                    else -> {
+                        tab.error = descripcion
+                        "se enseña el error"
+                    }
                 }
                 tab.loading = false
+                Registro.traza("Pestañas") { "«${tab.service.name}» falla con $descripcion tras $hechos repeticiones: $que" }
+            }
+        }
+
+        override fun onReceivedHttpError(
+            v: WebView?,
+            peticion: WebResourceRequest?,
+            respuesta: WebResourceResponse?
+        ) {
+            if (peticion?.isForMainFrame == true) {
+                Registro.traza("Pestañas") { "«${tab.service.name}» responde ${respuesta?.statusCode}" }
             }
         }
 
@@ -766,11 +790,13 @@ private fun crearWebView(
             val clave = SecureStore.read(context, SecureStore.servicePasswordKey(tab.service.id))
 
             if (!tab.httpAuthTried && usuario.isNotBlank() && !clave.isNullOrEmpty()) {
+                Registro.traza("Pestañas") { "«${tab.service.name}» pide usuario al navegador: se dan los guardados" }
                 tab.httpAuthTried = true
                 handler.proceed(usuario, clave)
                 return
             }
 
+            Registro.traza("Pestañas") { "«${tab.service.name}» pide usuario al navegador: se le pregunta" }
             onHttpAuthRequest(tab, host.orEmpty(), realm.orEmpty(), handler)
         }
 
@@ -781,6 +807,7 @@ private fun crearWebView(
             }
 
             val info = CertTrust.describe(e)
+            Registro.traza("Pestañas") { "«${tab.service.name}»: certificado no reconocido de ${info.host}" }
 
             when {
                 info.host.isBlank() -> handler.cancel()
@@ -961,12 +988,10 @@ private fun leerFicheroDeLaPagina(
                 val contenido = contenidoDeDataUrl(dataUrl)
 
                 if (contenido.isNullOrBlank()) {
-                    Log.w("Panel", "El fichero de la pagina no se pudo descodificar")
+                    Registro.aviso("Panel", "El fichero de la pagina no se pudo descodificar")
                     alTerminar(null)
                 } else {
-                    if (BuildConfig.DEBUG) {
-                        Log.w("Panel", "Fichero leido de la pagina: $nombre (${contenido.length} caracteres)")
-                    }
+                    Registro.traza("Pestañas") { "Fichero leido de la pagina: $nombre (${contenido.length} caracteres)" }
                     alTerminar(DownloadFile(name = nombre, content = contenido, kind = tipo))
                 }
             }
@@ -977,7 +1002,7 @@ private fun leerFicheroDeLaPagina(
             )
 
             else -> {
-                Log.w("Panel", "No se pudo leer el fichero que preparo la pagina")
+                Registro.aviso("Panel", "No se pudo leer el fichero que preparo la pagina")
                 alTerminar(null)
             }
         }

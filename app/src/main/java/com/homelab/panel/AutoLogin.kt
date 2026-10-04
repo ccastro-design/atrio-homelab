@@ -1,7 +1,6 @@
 package com.homelab.panel
 
 import android.content.Context
-import android.util.Log
 import android.webkit.WebView
 import org.json.JSONObject
 
@@ -62,12 +61,12 @@ object AutoLogin {
         val usuario = savedUser(context, service.id)
 
         if (allowedUrls.none { sameOrigin(currentUrl, it) }) {
-            Log.i(TAG, "Autocompletado omitido en «${service.name}»: la página no es la del servicio.")
+            Registro.info(TAG, "Autocompletado omitido en «${service.name}»: la página no es la del servicio.")
             return false
         }
 
         view.evaluateJavascript(script(usuario, contrasena)) { resultado ->
-            Log.i(TAG, "Autocompletado en «${service.name}»: ${resultado?.trim('"')}")
+            Registro.info(TAG, "Autocompletado en «${service.name}»: ${resultado?.trim('"')}")
         }
         return true
     }

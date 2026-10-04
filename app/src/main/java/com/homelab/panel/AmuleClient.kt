@@ -57,8 +57,12 @@ object AmuleClient : Conector {
      */
     private fun login(base: String, password: String): String? {
         val inicial = Http.abrir(base)
-        inicial.conectarY { responseCode }
+        val codigoInicial = inicial.conectarY { responseCode }
         val cookie = inicial.getHeaderField("Set-Cookie")?.substringBefore(';')
+        // Antes de leer: con un código de error, leer lanza y el código se perdería.
+        Registro.traza(AREA) {
+            "Página de entrada: $codigoInicial, ${if (cookie.isNullOrBlank()) "SIN cookie" else "con cookie"}"
+        }
         inicial.inputStream.use { it.readBytes() }
         inicial.disconnect()
 
@@ -67,16 +71,19 @@ object AmuleClient : Conector {
         val cuerpo = "pass=${URLEncoder.encode(password, "UTF-8")}&submit=Submit"
         val conexion = Http.abrir(base, "POST", formulario(cookie))
 
-        conexion.conectarY {
+        val codigo = conexion.conectarY {
             Http.escribir(this, cuerpo)
             responseCode
         }
+        Registro.traza(AREA) { "Contraseña: $codigo" }
 
         val respuesta = conexion.inputStream.use { String(it.readBytes()) }
         conexion.disconnect()
 
         // Si sigue mostrando el campo de contraseña, no entró.
-        return if (respuesta.contains("name=\"pass\"")) null else cookie
+        val entro = !respuesta.contains("name=\"pass\"")
+        Registro.traza(AREA) { if (entro) "Entra" else "SIGUE PIDIENDO LA CONTRASEÑA (${respuesta.length} caracteres)" }
+        return if (entro) cookie else null
     }
 
     private fun post(url: String, cuerpo: String, cookie: String): Int {
@@ -86,10 +93,13 @@ object AmuleClient : Conector {
             Http.escribir(this, cuerpo)
             responseCode
         }
+        Registro.traza(AREA) { "Enlace: $codigo" }
         conexion.inputStream.use { it.readBytes() }
         conexion.disconnect()
         return codigo
     }
+
+    private const val AREA = "aMule"
 
     private fun formulario(cookie: String) = mapOf(
         "Cookie" to cookie,

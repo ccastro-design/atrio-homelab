@@ -69,6 +69,7 @@ class EnvioDeEnlaces {
 
     /** El botón de enviar de la barra de una pestaña: empieza de cero. */
     fun abrirDesdePestana() {
+        Registro.traza("Envío") { "Botón de enviar de una pestaña" }
         enlaces = emptyList()
         tipo = null
         fichero = null
@@ -78,6 +79,7 @@ class EnvioDeEnlaces {
 
     /** El botón de enviar del panel. */
     fun abrirDesdePanel() {
+        Registro.traza("Envío") { "Botón de enviar del panel" }
         enlaces = emptyList()
         recogiendo = false
         abierto = true
@@ -85,6 +87,7 @@ class EnvioDeEnlaces {
 
     /** Pasó la espera de la ráfaga: ya no llegan más. */
     fun rafagaTerminada() {
+        Registro.traza("Envío") { "Ráfaga cerrada con ${enlaces.size} enlaces" }
         recogiendo = false
     }
 

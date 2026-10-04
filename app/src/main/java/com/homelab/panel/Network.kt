@@ -172,8 +172,14 @@ object NetworkResolver {
 
     suspend fun resolve(context: Context, config: PanelConfig): NetworkVerdict {
         when (config.networkProfile) {
-            NetworkProfile.HOME -> return NetworkVerdict(away = false)
-            NetworkProfile.AWAY -> return NetworkVerdict(away = true)
+            NetworkProfile.HOME -> {
+                Registro.traza("Casa/fuera") { "Perfil fijo: casa" }
+                return NetworkVerdict(away = false)
+            }
+            NetworkProfile.AWAY -> {
+                Registro.traza("Casa/fuera") { "Perfil fijo: fuera" }
+                return NetworkVerdict(away = true)
+            }
             NetworkProfile.AUTO -> Unit
         }
 
@@ -187,6 +193,7 @@ object NetworkResolver {
 
         val cache = ultimoResultado
         if (cache != null && firma == ultimaFirma && ahora - ultimoMomento < VALIDEZ_MS) {
+            Registro.traza("Casa/fuera") { "${if (cache.away) "Fuera" else "Casa"}, decidido hace ${(ahora - ultimoMomento) / 1000} s" }
             return cache
         }
 
@@ -210,6 +217,12 @@ object NetworkResolver {
         // abierta con la WiFi todavía asociándose. Se devuelve como provisional, pero **no
         // se cachea**: la siguiente consulta debe volver a mirar.
         val aCiegas = veredicto.away && wifi.isBlank() && !responde
+        Registro.traza("Casa/fuera") {
+            val red = if (wifi.isBlank()) "sin nombre de WiFi" else "WiFi «$wifi»${if (enSuRed) " (de casa)" else ""}"
+            val sondeo = if (enSuRed) "" else ", la de casa ${if (responde) "responde" else "no responde"}"
+            val decision = if (veredicto.away) "fuera" else "casa"
+            "$red$sondeo → $decision${if (aCiegas) " (provisional)" else ""}${veredicto.ask?.let { ", se pregunta" } ?: ""}"
+        }
         if (aCiegas) return veredicto.copy(provisional = true)
 
         ultimoResultado = veredicto

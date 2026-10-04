@@ -1,7 +1,6 @@
 package com.homelab.panel
 
 import android.content.Context
-import android.util.Log
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -79,7 +78,7 @@ object ConfigStore {
             return buena
         }
 
-        Log.w(TAG, "La configuración no se puede leer; se aparta y se prueba con la copia")
+        Registro.aviso(TAG, "La configuración no se puede leer; se aparta y se prueba con la copia")
         runCatching { fichero.copyTo(File(carpeta, FILE_ROTO), overwrite = true) }
 
         leer(File(carpeta, FILE_COPIA))?.let { deLaCopia ->
@@ -89,7 +88,7 @@ object ConfigStore {
         }
 
         ultimoEstado = Estado.PERDIDA
-        Log.e(TAG, "Tampoco hay copia utilizable; se parte de cero")
+        Registro.error(TAG, "Tampoco hay copia utilizable; se parte de cero")
         val inicial = deFabrica()
         saveIn(carpeta, inicial)
         return inicial
@@ -120,7 +119,7 @@ object ConfigStore {
                 if (!temporal.renameTo(destino)) error("no se pudo reemplazar el fichero")
             }
         }.onFailure {
-            Log.e(TAG, "No se pudo guardar la configuración; se deja la anterior", it)
+            Registro.error(TAG, "No se pudo guardar la configuración; se deja la anterior", it)
             runCatching { temporal.delete() }
         }
     }
@@ -144,7 +143,7 @@ object ConfigStore {
         runCatching {
             File(context.filesDir, FILE_ANTERIOR)
                 .writeText(json.encodeToString(PanelConfig.serializer(), config))
-        }.onFailure { Log.w(TAG, "No se pudo guardar la configuración anterior", it) }
+        }.onFailure { Registro.aviso(TAG, "No se pudo guardar la configuración anterior", it) }
     }
 
     /**
@@ -164,7 +163,7 @@ object ConfigStore {
         if (!file.exists()) return null
 
         return runCatching { json.decodeFromString(PanelConfig.serializer(), file.readText()) }
-            .onFailure { Log.w(TAG, "La configuración anterior no se pudo leer", it) }
+            .onFailure { Registro.aviso(TAG, "La configuración anterior no se pudo leer", it) }
             .getOrNull()
     }
 
@@ -179,6 +178,6 @@ object ConfigStore {
     /** Lee una configuración exportada. Devuelve null si el texto no es válido. */
     fun import(texto: String): PanelConfig? =
         runCatching { json.decodeFromString(PanelConfig.serializer(), texto) }
-            .onFailure { Log.w(TAG, "El fichero no contiene una configuración válida", it) }
+            .onFailure { Registro.aviso(TAG, "El fichero no contiene una configuración válida", it) }
             .getOrNull()
 }

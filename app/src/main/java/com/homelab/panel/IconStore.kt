@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -101,7 +100,7 @@ object IconStore {
             }
 
             nombre
-        }.onFailure { Log.w(TAG, "No se pudo guardar la imagen elegida", it) }.getOrNull()
+        }.onFailure { Registro.aviso(TAG, "No se pudo guardar la imagen elegida", it) }.getOrNull()
 
     /**
      * Lee una imagen sin cargarla entera cuando es más grande de lo que se va a usar. Es la
@@ -165,7 +164,7 @@ object IconStore {
             val destino = File(carpetaUsuario(context), nombre)
             destino.outputStream().use { escalar(bitmap).compress(Bitmap.CompressFormat.PNG, 100, it) }
             nombre
-        }.onFailure { Log.w(TAG, "No se pudo guardar el icono de $url", it) }.getOrNull()
+        }.onFailure { Registro.aviso(TAG, "No se pudo guardar el icono de $url", it) }.getOrNull()
     }
 
     fun deleteUserIcon(context: Context, name: String) {

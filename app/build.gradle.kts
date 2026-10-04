@@ -56,6 +56,10 @@ android {
         // Solo los idiomas del producto: evita arrastrar las traducciones de las
         // librerías de AndroidX a todos los idiomas del mundo.
         resourceConfigurations += listOf("en", "es")
+
+        // El registro en fichero (`Registro.kt`): apagado en la que se publica, encendido
+        // abajo en la de desarrollo y en la de prueba.
+        buildConfigField("boolean", "REGISTRO", "false")
     }
 
     signingConfigs {
@@ -93,8 +97,10 @@ android {
             )
         }
 
-        // La misma de publicación, pero firmada con la clave de depuración y con otro
-        // identificador para que se instale **al lado** de la de desarrollo.
+        // La de publicación, pero firmada con la clave de depuración y con otro identificador
+        // para que se instale **al lado** de la de desarrollo. Y con dos añadidos que la
+        // publicada no lleva: el registro en fichero (`Registro.kt`) y los nombres de los
+        // errores sin cifrar, para que ese registro se pueda leer.
         //
         // Existe porque la minificación no se puede comprobar compilando: lo que rompe se
         // ve al ejecutar, y la única forma de probarla sin desinstalar la de desarrollo
@@ -108,6 +114,12 @@ android {
             versionNameSuffix = "-min"
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += listOf("release")
+            buildConfigField("boolean", "REGISTRO", "true")
+            proguardFile("proguard-prueba.pro")
+        }
+
+        debug {
+            buildConfigField("boolean", "REGISTRO", "true")
         }
     }
 

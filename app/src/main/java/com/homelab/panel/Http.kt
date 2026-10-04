@@ -18,8 +18,9 @@ internal object Http {
         url: String,
         metodo: String = "GET",
         cabeceras: Map<String, String> = emptyMap()
-    ): HttpURLConnection =
-        (URL(url).openConnection() as HttpURLConnection).apply {
+    ): HttpURLConnection {
+        Registro.traza("Red") { "→ $metodo $url" }
+        return (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = ESPERA_MS
             readTimeout = ESPERA_MS
             instanceFollowRedirects = true
@@ -27,6 +28,7 @@ internal object Http {
             if (metodo == "POST") doOutput = true
             cabeceras.forEach { (nombre, valor) -> setRequestProperty(nombre, valor) }
         }
+    }
 
     fun escribir(conexion: HttpURLConnection, cuerpo: String) {
         OutputStreamWriter(conexion.outputStream).use { it.write(cuerpo) }
@@ -40,6 +42,7 @@ internal object Http {
         val codigo = conexion.responseCode
         val flujo = if (codigo >= 400) conexion.errorStream else conexion.inputStream
         val cuerpo = flujo?.use { String(it.readBytes()) }.orEmpty()
+        Registro.traza("Red") { "← $codigo (${cuerpo.length} caracteres)" }
         return Respuesta(codigo, cuerpo)
     }
 

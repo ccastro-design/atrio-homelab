@@ -85,6 +85,12 @@ fun SendLinkFlow(
         enviando = destino
         alcance.launch {
             val direccion = config.urlOf(destino, away)
+            // Numerados para ver en el registro si dos envíos se solapan.
+            val numero = if (BuildConfig.REGISTRO) numeroDeEnvio.incrementAndGet() else 0
+            Registro.traza("Envío") {
+                val que = if (ficheroEntrante != null) "un fichero" else "${enlaces.size} enlaces"
+                "Envío $numero: $que a «${destino.name}» en $direccion (${if (away) "fuera" else "casa"})"
+            }
 
             // Si lo que hay es un fichero, se sube entero: no hay enlaces que repartir ni
             // nada que contar, es uno y va de una vez.
@@ -103,11 +109,18 @@ fun SendLinkFlow(
 
             // De uno en uno: aMule sirve las peticiones en serie y con varias a la vez
             // pierde alguna sin decir nada.
-            enlaces.forEach { enlace ->
+            enlaces.forEachIndexed { i, enlace ->
+                val cual = "Envío $numero, ${i + 1} de ${enlaces.size}"
+                Registro.traza("Envío") { "$cual: ${Registro.enlace(enlace)}" }
                 when (val resultado = LinkSender.send(context, destino, direccion, enlace)) {
-                    is SendResult.Ok -> enviados++
-                    is SendResult.Failed ->
+                    is SendResult.Ok -> {
+                        enviados++
+                        Registro.traza("Envío") { "$cual: entregado" }
+                    }
+                    is SendResult.Failed -> {
                         if (primerFallo == null) primerFallo = resultado.message
+                        Registro.traza("Envío") { "$cual: FALLA: ${resultado.message}" }
+                    }
                 }
             }
 
@@ -343,6 +356,8 @@ private fun IconoDeDestino(config: PanelConfig, destino: DownloadTarget, away: B
     }
 }
 
+private val numeroDeEnvio = java.util.concurrent.atomic.AtomicInteger()
+
 /** «http://192.168.1.254:8085/» -> «192.168.1.254:8085», para emparejar direcciones. */
 private fun maquinaYPuerto(url: String): String? = runCatching {
     val uri = java.net.URI(url.trim())
@@ -359,8 +374,13 @@ private fun maquinaYPuerto(url: String): String? = runCatching {
 private fun delPortapapeles(context: Context): String = runCatching {
     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val texto = cm.primaryClip?.getItemAt(0)?.text?.toString()
-    Links.extractAll(texto).joinToString("\n")
-}.getOrDefault("")
+    val enlaces = Links.extractAll(texto)
+    Registro.traza("Envío") { "Del portapapeles: ${enlaces.size} enlaces de ${texto?.length ?: 0} caracteres" }
+    enlaces.joinToString("\n")
+}.getOrElse {
+    Registro.aviso("Envío", "No se pudo leer el portapapeles", it)
+    ""
+}
 
 private fun linkKindName(context: Context, kind: LinkKind): String = context.getString(
     when (kind) {

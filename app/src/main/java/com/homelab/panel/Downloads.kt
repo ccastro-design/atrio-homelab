@@ -1,7 +1,6 @@
 package com.homelab.panel
 
 import android.content.Context
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -222,14 +221,18 @@ object LinkSender {
     ): SendResult = withContext(Dispatchers.IO) {
         try {
             val hecho = entrega()
-            if (hecho == Entrega.Hecha) Log.i(TAG, "Enlace entregado a «$nombre»")
+            if (hecho == Entrega.Hecha) {
+                Registro.info(TAG, "Enlace entregado a «$nombre»")
+            } else {
+                Registro.traza(TAG) { "«$nombre» contesta: $hecho" }
+            }
             textoDe(hecho, nombre)?.let { SendResult.Failed(it.en(context)) } ?: SendResult.Ok(nombre)
         } catch (e: ServidorColgo) {
             // Sí se contactó: no es la red, es el programa cerrándose. Ver [Reintentos].
-            Log.w(TAG, "«$nombre» colgó sin contestar, también al repetir", e)
+            Registro.aviso(TAG, "«$nombre» colgó sin contestar, también al repetir", e)
             SendResult.Failed(context.getString(R.string.error_hung_up, nombre))
         } catch (e: Exception) {
-            Log.w(TAG, siFalla, e)
+            Registro.aviso(TAG, siFalla, e)
             SendResult.Failed(
                 context.getString(R.string.send_unreachable, nombre, e.message ?: e.javaClass.simpleName)
             )

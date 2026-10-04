@@ -3,7 +3,6 @@ package com.homelab.panel
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -185,7 +184,7 @@ object NetworkScan {
                 }
             }
             .distinctBy { if (it.hosts.isEmpty()) it.prefix else "malla" }
-    }.onFailure { Log.w(TAG, "No se pudieron leer las redes del móvil", it) }
+    }.onFailure { Registro.aviso(TAG, "No se pudieron leer las redes del móvil", it) }
         .getOrDefault(emptyList())
 
     /**
