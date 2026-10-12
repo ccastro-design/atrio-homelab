@@ -57,9 +57,15 @@ class EnvioDeEnlaces {
         data class Fichero(val fichero: DownloadFile) : Llegada
     }
 
-    fun deOtraAplicacion(enlace: String) {
-        if (enviando) return encolar(Llegada.Enlaces(listOf(enlace), null))
-        enlaces = listOf(enlace)
+    /**
+     * Lo que llega de otra aplicación puede ser un texto con varios enlaces, o uno con algo más
+     * detrás: se trocea aquí, al entrar. Guardado entero, al mandarlo troceado el texto parecía
+     * pendiente y volvía a la cola sin fin (la 1.9).
+     */
+    fun deOtraAplicacion(texto: String) {
+        val llegados = Links.extractAll(texto).ifEmpty { listOf(texto.trim()) }
+        if (enviando) return encolar(Llegada.Enlaces(llegados, null))
+        enlaces = llegados
         abierto = true
     }
 

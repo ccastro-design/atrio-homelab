@@ -23,6 +23,52 @@ class EnvioDeEnlacesTest {
         assertEquals(listOf(magnet1), e.enlaces)
     }
 
+    /**
+     * Lo que hace el aviso de envío con lo que hay: trocearlo y mandarlo, y cerrar. Devuelve
+     * cuántas tandas salieron antes de quedarse cerrado, con un tope por si no se cierra nunca.
+     */
+    private fun enviarHastaQueSeCierre(e: EnvioDeEnlaces): Int {
+        var tandas = 0
+        while (e.abierto && tandas < 5) {
+            e.empiezaEnvio(Links.extractAll(e.enlaces.joinToString("\n")))
+            e.cerrar()
+            tandas++
+        }
+        return tandas
+    }
+
+    /**
+     * El bucle de la 1.9: un texto compartido con varios enlaces llegaba entero como un solo
+     * «enlace»; al mandarlo troceado, el texto entero parecía pendiente y volvía a la cola sin fin.
+     */
+    @Test
+    fun `un texto compartido con varios enlaces se manda una vez`() {
+        val e = EnvioDeEnlaces()
+        e.deOtraAplicacion(Links.extract("$ed2kA\n$ed2kB")!!)
+        assertEquals(listOf(ed2kA, ed2kB), e.enlaces)
+        assertEquals(1, enviarHastaQueSeCierre(e))
+    }
+
+    @Test
+    fun `un enlace compartido con texto detras se manda una vez`() {
+        val e = EnvioDeEnlaces()
+        e.deOtraAplicacion(Links.extract("$ed2kA para mañana")!!)
+        assertEquals(listOf(ed2kA), e.enlaces)
+        assertEquals(1, enviarHastaQueSeCierre(e))
+    }
+
+    /** Lo mismo si llega mientras otro se está enviando y espera su turno. */
+    @Test
+    fun `un texto con varios enlaces que espera su turno sale troceado`() {
+        val e = EnvioDeEnlaces()
+        e.deOtraAplicacion(ed2kC)
+        e.empiezaEnvio(listOf(ed2kC))
+        e.deOtraAplicacion("$ed2kA\n$ed2kB")
+        e.cerrar()
+        assertEquals(listOf(ed2kA, ed2kB), e.enlaces)
+        assertEquals(1, enviarHastaQueSeCierre(e))
+    }
+
     /** Una ráfaga se junta sin repetidos, y el aviso ya está abierto desde el primero. */
     @Test
     fun `una rafaga desde una pestana se junta sin repetir`() {
