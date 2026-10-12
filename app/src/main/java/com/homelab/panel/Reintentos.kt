@@ -1,10 +1,13 @@
 package com.homelab.panel
 
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import java.io.IOException
 import java.net.ConnectException
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Qué hacer cuando un servidor **acepta la conexión y cuelga sin contestar**. Es lo que hace
@@ -12,13 +15,24 @@ import java.net.SocketTimeoutException
  * propósito y deja que lo que la vigila la vuelva a arrancar.
  *
  * La respuesta es la de los navegadores, la recarga automática de Chrome
- * (`NetErrorAutoReloader`): aquí se usan solo las dos primeras esperas, porque hay alguien
- * mirando la pantalla. Y como Chrome, nunca se reenvía un formulario.
+ * (`NetErrorAutoReloader`), cortada pronto porque hay alguien mirando la pantalla. Y como
+ * Chrome, nunca se reenvía un formulario.
  */
 object Reintentos {
 
-    /** Esperas antes de cada repetición: las dos primeras de la recarga de Chrome. */
-    val ESPERAS_MS = listOf(1_000L, 5_000L)
+    /**
+     * Esperas antes de cada repetición de un envío: las tres primeras de la recarga de Chrome.
+     * La de 30 s, desde que el registro lo vio el 06/10 y el 09/10: aMule volvió entre 1 y 6 s,
+     * y el 04/10 tardó más y se perdió un enlace. Mientras, se le dice al usuario por qué tarda
+     * (ver [AvisoDeEspera]).
+     */
+    val ESPERAS_MS = listOf(1_000L, 5_000L, 30_000L)
+
+    /**
+     * Las de una pestaña, solo las dos primeras: si se rinde no se pierde nada, queda el error
+     * con su botón de reintentar.
+     */
+    val ESPERAS_PESTANA_MS = ESPERAS_MS.take(2)
 
     /**
      * Errores de la pestaña que quieren decir «conectó y colgó».
@@ -45,7 +59,7 @@ object Reintentos {
 
     /** Si la carga de una pestaña que acaba de fallar se repite sola. */
     fun repetirLaPestana(descripcion: String?, hechos: Int): Boolean =
-        hechos < ESPERAS_MS.size && colgoLaPestana(descripcion, hechos)
+        hechos < ESPERAS_PESTANA_MS.size && colgoLaPestana(descripcion, hechos)
 
     /**
      * Conecta y después hace [resto]. Lo que falle después de conectar —salvo tardar
@@ -94,6 +108,7 @@ object Reintentos {
 
         for ((n, espera) in ESPERAS_MS.withIndex()) {
             Registro.traza("Reintentos") { "Se repite en ${espera / 1000} s (${n + 1} de ${ESPERAS_MS.size})" }
+            currentCoroutineContext()[AvisoDeEspera]?.alEsperar?.invoke(espera)
             esperar(espera)
             try {
                 val hecho = intento()
@@ -113,3 +128,14 @@ object Reintentos {
 
 /** El servidor conectó y después colgó, o cortó a medias. Ver [Reintentos]. */
 class ServidorColgo(causa: IOException) : IOException(causa)
+
+/**
+ * Para quien espera un envío y quiere saber que se está repitiendo, y decirle al usuario por
+ * qué tarda: [alEsperar] recibe cada espera antes de hacerla.
+ *
+ * Va en el contexto de la corrutina y no como parámetro, para no cruzar los cuatro conectores,
+ * que no saben nada de esto.
+ */
+class AvisoDeEspera(val alEsperar: (Long) -> Unit) : AbstractCoroutineContextElement(Key) {
+    companion object Key : CoroutineContext.Key<AvisoDeEspera>
+}

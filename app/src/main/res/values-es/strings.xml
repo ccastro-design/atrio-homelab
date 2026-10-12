@@ -310,6 +310,7 @@
     <string name="send_remember">Usar siempre para %1$s</string>
     <string name="send_sending_generic">Enviando el enlace…</string>
     <string name="send_sending_wait">Esperando a que conteste</string>
+    <string name="send_restarting">«%1$s» se está reiniciando. Esperando a que vuelva…</string>
     <string name="send_ok">Enlace enviado a «%1$s»</string>
     <plurals name="send_ok_many">
         <item quantity="one">%1$d enlace enviado a «%2$s»</item>

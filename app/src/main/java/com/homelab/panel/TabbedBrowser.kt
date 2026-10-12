@@ -185,7 +185,7 @@ fun TabbedBrowser(
                 if (!tab.reintentoPendiente) return@LaunchedEffect
 
                 val carga = tab.loadId
-                delay(Reintentos.ESPERAS_MS[tab.reintentosSolos.coerceAtMost(Reintentos.ESPERAS_MS.lastIndex)])
+                delay(Reintentos.ESPERAS_PESTANA_MS[tab.reintentosSolos.coerceAtMost(Reintentos.ESPERAS_PESTANA_MS.lastIndex)])
 
                 // Si entretanto se recargó por otro camino, esta ya no toca.
                 if (tab.reintentoPendiente && tab.loadId == carga) {

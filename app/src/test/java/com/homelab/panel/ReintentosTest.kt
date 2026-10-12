@@ -1,6 +1,7 @@
 package com.homelab.panel
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -60,19 +61,48 @@ class ReintentosTest {
         assertEquals(listOf(1_000L, 5_000L), guion.esperas)
     }
 
-    /** Tres intentos como mucho, y lo que se cuenta al final es lo que pasó: que colgó. */
+    /**
+     * El 04/10 aMule tardó en volver más de los 6 s de las dos primeras esperas y se perdió un
+     * enlace: la tercera, de 30 s, lo recoge.
+     */
+    @Test
+    fun `si tarda en volver, entra a la tercera`() = runTest {
+        val guion = Guion(colgo(), ConnectException("arrancando"), ConnectException("arrancando"), 200)
+        assertEquals(200, ejecutar(guion))
+        assertEquals(listOf(1_000L, 5_000L, 30_000L), guion.esperas)
+    }
+
+    /** Cuatro intentos como mucho, y lo que se cuenta al final es lo que pasó: que colgó. */
     @Test
     fun `si no deja de colgar, se rinde con el primer fallo`() = runTest {
         val primero = colgo()
-        val guion = Guion(primero, colgo(), ConnectException("arrancando"))
+        val guion = Guion(primero, colgo(), ConnectException("arrancando"), ConnectException("arrancando"))
         try {
             ejecutar(guion)
             fail("tenía que rendirse")
         } catch (e: ServidorColgo) {
             assertSame(primero, e)
         }
-        assertEquals(3, guion.intentos)
-        assertEquals(listOf(1_000L, 5_000L), guion.esperas)
+        assertEquals(4, guion.intentos)
+        assertEquals(listOf(1_000L, 5_000L, 30_000L), guion.esperas)
+    }
+
+    /** Quien espera el envío se entera de cada espera, para decirle al usuario por qué tarda. */
+    @Test
+    fun `cada espera se avisa antes de hacerla`() = runTest {
+        val avisos = mutableListOf<Long>()
+        val guion = Guion(colgo(), ConnectException("arrancando"), 200)
+
+        withContext(AvisoDeEspera { avisos += it }) { ejecutar(guion) }
+
+        assertEquals(listOf(1_000L, 5_000L), avisos)
+    }
+
+    @Test
+    fun `si sale a la primera no se avisa nada`() = runTest {
+        val avisos = mutableListOf<Long>()
+        withContext(AvisoDeEspera { avisos += it }) { ejecutar(Guion(200)) }
+        assertEquals(emptyList<Long>(), avisos)
     }
 
     /** Un servicio apagado de entrada se avisa al momento, como siempre. */
@@ -115,6 +145,7 @@ class ReintentosTest {
     // La pestaña, que decide por el nombre del error de red.
     // -------------------------------------------------------------------------------
 
+    /** La pestaña no pierde nada si se rinde: le bastan las dos primeras esperas. */
     @Test
     fun `la pestana repite el ERR_EMPTY_RESPONSE dos veces`() {
         assertTrue(Reintentos.repetirLaPestana("net::ERR_EMPTY_RESPONSE", 0))

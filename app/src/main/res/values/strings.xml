@@ -320,6 +320,7 @@
     <string name="send_remember">Always use it for %1$s</string>
     <string name="send_sending_generic">Sending the link…</string>
     <string name="send_sending_wait">Waiting for an answer</string>
+    <string name="send_restarting">“%1$s” is restarting. Waiting for it to come back…</string>
     <string name="send_ok">Link sent to “%1$s”</string>
     <plurals name="send_ok_many">
         <item quantity="one">%1$d link sent to “%2$s”</item>

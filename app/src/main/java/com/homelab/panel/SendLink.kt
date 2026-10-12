@@ -58,6 +58,9 @@ fun SendLinkFlow(
     var eligiendo by remember { mutableStateOf(false) }
     var enviando by remember { mutableStateOf<DownloadTarget?>(null) }
 
+    /** El programa colgó y se espera a que vuelva: se dice por qué tarda. Ver [Reintentos]. */
+    var reiniciando by remember { mutableStateOf(false) }
+
     /**
      * Los enlaces que llegan solos —de una pestaña o de otra aplicación— no enseñan el
      * cuadro de pegar.
@@ -87,7 +90,7 @@ fun SendLinkFlow(
     fun enviar(destino: DownloadTarget) {
         enviando = destino
         onSending(if (ficheroEntrante != null) emptyList() else enlaces)
-        alcance.launch {
+        alcance.launch(AvisoDeEspera { reiniciando = true }) {
             val direccion = config.urlOf(destino, away)
             // Numerados para ver en el registro si dos envíos se solapan.
             val numero = if (BuildConfig.REGISTRO) numeroDeEnvio.incrementAndGet() else 0
@@ -114,7 +117,9 @@ fun SendLinkFlow(
             enlaces.forEachIndexed { i, enlace ->
                 val cual = "Envío $numero, ${i + 1} de ${enlaces.size}"
                 Registro.traza("Envío") { "$cual: ${Registro.enlace(enlace)}" }
-                when (val resultado = LinkSender.send(context, destino, direccion, enlace)) {
+                val resultado = LinkSender.send(context, destino, direccion, enlace)
+                reiniciando = false
+                when (resultado) {
                     is SendResult.Ok -> {
                         enviados++
                         Registro.traza("Envío") { "$cual: entregado" }
@@ -185,7 +190,10 @@ fun SendLinkFlow(
     // Un solo aviso desde el primer toque hasta la respuesta: mientras se recogen los
     // enlaces de la ráfaga, mientras se decide el destino y mientras se entrega.
     if (esperandoMas || enviando != null || (decidiendo && !eligiendo)) {
-        DialogoEnviando(if (ficheroEntrante != null) 1 else enlaces.size)
+        DialogoEnviando(
+            cuantos = if (ficheroEntrante != null) 1 else enlaces.size,
+            reiniciandose = enviando?.name?.takeIf { reiniciando }
+        )
         return
     }
 
@@ -263,27 +271,39 @@ fun SendLinkFlow(
 /**
  * Aviso mientras se entrega el enlace. No lleva botones a propósito: no hay nada que decidir
  * y se cierra solo al terminar.
+ *
+ * @param reiniciandose el programa que colgó y al que se espera, para decir por qué tarda:
+ *   la espera puede llegar a medio minuto.
  */
 @Composable
-private fun DialogoEnviando(cuantos: Int) {
+private fun DialogoEnviando(cuantos: Int, reiniciandose: String?) {
     AlertDialog(
         onDismissRequest = { },
-        // El texto no cambia en todo el proceso, aunque por dentro sean dos pasos
+        // El título no cambia en todo el proceso, aunque por dentro sean dos pasos
         // (decidir el destino y entregar). Cambiarlo a mitad se veía como si un aviso se
         // cerrara y se abriera otro. El destino ya lo dice el mensaje del final.
         title = { Text(stringResource(R.string.send_sending_generic)) },
         text = {
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
-                Spacer(Modifier.width(16.dp))
-                Text(
-                    if (cuantos > 1) {
-                        pluralStringResource(R.plurals.send_count, cuantos, cuantos)
-                    } else {
-                        stringResource(R.string.send_sending_wait)
-                    },
-                    fontSize = 13.sp
-                )
+            Column {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
+                    Spacer(Modifier.width(16.dp))
+                    Text(
+                        if (cuantos > 1) {
+                            pluralStringResource(R.plurals.send_count, cuantos, cuantos)
+                        } else {
+                            stringResource(R.string.send_sending_wait)
+                        },
+                        fontSize = 13.sp
+                    )
+                }
+                if (reiniciandose != null) {
+                    Text(
+                        stringResource(R.string.send_restarting, reiniciandose),
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
             }
         },
         confirmButton = { }
